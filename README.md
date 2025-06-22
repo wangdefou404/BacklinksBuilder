@@ -1,17 +1,12 @@
-# Astro & Tailwind CSS Starter Kit
-
-by https://lexingtonthemes.com
+# SaaS & Startup Astro & Tailwind CSS Template
 
 ## License
 
-This template is open-source software licensed under the [GPL-3.0 license](https://opensource.org/licenses/GPL-3.0). Feel free to fork, modify, and use it in your projects.
-## Need an attribution-free version?
+This template is open-source software licensed under the [GPL-3.0 license](https://opensource.org/licenses/GPL-3.0). You are free to fork, modify, and use it in your projects.
 
-Checkout [Lexington Themes](https://lexingtonthemes.com/) for free and premium multipage themes & UI Kits
-For freelancers, developers, businesses, and personal use.
-Beautifully crafted with Astro.js, and Tailwind CSS — Simple & easy to customise.
+## Attribution
 
-## Before using this template publicly, please ensure you remove my name and any links associated with me from the website.
+Originally created by Michael Andreuzza. Modified, extended, and redistributed by Bektur Aslan with added sections and updated UI/UX for broader usage.
 
 ## This template is using Tailwind CSS V4
 
@@ -70,3 +65,6 @@ All commands are run from the root of the project, from a terminal:
 ## Want to learn more?
 
 Feel free to check Astro's [documentation](https://docs.astro.build)
+
+---
+Maintained & updated by Bektur Aslan. Contributions welcome.
