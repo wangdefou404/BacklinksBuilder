@@ -1,11 +1,20 @@
-import { defineConfig } from 'astro/config';
+import { defineConfig, fontProviders } from "astro/config";
 import sitemap from "@astrojs/sitemap";
-import tailwindcss from '@tailwindcss/vite';
+import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
-vite: {
+  site: "https://yoursite.com",
+  experimental: {
+    fonts: [
+      {
+        provider: fontProviders.google(),
+        name: "Inter",
+        cssVariable: "--font-sans",
+        weights: [400, 500],
+      }
+    ],
+  },
+  integrations: [sitemap()],
+  vite: {
     plugins: [tailwindcss()],
   },
-    // add yur domain name here
-   site: 'https://yoursite.com',
-  integrations: [sitemap()]
 });
