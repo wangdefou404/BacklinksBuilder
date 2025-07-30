@@ -1,7 +1,3 @@
-⭐ SUPPORT THE PROJECT WITH A STAR — IT REALLY HELPS! ⭐
-
----
-
 # SaaS & Startup Astro & Tailwind CSS Template
 
 ## License
