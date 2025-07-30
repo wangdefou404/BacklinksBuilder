@@ -1,4 +1,6 @@
 ---
+import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
+
 const featuresList = [
   {
     title: "Astro, Tailwind CSS and Alpine.js",
@@ -24,7 +26,7 @@ const featuresList = [
         Tagline
       </p>
       <h2
-        class="text-xl/snug leading-tight tracking-tight sm:text-2xl/snug md:text-3xl/snug capitalize lg:text-4xl/snug mt-4 font-semibold text-base-900">
+        class="text-xl/snug leading-tight tracking-tight sm:text-2xl/snug md:text-3xl/snug capitalize lg:text-4xl/snug mt-4 font-medium text-base-900">
         A astro template built with Astro and Tailwind CSS for your next project
       </h2>
       <p class="text-base leading-normal mt-4 text-base-500 font-medium">
@@ -35,17 +37,17 @@ const featuresList = [
         class="flex flex-wrap items-center gap-2 justify-center mx-auto mt-12">
         <a
           href="https://github.com/bekturaslan/syntro-astro"
-          class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:text-accent-500 ring-1 ring-base-200 focus:ring-accent-500 h-9 px-4 py-2 text-sm font-medium rounded-md">
+          class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:bg-accent-100 ring-1 ring-base-200 focus:ring-accent-100 hover:text-accent-600 h-9 px-4 py-2 text-sm font-medium rounded-md">
           Get This Template
         </a>
         <a
-          href="https://getastrothemes.com/"
-          class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-white bg-accent-600 hover:bg-accent-700 focus:ring-accent-500/50 h-9 px-4 py-2 text-sm font-medium rounded-md">
-          More themes
+          href="https://getastrothemes.com/free-astro-themes-templates/"
+          class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-white bg-accent-600 hover:bg-accent-700 focus:ring-accent-700/50 h-9 px-4 py-2 text-sm font-medium rounded-md">
+          More Free Astro themes
         </a>
       </div>
     </div>
-    <dl
+    <div
       class="lg:gap-x-8 lg:grid-cols-3 max-w-4xl mt-8 mx-auto sm:gap-x-6 sm:gap-y-12 sm:grid sm:grid-cols-2 sm:space-y-0 space-y-6 text-center text-sm items-start">
       {
         featuresList.map(({ title, description }) => (
@@ -54,12 +56,12 @@ const featuresList = [
           </div>
         ))
       }
-    </dl>
+    </div>
     <div class="relative w-full mx-auto max-w-7xl items-center py-12 pb-12">
-      <img
+      <OptimizedImage
+        src="/dashboardLight.svg"
         alt="#_"
         class="relative w-full ring-4 ring-base-50 border border-base-200 lg:rounded-2xl object-cover rounded"
-        src="/dashboardLight.svg"
       />
     </div>
   </div>
