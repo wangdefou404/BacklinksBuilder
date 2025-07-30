@@ -27,7 +27,8 @@ const featuresList = [
       </p>
       <h2
         class="text-xl/snug leading-tight tracking-tight sm:text-2xl/snug md:text-3xl/snug capitalize lg:text-4xl/snug mt-4 font-medium text-base-900">
-        A astro template built with Astro and Tailwind CSS for your next project
+        An astro template built with Astro and Tailwind CSS for your next
+        project
       </h2>
       <p class="text-base leading-normal mt-4 text-base-500 font-medium">
         The fastest method for working together on staging and temporary
@@ -58,11 +59,15 @@ const featuresList = [
       }
     </div>
     <div class="relative w-full mx-auto max-w-7xl items-center py-12 pb-12">
-      <OptimizedImage
-        src="/dashboardLight.svg"
-        alt="#_"
-        class="relative w-full ring-4 ring-base-50 border border-base-200 lg:rounded-2xl object-cover rounded"
-      />
+      <div class="p-10 bg-accent-50 rounded-2xl">
+        <OptimizedImage
+          src="/dashboard.png"
+          alt="#_"
+          width={1200}
+          height={700}
+          class="relative w-full ring-4 ring-base-50 border border-base-200 lg:rounded-2xl object-cover rounded"
+        />
+      </div>
     </div>
   </div>
 </section>

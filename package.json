@@ -1,6 +1,6 @@
 {
-  "name": "@lexington/syntro-astro",
-  "version": "0.0.1",
+  "name": "@getastrothemes/syntro-astro",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "astro dev",
@@ -14,7 +14,7 @@
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.16",
     "@tailwindcss/vite": "^4.1.10",
-    "astro": "^5.9.3",
+    "astro": "^5.12.6",
     "tailwindcss": "^4.1.10"
   }
 }

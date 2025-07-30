@@ -31,11 +31,17 @@ import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
         </div>
       </div>
       <div class="lg:col-span-2">
-        <OptimizedImage
-          src="/dashboardLight.svg"
-          alt="#_"
-          class="object-cover h-full ring-4 ring-base-50 border border-base-200 rounded-2xl"
-        />
+        <div class="p-5 bg-accent-50 rounded-2xl">
+          <OptimizedImage
+            src="/dashboard.png"
+            alt="#_"
+            width={900}
+            height={500}
+            loading={"eager"}
+            fetchpriority="high"
+            class="relative w-full ring-4 ring-base-50 border border-base-200 lg:rounded-2xl object-cover rounded"
+          />
+        </div>
       </div>
     </div>
     <div
