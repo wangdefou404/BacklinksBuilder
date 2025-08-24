@@ -1,0 +1,70 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogPost from '../../components/blog/BlogPost.astro';
+import { getAllBlogPosts, getBlogPost } from '../../data/blog';
+import type { GetStaticPaths } from 'astro';
+
+export const getStaticPaths: GetStaticPaths = () => {
+  const posts = getAllBlogPosts();
+  return posts.map((post, index) => {
+    const prevPost = index > 0 ? posts[index - 1] : null;
+    const nextPost = index < posts.length - 1 ? posts[index + 1] : null;
+    
+    return {
+      params: { slug: post.slug },
+      props: { 
+        post,
+        prevPost,
+        nextPost
+      }
+    };
+  });
+};
+
+const { post, prevPost, nextPost } = Astro.props;
+
+if (!post) {
+  return Astro.redirect('/404');
+}
+
+const pageTitle = post.title;
+const pageDescription = post.description;
+const canonicalUrl = new URL(`/blog/${post.slug}`, Astro.site);
+---
+
+<BaseLayout title={pageTitle} description={pageDescription}>
+  <Fragment slot="head">
+    <meta property="article:published_time" content={post.publishedAt} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={canonicalUrl} />
+    {post.image && (
+      <meta property="og:image" content={post.image} />
+    )}
+    <meta name="twitter:card" content="summary_large_image" />
+    {post.image && (
+      <meta name="twitter:image" content={post.image} />
+    )}
+    <link rel="canonical" href={canonicalUrl} />
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": post.title,
+      "description": post.description,
+      "image": post.image,
+      "publisher": {
+        "@type": "Organization",
+        "name": "Your Site Name"
+      },
+      "datePublished": post.publishedAt,
+      "dateModified": post.publishedAt,
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": canonicalUrl.toString()
+      }
+    })} />
+  </Fragment>
+
+  <BlogPost post={post} prevPost={prevPost} nextPost={nextPost} />
+</BaseLayout>

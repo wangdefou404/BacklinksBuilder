@@ -16,5 +16,8 @@
     "@tailwindcss/vite": "^4.1.10",
     "astro": "^5.12.6",
     "tailwindcss": "^4.1.10"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3"
   }
 }

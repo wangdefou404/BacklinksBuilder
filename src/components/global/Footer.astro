@@ -2,8 +2,17 @@
 import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
 
 const sections = [
+
+    {
+    title: "Friend Link",
+    links: [
+      { name: "WangDefou", href: "https://wangdefou.com/" },
+
+    ],
+  },
+
   {
-    title: "All backLink Building Tool",
+    title: "All Products",
     links: [
       { name: "Home", href: "/" },
       { name: "SubmitList", href: "/#section-two" },
@@ -33,7 +42,7 @@ const sections = [
     title: "Contact",
     links: [
 
-      { name: "Mail Support", href: "/support" },
+      { name: "Mail Support", href: "mailto:wangpangzier@gmail.com" },
 
     ],
   },
@@ -79,7 +88,7 @@ const sections = [
       </div>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm text-gray-600">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm text-gray-600">
       {
         sections.map(({ title, links }) => (
           <div>

@@ -1,15 +1,25 @@
 ---
 import "../styles/global.css";
+
+export interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = "BacklinksBuilder - a free backLink Building Tool",
+  description = "Astro SaaS template built with Astro & Tailwind CSS. Customize freely and deploy with ease."
+} = Astro.props;
 ---
 
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <!-- Basic Meta Tags -->
-<title>BacklinksBuilder - a free backLink Building Tool</title>
+<title>{title}</title>
 <meta
   name="description"
-  content="Astro SaaS template built with Astro & Tailwind CSS. Customize freely and deploy with ease."
+  content={description}
 />
 <meta name="keywords" content="keyword1, keyword2, keyword3" />
 <meta name="author" content="Your Name or Company Name" />
@@ -24,10 +34,10 @@ import "../styles/global.css";
 <meta property="og:image" content="/og-image.png" />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://www.yourwebsite.com/" />
-<meta property="og:title" content="Your Website Title" />
+<meta property="og:title" content={title} />
 <meta
   property="og:description"
-  content="A brief description of your website content."
+  content={description}
 />
 <meta
   property="og:image"
@@ -37,10 +47,10 @@ import "../styles/global.css";
 <!-- Twitter -->
 <meta property="twitter:card" content="summary_large_image" />
 <meta property="twitter:url" content="https://www.yourwebsite.com/" />
-<meta property="twitter:title" content="Your Website Title" />
+<meta property="twitter:title" content={title} />
 <meta
   property="twitter:description"
-  content="A brief description of your website content."
+  content={description}
 />
 <meta
   property="twitter:image"

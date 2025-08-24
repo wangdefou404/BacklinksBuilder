@@ -1,0 +1,427 @@
+---
+import type { BlogPost } from '../../data/blog';
+
+interface Props {
+  post: BlogPost;
+  prevPost?: BlogPost | null;
+  nextPost?: BlogPost | null;
+}
+
+const { post, prevPost, nextPost } = Astro.props;
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}/${month}/${day}`;
+};
+
+// Advanced markdown to HTML converter with proper nested list support
+// Filters out the first h1 title to avoid duplication with page title
+const markdownToHtml = (markdown: string) => {
+  // Remove the first h1 title from markdown content
+  const contentWithoutFirstH1 = markdown.replace(/^# .*$/m, '');
+  
+  // Split content into lines for better processing
+  const lines = contentWithoutFirstH1.split('\n');
+  const processedLines: string[] = [];
+  let inCodeBlock = false;
+  
+  // Stack to track nested lists with proper hierarchy
+  interface ListState {
+    type: 'ul' | 'ol';
+    level: number;
+    items: string[];
+  }
+  
+  const listStack: ListState[] = [];
+  
+  // Helper function to get indentation level (more precise detection)
+  const getIndentLevel = (line: string): number => {
+    const match = line.match(/^( *)/);
+    if (!match) return 0;
+    // Count actual spaces, every 2 spaces = 1 level
+    return Math.floor(match[1].length / 2);
+  };
+  
+  // Helper function to process inline formatting
+  const processInlineFormatting = (text: string): string => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+      .replace(/`([^`]+)`/g, '<code class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono">$1</code>');
+  };
+  
+  // Helper function to close lists down to a specific level
+  const closeListsToLevel = (targetLevel: number) => {
+    while (listStack.length > 0 && listStack[listStack.length - 1].level >= targetLevel) {
+      const currentList = listStack.pop()!;
+      const listClass = currentList.type === 'ul' 
+        ? `mb-4 space-y-2`
+        : `mb-4 space-y-2`;
+      processedLines.push(`<${currentList.type} class="${listClass}">${currentList.items.join('')}</${currentList.type}>`);
+    }
+  };
+  
+  // Helper function to close all lists
+  const closeAllLists = () => {
+    closeListsToLevel(0);
+  };
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Handle code blocks
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        processedLines.push('</code></pre>');
+        inCodeBlock = false;
+      } else {
+        closeAllLists();
+        processedLines.push('<pre class="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-6"><code>');
+        inCodeBlock = true;
+      }
+      continue;
+    }
+    
+    if (inCodeBlock) {
+      processedLines.push(line);
+      continue;
+    }
+    
+    // Check for unordered list items with proper indentation detection
+    const ulMatch = line.match(/^( *)- (.*)$/);
+    if (ulMatch) {
+      const indentLevel = getIndentLevel(line);
+      const content = processInlineFormatting(ulMatch[2]);
+      
+      // Close lists that are deeper than current level
+      closeListsToLevel(indentLevel + 1);
+      
+      // Find or create the appropriate list at this level
+      let targetListIndex = -1;
+      for (let j = listStack.length - 1; j >= 0; j--) {
+        if (listStack[j].level === indentLevel && listStack[j].type === 'ul') {
+          targetListIndex = j;
+          break;
+        }
+      }
+      
+      if (targetListIndex === -1) {
+        // Create new list
+        listStack.push({
+          type: 'ul',
+          level: indentLevel,
+          items: []
+        });
+        targetListIndex = listStack.length - 1;
+      }
+      
+      listStack[targetListIndex].items.push(`<li class="mb-1 leading-relaxed flex items-start"><span class="text-gray-600 mr-2 mt-1 text-sm">•</span><span>${content}</span></li>`);
+      continue;
+    }
+    
+    // Check for ordered list items with proper indentation detection
+    const olMatch = line.match(/^( *)\d+\. (.*)$/);
+    if (olMatch) {
+      const indentLevel = getIndentLevel(line);
+      const content = processInlineFormatting(olMatch[2]);
+      
+      // Close lists that are deeper than current level
+      closeListsToLevel(indentLevel + 1);
+      
+      // Find or create the appropriate list at this level
+      let targetListIndex = -1;
+      for (let j = listStack.length - 1; j >= 0; j--) {
+        if (listStack[j].level === indentLevel && listStack[j].type === 'ol') {
+          targetListIndex = j;
+          break;
+        }
+      }
+      
+      if (targetListIndex === -1) {
+        // Create new list
+        listStack.push({
+          type: 'ol',
+          level: indentLevel,
+          items: []
+        });
+        targetListIndex = listStack.length - 1;
+      }
+      
+      const itemNumber = listStack[targetListIndex].items.length + 1;
+      listStack[targetListIndex].items.push(`<li class="mb-1 leading-relaxed flex items-start"><span class="text-gray-600 mr-2 mt-1 text-sm font-medium">${itemNumber}.</span><span>${content}</span></li>`);
+      continue;
+    }
+    
+    // Handle headings (check from most specific to least specific)
+    if (line.match(/^#### /)) {
+      closeAllLists();
+      let headingContent = processInlineFormatting(line.substring(5));
+      processedLines.push(`<h4 class="text-base font-bold text-gray-900 mb-2 mt-6">${headingContent}</h4>`);
+    } else if (line.match(/^### /)) {
+      closeAllLists();
+      let headingContent = processInlineFormatting(line.substring(4));
+      processedLines.push(`<h3 class="text-lg font-bold text-gray-900 mb-3 mt-8">${headingContent}</h3>`);
+    } else if (line.match(/^## /)) {
+      closeAllLists();
+      let headingContent = processInlineFormatting(line.substring(3));
+      processedLines.push(`<h2 class="text-xl font-bold text-gray-900 mb-4 mt-10">${headingContent}</h2>`);
+    } else if (line.match(/^# /)) {
+      closeAllLists();
+      let headingContent = processInlineFormatting(line.substring(2));
+      processedLines.push(`<h1 class="text-2xl font-bold text-gray-900 mb-6 mt-8">${headingContent}</h1>`);
+    } else if (line.trim() === '') {
+      // Empty line - don't close lists, just skip
+      continue;
+    } else {
+      // Regular paragraph - close all lists before paragraph
+      closeAllLists();
+      
+      // Regular paragraph - process inline formatting
+      let processedLine = processInlineFormatting(line);
+      processedLines.push(`<p class="mb-4 leading-relaxed">${processedLine}</p>`);
+    }
+  }
+  
+  // Close any remaining lists
+  closeAllLists();
+  
+  return processedLines.join('\n');
+};
+---
+
+<article class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  <!-- Two Column Layout -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: Main Content -->
+    <div class="lg:col-span-2">
+      <!-- Breadcrumb Navigation -->
+      <nav class="mb-8" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm text-gray-500">
+          <li>
+            <a href="/" class="hover:text-gray-700 transition-colors duration-200">
+              Home
+            </a>
+          </li>
+          <li class="flex items-center">
+            <svg class="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <a href="/blog" class="hover:text-gray-700 transition-colors duration-200">
+              Blog
+            </a>
+          </li>
+          <li class="flex items-center">
+            <svg class="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="text-gray-900 font-medium" title={post.title}>
+              {post.title}
+            </span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Header -->
+      <header class="mb-8">
+        <h1 class="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+          {post.title}
+        </h1>
+      </header>
+      
+      <!-- Content -->
+      <div class="prose max-w-none">
+        <div set:html={markdownToHtml(post.content)} class="blog-content" />
+      </div>
+      
+      <!-- Navigation -->
+      <footer class="mt-12 pt-8 border-t border-gray-200">
+        <!-- Back to Blog Link -->
+        <div class="mb-8">
+          <a 
+            href="/blog"
+            class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors duration-200"
+          >
+            <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Back to Blog
+          </a>
+        </div>
+
+        <!-- Previous/Next Navigation -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Previous Post -->
+          <div class="flex justify-start">
+            {prevPost ? (
+              <a 
+                href={`/blog/${prevPost.slug}`}
+                class="group flex items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 w-full max-w-sm"
+              >
+                <div class="flex-shrink-0 mr-4">
+                  <svg class="w-6 h-6 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm text-gray-500 mb-1">Previous</p>
+                  <p class="text-gray-900 font-medium truncate group-hover:text-blue-600 transition-colors duration-200">
+                    {prevPost.title}
+                  </p>
+                </div>
+              </a>
+            ) : (
+              <div class="flex items-center p-4 bg-gray-50 rounded-lg opacity-50 w-full max-w-sm">
+                <div class="flex-shrink-0 mr-4">
+                  <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-sm text-gray-400 mb-1">Previous</p>
+                  <p class="text-gray-400 font-medium">No previous post</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <!-- Next Post -->
+          <div class="flex justify-end">
+            {nextPost ? (
+              <a 
+                href={`/blog/${nextPost.slug}`}
+                class="group flex items-center p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200 w-full max-w-sm"
+              >
+                <div class="min-w-0 text-right">
+                  <p class="text-sm text-gray-500 mb-1">Next</p>
+                  <p class="text-gray-900 font-medium truncate group-hover:text-blue-600 transition-colors duration-200">
+                    {nextPost.title}
+                  </p>
+                </div>
+                <div class="flex-shrink-0 ml-4">
+                  <svg class="w-6 h-6 text-gray-400 group-hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </a>
+            ) : (
+              <div class="flex items-center p-4 bg-gray-50 rounded-lg opacity-50 w-full max-w-sm">
+                <div class="min-w-0 text-right">
+                  <p class="text-sm text-gray-400 mb-1">Next</p>
+                  <p class="text-gray-400 font-medium">No next post</p>
+                </div>
+                <div class="flex-shrink-0 ml-4">
+                  <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                  </svg>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Right Column: Sidebar -->
+    <div class="lg:col-span-1">
+          <div class="space-y-6">
+        <!-- Featured Image -->
+        {post.image && (
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="aspect-[16/9] overflow-hidden rounded-lg shadow-lg">
+              <img 
+                src={post.image} 
+                alt={post.title}
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        )}
+        
+        <!-- Article Information -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Article Information</h3>
+          
+          <!-- Published Date -->
+          <div class="mb-4 flex justify-between items-center">
+            <p class="text-sm text-gray-500">Published</p>
+            <time datetime={post.publishedAt} class="text-sm font-medium text-gray-900">
+              {formatDate(post.publishedAt)}
+            </time>
+          </div>
+          
+          <!-- Author -->
+          <div class="flex justify-between items-center">
+            <p class="text-sm text-gray-500">Author</p>
+            <p class="text-sm font-medium text-gray-900">Admin</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+
+<style>
+  .blog-content {
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  
+  .blog-content h1 {
+    font-size: 1.75rem;
+    line-height: 1.3;
+    scroll-margin-top: 2rem;
+  }
+  
+  .blog-content h2 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+    scroll-margin-top: 2rem;
+  }
+  
+  .blog-content h3 {
+    font-size: 1.25rem;
+    line-height: 1.3;
+    scroll-margin-top: 2rem;
+  }
+  
+  .blog-content h4 {
+    font-size: 1.125rem;
+    line-height: 1.3;
+    scroll-margin-top: 2rem;
+  }
+  
+  .blog-content p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  
+  .blog-content ul {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  
+  .blog-content li {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  
+  .blog-content pre {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .blog-content code {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 14px;
+  }
+  
+  .blog-content strong {
+    font-weight: 600;
+  }
+</style>
