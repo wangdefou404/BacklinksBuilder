@@ -11,7 +11,7 @@ import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
       <div class="flex flex-row items-center justify-between lg:justify-start">
         <a href="/" class="text-black inline-flex items-center gap-3">
           <OptimizedImage width={40} src="/logo.svg" alt="logo" />
-          <span class="font-bold">Syntro</span>
+          <span class="font-bold">BacklinksBuilder</span>
         </a>
         <button
           @click="open = !open"
@@ -52,39 +52,44 @@ import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
           Features
         </a>
         <a
-          href="/"
-          class="text-sm text-black transition duration-300 hover:text-blue-600 relative">
-          Updates
-          <span
-            class="bg-red-600 ms-1 text-white text-[10px] px-2 py-1 rounded-full">
-            NEW
-          </span>
+          class="text-sm text-black transition duration-300 hover:text-blue-600"
+          href="/#section-two">
+          SubmitList
         </a>
         <a
-          href="/"
-          class="text-sm text-black transition duration-300 hover:text-blue-600 relative">
-          Changelog
-          <sup
-            class="ml-1 inline-block mt-1 w-1.5 h-1.5 bg-green-500 rounded-full">
-          </sup>
+          class="text-sm text-black transition duration-300 hover:text-blue-600"
+          href="/#section-three">
+          Backlink Generator
         </a>
+        <a
+          class="text-sm text-black transition duration-300 hover:text-blue-600"
+          href="/#section-four">
+          DR checker
+        </a>
+        <a
+          class="text-sm text-black transition duration-300 hover:text-blue-600"
+          href="/#section-five">
+          Traffic checker
+        </a>
+
 
         <a
-          href="/faq"
+          class="text-sm text-black transition duration-300 hover:text-blue-600"
+          href="/blog">
+          Blog
+        </a>
+        <a
+          href="/#faq"
           class="text-sm text-black transition duration-300 hover:text-blue-600 relative">
-          Faq
+          FAQ
         </a>
 
-        <div class="inline-flex items-center gap-2 list-none py-px lg:ml-auto">
+
           <a
-            href="/signup"
-            class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:text-accent-600 ring-1 ring-base-200 focus:bg-accent-100 h-8 px-4 py-2 text-xs font-medium rounded-md hover:bg-accent-100">
-            Sign up
-          </a>
-          <a
-            href="/login"
+            href="https://accounts.google.com/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=openid%20email%20profile&response_type=code"
+            target="_blank"
             class="flex items-center justify-center transition-all duration-200 ring-1 focus:ring-2 ring-accent-700 focus:outline-none text-base-50 bg-accent-600 hover:bg-accent-700 focus:ring-base-500/50 h-8 px-4 py-2 text-xs font-medium rounded-md">
-            Log in
+            Sign In
           </a>
         </div>
       </nav>

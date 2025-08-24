@@ -3,46 +3,42 @@ import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
 
 const sections = [
   {
-    title: "All pages",
+    title: "All backLink Building Tool",
     links: [
       { name: "Home", href: "/" },
-      { name: "About", href: "/about" },
-      { name: "Features", href: "/features" },
-      { name: "Pricing", href: "/pricing" },
-      { name: "FAQ", href: "/faq" },
-      { name: "Contact", href: "/contact" },
+      { name: "SubmitList", href: "/#section-two" },
+      { name: "Backlink Generator", href: "/#section-three" },
+      { name: "DR checker", href: "/#section-four" },
+      { name: "Traffic checker", href: "/#section-five" },
     ],
   },
   {
-    title: "Company",
+    title: "Dynamic",
     links: [
-      { name: "Careers", href: "/careers" },
-      { name: "Press", href: "/press" },
+      { name: "FAQ", href: "/#faq" },      
       { name: "Blog", href: "/blog" },
-      { name: "Partners", href: "/partners" },
+
+    ],
+  },
+
+  {
+    title: "Terms & Privacy",
+    links: [
       { name: "Terms", href: "/terms" },
       { name: "Privacy", href: "/privacy" },
+
     ],
   },
   {
-    title: "Developers",
+    title: "Contact",
     links: [
-      { name: "Documentation", href: "/docs" },
-      { name: "API Reference", href: "/api" },
-      { name: "Status", href: "/status" },
-      { name: "Github", href: "https://github.com/bekturaslan/syntro-astro" },
-      { name: "Changelog", href: "/changelog" },
+
+      { name: "Mail Support", href: "/support" },
+
     ],
   },
-  {
-    title: "Support",
-    links: [
-      { name: "Help Center", href: "/help" },
-      { name: "Community", href: "/community" },
-      { name: "Contact Support", href: "/support" },
-      { name: "Live Chat", href: "/chat" },
-    ],
-  },
+
+
 ];
 ---
 
@@ -53,11 +49,10 @@ const sections = [
       <div class="md:col-span-1">
         <a href="/" class="inline-flex items-center gap-3">
           <OptimizedImage width={40} src="/logo.svg" alt="logo" />
-          <span class="text-lg font-semibold text-black">Syntro</span>
+          <span class="text-lg font-semibold text-black">BacklinksBuilder</span>
         </a>
         <p class="mt-4 text-sm text-gray-500">
-          Open-source SaaS starter built with Astro & Tailwind CSS. Customize
-          freely and deploy with ease.
+          Analyze your competitors' websites quickly and for free to understand their backlinks, Domain Rating (DR), and website traffic.
         </p>
       </div>
 
@@ -108,15 +103,14 @@ const sections = [
     <div
       class="pt-12 mt-12 border-t border-base-200 flex flex-col md:flex-row justify-between items-center text-xs text-gray-400">
       <p>
-        &copy; {new Date().getFullYear()} Your Company Name. Crafted by Michael Andreuzza
-        &
+        &copy; {new Date().getFullYear()} BacklinksBuilder. Crafted by WangDefou Studio
         <a
-          href="https://getastrothemes.com/free-astro-themes-templates/"
+          href="https://wangdefou.com"
           class="underline text-blue-600 hover:text-blue-800">
-          Getastrothemes
+          WangDefou Studio
         </a>
       </p>
-      <p>Additionally Development by Bektur Aslan</p>
+      <p>Additionally Development by WangDefou</p>
     </div>
   </div>
 </footer>

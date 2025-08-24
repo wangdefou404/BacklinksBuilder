@@ -1,4 +1,4 @@
-<section>
+<section {...Astro.props}>
   <div class="px-8 pt-20 mx-auto md:px-12 lg:px-24 max-w-7xl">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12">
       <div class="text-center lg:text-left">
@@ -25,7 +25,7 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>How does end-to-end encryption work?</span>
+            <span>What is a backlink submission list? How to use it?</span>
             <svg
               class="size-5 duration-300 ease-out text-accent-500 -rotate-[45deg]"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -43,11 +43,7 @@
           </button>
           <div x-show="activeAccordion==id" x-collapse="">
             <div class="p-4 pt-2 text-zinc-500">
-              End-to-end encryption ensures that only the sender and recipient
-              can access the content of a message. The information is encrypted
-              on the sender's device and can only be decrypted by the intended
-              recipient, preventing any intermediaries, including the platform
-              provider, from accessing the data.
+              A backlink submission list is one of the core features of the BacklinksBuilder platform, providing a carefully curated list of high-quality websites where you can submit your links. These websites have been verified by our professional team and have good domain authority and traffic. The usage is simple: select categories related to your website, get the submission list, and then follow the guidelines to submit your links to these websites to obtain high-quality backlink resources.
             </div>
           </div>
         </div>
@@ -59,7 +55,7 @@
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
             <span>
-              Can I access my encrypted data if I forget my encryption key?
+              How does Backlink Generator help me get high-quality backlinks?
             </span>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
@@ -81,11 +77,7 @@
             x-collapse=""
             style="display: none;">
             <div class="p-4 pt-2 text-zinc-500">
-              No, forgetting or losing your encryption key means that your
-              encrypted data cannot be accessed. This is a crucial security
-              measure to ensure that even if someone gains unauthorized access
-              to your account, they won't be able to decrypt and view your
-              messages or files.
+              Backlink Generator is our intelligent backlink generation tool that automatically recommends the most suitable backlink opportunities by analyzing your website content and industry characteristics. This tool scans relevant websites on the internet and identifies high-quality sites that are willing to accept guest articles, resource exchanges, or partnership links. It not only saves you time from manual searching but also ensures that recommended websites are highly relevant to your business, thereby improving the quality of backlinks and SEO effectiveness.
             </div>
           </div>
         </div>
@@ -97,8 +89,7 @@
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
             <span>
-              Are there any limitations to the self-destructing messages
-              feature?
+              How accurate is the Website DR checker?
             </span>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
@@ -120,12 +111,7 @@
             x-collapse=""
             style="display: none;">
             <div class="p-4 pt-2 text-zinc-500">
-              Self-destructing messages are designed to automatically delete
-              themselves after a specific period or upon being read by the
-              recipient. However, it's important to note that the feature only
-              removes the message from the devices involved in the conversation.
-              Recipients may take screenshots or use other means to capture the
-              content, which is beyond the platform's control.
+              Our Website DR checker uses advanced algorithms and multiple authoritative data sources to evaluate a website's Domain Rating. The tool has very high accuracy, with data updated daily to ensure you get the latest website authority information. We integrate data from multiple SEO tools, including backlink count, referring domains, website traffic, and other dimensions to provide you with comprehensive and accurate website authority assessment, helping you make informed backlink building decisions.
             </div>
           </div>
         </div>
@@ -137,8 +123,7 @@
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
             <span>
-              What happens if I enable two-factor authentication and lose my
-              device?
+              Which websites does Website Traffic Checker support?
             </span>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
@@ -160,12 +145,7 @@
             x-collapse=""
             style="display: none;">
             <div class="p-4 pt-2 text-zinc-500">
-              Losing your device doesn't automatically compromise your account's
-              security. It's recommended to contact our support team as soon as
-              possible to disable the two-factor authentication on your lost
-              device and set up the authentication on your new device. This
-              process will help protect your account from unauthorized access
-              while ensuring you can regain access to it.
+              Our Website Traffic Checker supports the vast majority of websites worldwide, including various types of domains (.com, .org, .net, etc.) and websites from different regions. This tool can analyze traffic data for any publicly accessible website, providing detailed metrics such as monthly visits, page views, bounce rate, and session duration. Whether it's corporate websites, blogs, e-commerce platforms, or news sites, we can provide you with accurate traffic analysis reports to help you evaluate the value of potential partner websites.
             </div>
           </div>
         </div>
@@ -177,7 +157,7 @@
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
             <span>
-              Is my personal information shared or sold to third parties?
+              Are these tools free to use?
             </span>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
@@ -199,10 +179,7 @@
             x-collapse=""
             style="display: none;">
             <div class="p-4 pt-2 text-zinc-500">
-              No, we strictly adhere to a privacy-centric approach. Your
-              personal information is never shared, sold, or monetized. We
-              prioritize your privacy and ensure that your data remains
-              confidential and only accessible to you.
+              BacklinksBuilder offers multiple usage plans. We provide a free trial version for new users, including basic backlink checking and limited access to submission lists. For users who need more features, we offer multiple paid packages, including unlimited backlink submission lists, advanced Backlink Generator features, detailed website analysis reports, and more. All packages come with a 7-day free trial period, allowing you to fully experience our service quality.
             </div>
           </div>
         </div>
@@ -213,7 +190,7 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>Can I use this platform on multiple devices?</span>
+            <span>Can I use BacklinksBuilder on multiple devices?</span>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -234,10 +211,7 @@
             x-collapse=""
             style="display: none;">
             <div class="p-4 pt-2 text-zinc-500">
-              Yes, you can access our platform on multiple devices. Your
-              encrypted data remains synced across all devices, allowing you to
-              seamlessly communicate and access your files and messages from
-              anywhere.
+              Absolutely! BacklinksBuilder is a cloud-based platform that you can access through a browser on any device, including computers, tablets, and smartphones. All your data and projects are automatically synchronized, so you can seamlessly continue your backlink building work regardless of which device you're using. Our responsive design ensures a great user experience across different screen sizes.
             </div>
           </div>
         </div>
@@ -249,7 +223,7 @@
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
             <span>
-              Are there any storage limitations for files and documents?
+              Is my data safe on BacklinksBuilder?
             </span>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
@@ -271,11 +245,7 @@
             x-collapse=""
             style="display: none;">
             <div class="p-4 pt-2 text-zinc-500">
-              Our platform provides ample storage space for your files and
-              documents. However, there may be storage limitations based on the
-              pricing plan you choose. We offer flexible plans to suit your
-              needs and provide options to upgrade if you require additional
-              storage capacity.
+              Data security is our top priority. BacklinksBuilder employs enterprise-level security measures, including SSL encrypted transmission, encrypted database storage, and regular security audits. We strictly comply with data protection regulations such as GDPR and will never share your personal information or website data with third parties. All user data is stored on secure cloud servers with regular backups to ensure your data is safe and reliable.
             </div>
           </div>
         </div>
@@ -286,7 +256,7 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>Is it possible to export my data from the platform?</span>
+            <span>Can I get technical support if I encounter problems?</span>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -307,11 +277,7 @@
             x-collapse=""
             style="display: none;">
             <div class="p-4 pt-2 text-zinc-500">
-              Yes, you can export your data from the platform. We offer export
-              features that allow you to download your messages, files, and
-              documents, ensuring you have a local copy for backup or migration
-              purposes. It provides you with greater control and flexibility
-              over your data.
+              Absolutely! We provide comprehensive technical support services. Free users can receive basic support via email, while paid users enjoy priority technical support, including live chat and phone support. Our support team consists of SEO experts and technical engineers who can not only solve technical issues but also provide professional advice for your backlink building strategies. Additionally, we provide detailed tutorials, video guides, and best practice documentation.
             </div>
           </div>
         </div>

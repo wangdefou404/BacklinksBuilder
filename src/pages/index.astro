@@ -3,18 +3,26 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import Hero from "../components/landing/Hero.astro";
 import SectionOne from "../components/landing/SectionOne.astro";
 import SectionTwo from "../components/landing/SectionTwo.astro";
+import SectionThree from "../components/landing/SectionThree.astro";
+import SectionFour from "../components/landing/SectionFour.astro";
+import SectionFive from "../components/landing/SectionFive.astro";
 import Pricing from "../components/landing/Pricing.astro";
 import WhyChooseUs from "../components/landing/WhyChooseUs.astro";
 import HowItWorks from "../components/landing/HowItWorks.astro";
 import Testimonial from "../components/global/Testimonial.astro";
+import FaqLayout from "../components/infopages/Faq.astro";
 ---
 
 <BaseLayout>
   <Hero />
   <SectionOne />
   <SectionTwo />
+  <SectionThree />
+  <SectionFour />
+  <SectionFive />
   <WhyChooseUs />
   <HowItWorks />
   <Pricing />
   <Testimonial />
+  <FaqLayout id="faq" />
 </BaseLayout>
