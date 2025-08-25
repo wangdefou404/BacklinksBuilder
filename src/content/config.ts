@@ -5,13 +5,19 @@ const blog = defineCollection({
   schema: z.object({
     title: z.string(),
     description: z.string(),
-    date: z.date(),
-    author: z.string().default('SEO Expert'),
-    tags: z.array(z.string()).default([]),
+    publishedAt: z.string().transform((str) => {
+      const date = new Date(str);
+      if (isNaN(date.getTime())) {
+        throw new Error(`Invalid date: ${str}`);
+      }
+      return date;
+    }),
+    author: z.string().optional(),
+    tags: z.array(z.string()).optional(),
     image: z.string().optional(),
-    featured: z.boolean().default(false),
-    draft: z.boolean().default(false)
-  })
+    featured: z.boolean().optional(),
+    draft: z.boolean().optional(),
+  }),
 });
 
 export const collections = {

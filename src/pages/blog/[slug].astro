@@ -2,30 +2,24 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import BlogPost from '../../components/blog/BlogPost.astro';
 import { getAllBlogPosts, getBlogPost } from '../../data/blog';
-import type { GetStaticPaths } from 'astro';
 
-export const getStaticPaths: GetStaticPaths = () => {
-  const posts = getAllBlogPosts();
-  return posts.map((post, index) => {
-    const prevPost = index > 0 ? posts[index - 1] : null;
-    const nextPost = index < posts.length - 1 ? posts[index + 1] : null;
-    
-    return {
-      params: { slug: post.slug },
-      props: { 
-        post,
-        prevPost,
-        nextPost
-      }
-    };
-  });
-};
+const { slug } = Astro.params;
 
-const { post, prevPost, nextPost } = Astro.props;
+if (!slug) {
+  return Astro.redirect('/404');
+}
+
+const post = await getBlogPost(slug);
 
 if (!post) {
   return Astro.redirect('/404');
 }
+
+// 获取所有文章以计算上一篇和下一篇
+const allPosts = await getAllBlogPosts();
+const currentIndex = allPosts.findIndex(p => p.slug === slug);
+const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
+const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
 
 const pageTitle = post.title;
 const pageDescription = post.description;
