@@ -3,7 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import BlogList from '../components/blog/BlogList.astro';
 import { getAllBlogPosts } from '../data/blog';
 
-const posts = getAllBlogPosts();
+const posts = await getAllBlogPosts();
 
 const pageTitle = 'Blog';
 const pageDescription = 'Discover insights, tutorials, and best practices from our team of experts. Stay updated with the latest trends in web development, design, and technology.';

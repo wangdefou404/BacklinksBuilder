@@ -1,48 +1,56 @@
-import { readFileSync, readdirSync } from 'fs';
-import { join } from 'path';
-import matter from 'gray-matter';
+import { getCollection, getEntry } from 'astro:content';
 
 export interface BlogPost {
   slug: string;
   title: string;
   description: string;
-  publishedAt: string;
-  image: string;
+  date: Date;
+  author: string;
+  tags: string[];
   content: string;
+  image?: string;
+  featured?: boolean;
 }
 
-// 读取markdown文件并解析frontmatter
-function loadBlogPost(filename: string): BlogPost {
-  const filePath = join(process.cwd(), 'src/content/blog', filename);
-  const fileContent = readFileSync(filePath, 'utf-8');
-  const { data, content } = matter(fileContent);
-  
-  return {
-    slug: data.slug,
-    title: data.title,
-    description: data.description,
-    publishedAt: data.publishedAt,
-    image: data.image,
-    content: content
-  };
+export async function getAllBlogPosts(): Promise<BlogPost[]> {
+  const blogEntries = await getCollection('blog', ({ data }) => {
+    return !data.draft;
+  });
+
+  const allPostsData = blogEntries.map(entry => {
+    return {
+      slug: entry.slug,
+      title: entry.data.title,
+      description: entry.data.description,
+      date: entry.data.date,
+      author: entry.data.author,
+      tags: entry.data.tags,
+      content: entry.body,
+      image: entry.data.image,
+      featured: entry.data.featured
+    } as BlogPost;
+  });
+
+  return allPostsData.sort((a, b) => b.date.getTime() - a.date.getTime());
 }
 
-// 获取所有博客文章
-function loadAllBlogPosts(): BlogPost[] {
-  const blogDir = join(process.cwd(), 'src/content/blog');
-  const filenames = readdirSync(blogDir).filter(name => name.endsWith('.md'));
-  
-  return filenames
-    .map(filename => loadBlogPost(filename))
-    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-}
+export async function getBlogPost(slug: string): Promise<BlogPost | null> {
+  try {
+    const entry = await getEntry('blog', slug);
+    if (!entry) return null;
 
-export const blogPosts: BlogPost[] = loadAllBlogPosts();
-
-export function getBlogPost(slug: string): BlogPost | undefined {
-  return blogPosts.find(post => post.slug === slug);
-}
-
-export function getAllBlogPosts(): BlogPost[] {
-  return blogPosts.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    return {
+      slug: entry.slug,
+      title: entry.data.title,
+      description: entry.data.description,
+      date: entry.data.date,
+      author: entry.data.author,
+      tags: entry.data.tags,
+      content: entry.body,
+      image: entry.data.image,
+      featured: entry.data.featured
+    } as BlogPost;
+  } catch (error) {
+    return null;
+  }
 }
