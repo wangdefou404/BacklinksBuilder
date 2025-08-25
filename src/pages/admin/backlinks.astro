@@ -1,0 +1,655 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="min-h-screen bg-gray-100 py-8">
+    <!-- 认证检查加载中状态 -->
+    <div id="auth-loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p class="mt-4 text-gray-600">正在验证身份...</p>
+      </div>
+    </div>
+    
+    <!-- 主要内容区域 -->
+    <div id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden">
+      <!-- Page Header -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">
+            Backlinks Management
+          </h1>
+          <p class="text-gray-600 mt-2">
+            Manage backlink resources for the Featured Backlink Resources page
+          </p>
+        </div>
+        <button
+          id="add-backlink-btn"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200"
+        >
+          Add New Backlink
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label for="filter-search" class="block text-sm font-medium text-gray-700 mb-2">
+              Search
+            </label>
+            <input
+              type="text"
+              id="filter-search"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Search by name or description..."
+            />
+          </div>
+          <div>
+            <label for="filter-payment" class="block text-sm font-medium text-gray-700 mb-2">
+              Payment Type
+            </label>
+            <select
+              id="filter-payment"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Payment Types</option>
+              <option value="Free">Free</option>
+              <option value="Paid">Paid</option>
+            </select>
+          </div>
+          <div>
+            <label for="filter-platform" class="block text-sm font-medium text-gray-700 mb-2">
+              Platform Type
+            </label>
+            <select
+              id="filter-platform"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Platforms</option>
+              <option value="blog">Blog</option>
+              <option value="directory">Directory</option>
+              <option value="content">Content</option>
+              <option value="comment">Comment</option>
+              <option value="social">Social</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button
+              id="apply-filters-btn"
+              class="w-full bg-gray-600 hover:bg-gray-700 text-white font-medium px-4 py-2 rounded-md transition-colors duration-200"
+            >
+              Apply Filters
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Backlinks Table -->
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Website
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  DR
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Traffic
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Payment
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Platform
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Access
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Updated
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody id="backlinks-tbody" class="bg-white divide-y divide-gray-200">
+              <!-- Table rows will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex items-center justify-between mt-6">
+        <div class="text-sm text-gray-700">
+          Showing <span id="showing-from">1</span> to <span id="showing-to">10</span> of <span id="total-items">0</span> results
+        </div>
+        <div class="flex space-x-2">
+          <button
+            id="prev-page-btn"
+            class="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Previous
+          </button>
+          <button
+            id="next-page-btn"
+            class="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add/Edit Modal -->
+  <div id="backlink-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+      <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 id="modal-title" class="text-lg font-medium text-gray-900">
+            Add New Backlink
+          </h3>
+        </div>
+        
+        <form id="backlink-form" class="px-8 py-6 space-y-6">
+          <input type="hidden" id="backlink-id" />
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                Name *
+              </label>
+              <input
+                type="text"
+                id="name"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            
+            <div>
+              <label for="websiteLink" class="block text-sm font-medium text-gray-700 mb-1">
+                Website Link *
+              </label>
+              <input
+                type="url"
+                id="websiteLink"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          
+
+          
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label for="dr" class="block text-sm font-medium text-gray-700 mb-1">
+                DR *
+              </label>
+              <input
+                type="number"
+                id="dr"
+                required
+                min="0"
+                max="100"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            
+            <div>
+              <label for="traffic" class="block text-sm font-medium text-gray-700 mb-1">
+                Traffic *
+              </label>
+              <input
+                type="number"
+                id="traffic"
+                required
+                min="0"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            
+            <div>
+              <label for="paymentType" class="block text-sm font-medium text-gray-700 mb-1">
+                Payment Type *
+              </label>
+              <select
+                id="paymentType"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select...</option>
+                <option value="Free">Free</option>
+                <option value="Paid">Paid</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="followType" class="block text-sm font-medium text-gray-700 mb-1">
+                Follow Type *
+              </label>
+              <select
+                id="followType"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select...</option>
+                <option value="DoFollow">DoFollow</option>
+                <option value="NoFollow">NoFollow</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="platformType" class="block text-sm font-medium text-gray-700 mb-1">
+                Platform Type *
+              </label>
+              <select
+                id="platformType"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select...</option>
+                <option value="blog">Blog</option>
+                <option value="directory">Directory</option>
+                <option value="content">Content</option>
+                <option value="comment">Comment</option>
+                <option value="social">Social</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="accessType" class="block text-sm font-medium text-gray-700 mb-1">
+                Access Type *
+              </label>
+              <select
+                id="accessType"
+                required
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select...</option>
+                <option value="guest">Guest (Free Users)</option>
+                <option value="premium">Premium (Paid Users)</option>
+              </select>
+            </div>
+            
+            <div>
+              <label for="submissionUrl" class="block text-sm font-medium text-gray-700 mb-1">
+                Submission URL
+              </label>
+              <input
+                type="url"
+                id="submissionUrl"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          
+
+          
+
+          
+
+          
+
+        </form>
+        
+        <div class="px-8 py-6 border-t border-gray-200 flex justify-end space-x-3">
+          <button
+            id="cancel-btn"
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            id="save-btn"
+            type="submit"
+            form="backlink-form"
+            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
+          >
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentFilters = {};
+    let editingId = null;
+
+    // DOM elements
+    const tbody = document.getElementById('backlinks-tbody');
+    const modal = document.getElementById('backlink-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const form = document.getElementById('backlink-form');
+    const addBtn = document.getElementById('add-backlink-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const applyFiltersBtn = document.getElementById('apply-filters-btn');
+    const prevPageBtn = document.getElementById('prev-page-btn');
+    const nextPageBtn = document.getElementById('next-page-btn');
+
+    // Load backlinks
+    async function loadBacklinks() {
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: '20',
+          premium: 'true', // Admin can see all
+          ...currentFilters
+        });
+        
+        const response = await fetch(`/api/backlinks?${params}`);
+        const data = await response.json();
+        
+        renderBacklinks(data.data);
+        updatePagination(data);
+      } catch (error) {
+        console.error('Error loading backlinks:', error);
+        alert('Error loading backlinks');
+      }
+    }
+
+    // Render backlinks table
+    function renderBacklinks(backlinks) {
+      tbody.innerHTML = '';
+      
+      backlinks.forEach(backlink => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        
+        const paymentTypeClass = {
+          'Free': 'bg-green-100 text-green-800',
+          'Paid': 'bg-red-100 text-red-800'
+        }[backlink.paymentType] || 'bg-gray-100 text-gray-800';
+        
+        const followTypeClass = {
+          'DoFollow': 'bg-green-100 text-green-800',
+          'NoFollow': 'bg-red-100 text-red-800'
+        }[backlink.followType] || 'bg-gray-100 text-gray-800';
+        
+        const accessTypeClass = {
+          'guest': 'bg-blue-100 text-blue-800',
+          'premium': 'bg-purple-100 text-purple-800'
+        }[backlink.access] || 'bg-gray-100 text-gray-800';
+        
+        row.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="text-sm font-medium text-gray-900">${backlink.name}</div>
+          </td>
+          <td class="px-6 py-4">
+            <a href="${backlink.websiteLink}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
+              ${new URL(backlink.websiteLink).hostname}
+            </a>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-900">${backlink.dr}</td>
+          <td class="px-6 py-4 text-sm text-gray-900">${backlink.traffic.toLocaleString()}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${paymentTypeClass}">
+              ${backlink.paymentType}
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+              ${backlink.platformType}
+            </span>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${accessTypeClass}">
+              ${backlink.access}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm text-gray-500">${backlink.updated}</td>
+          <td class="px-6 py-4 text-sm font-medium space-x-2">
+            <button onclick="editBacklink('${backlink.id}')" class="text-blue-600 hover:text-blue-800">Edit</button>
+            <button onclick="deleteBacklink('${backlink.id}')" class="text-red-600 hover:text-red-800">Delete</button>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    // Update pagination
+    function updatePagination(data) {
+      document.getElementById('showing-from').textContent = ((data.page - 1) * data.limit + 1).toString();
+      document.getElementById('showing-to').textContent = Math.min(data.page * data.limit, data.total).toString();
+      document.getElementById('total-items').textContent = data.total.toString();
+      
+      prevPageBtn.disabled = data.page <= 1;
+      nextPageBtn.disabled = !data.hasMore;
+    }
+
+    // Show modal
+    function showModal(title, backlink = null) {
+      modalTitle.textContent = title;
+      editingId = backlink?.id || null;
+      
+      if (backlink) {
+        // Fill form with existing data
+        document.getElementById('backlink-id').value = backlink.id;
+        document.getElementById('name').value = backlink.name;
+        document.getElementById('websiteLink').value = backlink.websiteLink;
+        document.getElementById('dr').value = backlink.dr;
+        document.getElementById('traffic').value = backlink.traffic;
+        document.getElementById('paymentType').value = backlink.paymentType;
+        document.getElementById('followType').value = backlink.followType;
+        document.getElementById('platformType').value = backlink.platformType;
+        document.getElementById('accessType').value = backlink.access || '';
+        document.getElementById('submissionUrl').value = backlink.submissionUrl || '';
+      } else {
+        // Clear form
+        form.reset();
+        document.getElementById('backlink-id').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('websiteLink').value = '';
+        document.getElementById('dr').value = '';
+        document.getElementById('traffic').value = '';
+        document.getElementById('paymentType').value = '';
+        document.getElementById('followType').value = '';
+        document.getElementById('platformType').value = '';
+        document.getElementById('accessType').value = '';
+        document.getElementById('submissionUrl').value = '';
+      }
+      
+      modal.classList.remove('hidden');
+    }
+
+    // Hide modal
+    function hideModal() {
+      modal.classList.add('hidden');
+      editingId = null;
+    }
+
+    // Edit backlink
+    window.editBacklink = async function(id) {
+      try {
+        const response = await fetch(`/api/backlinks/${id}`);
+        const backlink = await response.json();
+        showModal('Edit Backlink', backlink);
+      } catch (error) {
+        console.error('Error loading backlink:', error);
+        alert('Error loading backlink');
+      }
+    };
+
+    // Delete backlink
+    window.deleteBacklink = async function(id) {
+      if (!confirm('Are you sure you want to delete this backlink?')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/backlinks/${id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          loadBacklinks();
+        } else {
+          alert('Error deleting backlink');
+        }
+      } catch (error) {
+        console.error('Error deleting backlink:', error);
+        alert('Error deleting backlink');
+      }
+    };
+
+    // Event listeners
+    addBtn.addEventListener('click', () => showModal('Add New Backlink'));
+    cancelBtn.addEventListener('click', hideModal);
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const data = {
+        name: formData.get('name'),
+        websiteLink: formData.get('websiteLink'),
+        dr: parseInt(formData.get('dr')),
+        traffic: parseInt(formData.get('traffic')),
+        paymentType: formData.get('paymentType'),
+        followType: formData.get('followType'),
+        platformType: formData.get('platformType'),
+        access: formData.get('accessType'),
+        submissionUrl: formData.get('submissionUrl') || undefined
+      };
+      
+      try {
+        const url = editingId ? `/api/backlinks/${editingId}` : '/api/backlinks';
+        const method = editingId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        
+        if (response.ok) {
+          hideModal();
+          loadBacklinks();
+        } else {
+          alert('Error saving backlink');
+        }
+      } catch (error) {
+        console.error('Error saving backlink:', error);
+        alert('Error saving backlink');
+      }
+    });
+
+    applyFiltersBtn.addEventListener('click', () => {
+      currentFilters = {
+        search: document.getElementById('filter-search').value || undefined,
+        paymentType: document.getElementById('filter-payment').value || undefined,
+        platformType: document.getElementById('filter-platform').value || undefined
+      };
+      currentPage = 1;
+      loadBacklinks();
+    });
+
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadBacklinks();
+      }
+    });
+
+    nextPageBtn.addEventListener('click', () => {
+      currentPage++;
+      loadBacklinks();
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        hideModal();
+      }
+    });
+
+    // 认证检查函数
+    function checkAuth() {
+      const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
+      const loginTime = localStorage.getItem('adminLoginTime');
+      
+      if (!isLoggedIn || !loginTime) {
+        // 未登录，重定向到登录页
+        window.location.href = '/admin/login';
+        return false;
+      }
+      
+      // 检查登录是否过期（24小时）
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
+      
+      if (hoursDiff > 24) {
+        // 登录过期，清除状态并重定向
+        localStorage.removeItem('adminLoggedIn');
+        localStorage.removeItem('adminUsername');
+        localStorage.removeItem('adminLoginTime');
+        alert('登录已过期，请重新登录');
+        window.location.href = '/admin/login';
+        return false;
+      }
+      
+      return true;
+    }
+    
+    // 登出函数
+    window.logout = function() {
+      if (confirm('确定要退出登录吗？')) {
+        localStorage.removeItem('adminLoggedIn');
+        localStorage.removeItem('adminUsername');
+        localStorage.removeItem('adminLoginTime');
+        window.location.href = '/admin/login';
+      }
+    };
+    
+    // 页面加载时进行认证检查
+    document.addEventListener('DOMContentLoaded', function() {
+      if (checkAuth()) {
+        // 认证通过，显示主要内容
+        document.getElementById('auth-loading').style.display = 'none';
+        document.getElementById('main-content').classList.remove('hidden');
+        
+        // 显示用户信息
+        const username = localStorage.getItem('adminUsername');
+        if (username) {
+          const userInfo = document.createElement('div');
+          userInfo.className = 'text-sm text-gray-600 mb-4';
+          userInfo.innerHTML = `
+            <div class="flex justify-between items-center bg-blue-50 px-4 py-2 rounded-lg">
+              <span>欢迎，<strong>${username}</strong> 管理员</span>
+              <button onclick="logout()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                退出登录
+              </button>
+            </div>
+          `;
+          document.querySelector('#main-content').insertBefore(userInfo, document.querySelector('#main-content').firstChild);
+        }
+        
+        // 初始化页面数据
+        loadBacklinks();
+      }
+    });
+  </script>
+</BaseLayout>

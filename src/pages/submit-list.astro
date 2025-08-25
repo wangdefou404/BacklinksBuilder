@@ -3,148 +3,157 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout>
-  <main class="min-h-screen bg-gray-50 py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <main class="min-h-screen bg-gray-100 py-12">
+    <div class="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="text-center mb-12">
-        <h1 class="text-4xl font-bold text-gray-900 mb-4">
-          Website Submit List
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">
+          Featured Backlink Resources
         </h1>
-        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
-          Manage and submit your websites to high-quality directories and platforms. Boost your SEO with strategic directory submissions.
+        <p class="text-base text-gray-700 max-w-3xl mx-auto">
+          Explore our carefully curated high-quality backlink resources to boost your website's authority and search rankings.
         </p>
       </div>
 
-      <!-- Main Tool Section -->
-      <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
-        <!-- Website Input Section -->
-        <div class="mb-8">
-          <label for="website-url" class="block text-lg font-medium text-gray-700 mb-4">
-            Website URL
-          </label>
-          <input
-            type="url"
-            id="website-url"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="https://example.com"
-          />
+      <!-- User Status Banner -->
+      <div id="user-status-banner" class="bg-blue-100 border border-blue-300 rounded-lg p-4 mb-8">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm text-blue-800">
+                <span id="user-status-text">You are viewing as a free user. Showing guest resources only (max 50).</span>
+                <a href="#" class="font-medium underline hover:text-blue-700">Upgrade to Premium</a> to access all resources.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm text-blue-800 font-medium">Demo Mode:</span>
+            <button
+              id="toggle-user-type"
+              class="px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 bg-blue-600 text-white hover:bg-blue-700"
+            >
+              Switch to Premium
+            </button>
+          </div>
         </div>
+      </div>
 
-        <!-- Website Details -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <!-- Filters and Search -->
+      <div class="bg-gray-50 rounded-lg shadow-md p-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
-            <label for="website-title" class="block text-sm font-medium text-gray-700 mb-2">
-              Website Title
+            <label for="search" class="block text-sm font-medium text-gray-800 mb-2">
+              Search Resources
             </label>
             <input
               type="text"
-              id="website-title"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Your Website Title"
+              id="search"
+              class="w-full px-3 py-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Search by name..."
             />
           </div>
           <div>
-            <label for="website-category" class="block text-sm font-medium text-gray-700 mb-2">
-              Category
+            <label for="payment-filter" class="block text-sm font-medium text-gray-800 mb-2">
+              Payment Type
             </label>
             <select
-              id="website-category"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              id="payment-filter"
+              class="w-full px-3 py-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">Select Category</option>
-              <option value="business">Business</option>
-              <option value="technology">Technology</option>
-              <option value="health">Health</option>
-              <option value="education">Education</option>
-              <option value="entertainment">Entertainment</option>
-              <option value="news">News</option>
-              <option value="sports">Sports</option>
-              <option value="travel">Travel</option>
-              <option value="other">Other</option>
+              <option value="">All Payment Types</option>
+              <option value="Free">Free</option>
+              <option value="Paid">Paid</option>
             </select>
           </div>
-        </div>
-
-        <!-- Description -->
-        <div class="mb-8">
-          <label for="website-description" class="block text-sm font-medium text-gray-700 mb-2">
-            Website Description
-          </label>
-          <textarea
-            id="website-description"
-            rows="4"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            placeholder="Brief description of your website and its main purpose..."
-          ></textarea>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-wrap gap-4 mb-8">
-          <button
-            id="analyze-btn"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors duration-200"
-          >
-            Analyze Website
-          </button>
-          <button
-            id="submit-btn"
-            class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled
-          >
-            Submit to Directories
-          </button>
-          <button
-            id="clear-form-btn"
-            class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg transition-colors duration-200"
-          >
-            Clear Form
-          </button>
-        </div>
-      </div>
-
-      <!-- Directory List Section -->
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900">Available Directories</h2>
-          <p class="text-sm text-gray-600 mt-1">Select directories to submit your website</p>
-        </div>
-        
-        <div class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="directory-list">
-            <!-- Directory items will be populated here -->
+          <div>
+            <label for="follow-filter" class="block text-sm font-medium text-gray-800 mb-2">
+              Follow Type
+            </label>
+            <select
+              id="follow-filter"
+              class="w-full px-3 py-2 border border-gray-400 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Follow Types</option>
+              <option value="DoFollow">DoFollow</option>
+              <option value="NoFollow">NoFollow</option>
+            </select>
+          </div>
+          <div>
+            <label for="platform-filter" class="block text-sm font-medium text-gray-800 mb-2">
+              Platform Type
+            </label>
+            <select
+              id="platform-filter"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Platforms</option>
+              <option value="Directory">Directory</option>
+              <option value="Blog">Blog</option>
+              <option value="Forum">Forum</option>
+              <option value="Social">Social</option>
+              <option value="News">News</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button
+              id="apply-filters"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition-colors duration-200 text-sm"
+            >
+              Apply Filters
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Submission Status -->
-      <div id="submission-status" class="hidden bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900">Submission Status</h2>
-          <p class="text-sm text-gray-600 mt-1">Track your directory submission progress</p>
-        </div>
-        
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
+      <!-- Backlink Resources Table -->
+      <div class="bg-white shadow-lg rounded-lg overflow-hidden border border-gray-300">
+          <div class="overflow-x-auto">
+            <table class="w-full min-w-[1200px] divide-y divide-gray-400">
+            <thead class="bg-gray-200 border-b-2 border-gray-300">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Directory
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Submitted At
-                </th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
+                <th class="px-6 py-5 text-center text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-16">#</th>
+                <th class="px-6 py-5 text-left text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-52">Name</th>
+                <th class="px-6 py-5 text-left text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-48">Website Link</th>
+                <th class="px-6 py-5 text-center text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-16">DR</th>
+                <th class="px-6 py-5 text-right text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-32">Traffic</th>
+                <th class="px-6 py-5 text-center text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-36">Payment Type</th>
+                <th class="px-6 py-5 text-center text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-36">Follow Type</th>
+                <th class="px-6 py-5 text-center text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-36">Platform Type</th>
+                <th class="px-6 py-5 text-center text-sm font-bold text-gray-800 uppercase tracking-wider whitespace-nowrap w-36">Updated</th>
               </tr>
             </thead>
-            <tbody id="status-tbody" class="bg-white divide-y divide-gray-200">
-              <!-- Status rows will be populated here -->
+            <tbody id="backlinks-tbody" class="bg-gray-50 divide-y divide-gray-300">
+              <!-- Backlink rows will be populated here -->
             </tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="flex items-center justify-between mt-6">
+        <div class="text-sm text-gray-800">
+          Showing <span id="showing-from">1</span> to <span id="showing-to">50</span> of <span id="total-items">0</span> results
+        </div>
+        <div class="flex space-x-2">
+          <button
+            id="prev-page"
+            class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-400 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Previous
+          </button>
+          <button
+            id="next-page"
+            class="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-400 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
         </div>
       </div>
 
@@ -157,7 +166,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             </svg>
           </div>
           <h3 class="text-lg font-semibold text-gray-900 mb-2">Quality Directories</h3>
-          <p class="text-gray-600">Submit to hand-picked, high-authority directories that actually matter for SEO.</p>
+          <p class="text-sm text-gray-700">Submit to hand-picked, high-authority directories that actually matter for SEO.</p>
         </div>
         
         <div class="text-center">
@@ -167,7 +176,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             </svg>
           </div>
           <h3 class="text-lg font-semibold text-gray-900 mb-2">Bulk Submission</h3>
-          <p class="text-gray-600">Save time with automated bulk submissions to multiple directories at once.</p>
+          <p class="text-sm text-gray-700">Save time with automated bulk submissions to multiple directories at once.</p>
         </div>
         
         <div class="text-center">
@@ -177,179 +186,321 @@ import BaseLayout from "../layouts/BaseLayout.astro";
             </svg>
           </div>
           <h3 class="text-lg font-semibold text-gray-900 mb-2">Progress Tracking</h3>
-          <p class="text-gray-600">Monitor submission status and track approval rates across all directories.</p>
+          <p class="text-sm text-gray-700">Monitor submission status and track approval rates across all directories.</p>
         </div>
       </div>
     </div>
   </main>
 
   <script>
-    // Mock directory data
-    const directories = [
-      { id: 1, name: "DMOZ Alternative", authority: 85, category: "General", fee: "Free", approval: "Manual" },
-      { id: 2, name: "Best of the Web", authority: 78, category: "General", fee: "$299", approval: "Manual" },
-      { id: 3, name: "Yahoo Directory", authority: 92, category: "General", fee: "$299", approval: "Manual" },
-      { id: 4, name: "Business.com", authority: 81, category: "Business", fee: "$199", approval: "Manual" },
-      { id: 5, name: "JoeAnt", authority: 65, category: "General", fee: "Free", approval: "Auto" },
-      { id: 6, name: "Gimpsy", authority: 58, category: "General", fee: "Free", approval: "Auto" },
-      { id: 7, name: "Exactseek", authority: 62, category: "General", fee: "Free", approval: "Manual" },
-      { id: 8, name: "Alive Directory", authority: 55, category: "General", fee: "Free", approval: "Manual" },
-      { id: 9, name: "Pegasus Directory", authority: 48, category: "General", fee: "Free", approval: "Auto" }
-    ];
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentFilters = {};
+    let isUserPremium = false; // This would be determined by user authentication
+    let allBacklinks = [];
+    let displayedBacklinks = [];
 
-    const websiteUrl = document.getElementById('website-url');
-    const websiteTitle = document.getElementById('website-title');
-    const websiteCategory = document.getElementById('website-category');
-    const websiteDescription = document.getElementById('website-description');
-    const analyzeBtn = document.getElementById('analyze-btn');
-    const submitBtn = document.getElementById('submit-btn');
-    const clearFormBtn = document.getElementById('clear-form-btn');
-    const directoryList = document.getElementById('directory-list');
-    const submissionStatus = document.getElementById('submission-status');
-    const statusTbody = document.getElementById('status-tbody');
+    // DOM elements
+    const tbody = document.getElementById('backlinks-tbody');
+    const searchInput = document.getElementById('search');
+    const paymentFilter = document.getElementById('payment-filter');
+    const followFilter = document.getElementById('follow-filter');
+    const platformFilter = document.getElementById('platform-filter');
+    const applyFiltersBtn = document.getElementById('apply-filters');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const userStatusText = document.getElementById('user-status-text');
+    const showingFrom = document.getElementById('showing-from');
+    const showingTo = document.getElementById('showing-to');
+    const totalItems = document.getElementById('total-items');
+    const toggleUserTypeBtn = document.getElementById('toggle-user-type');
+    const userStatusBanner = document.getElementById('user-status-banner');
 
-    let selectedDirectories = new Set();
+    // Initialize the page
+    async function init() {
+      updateUserStatus();
+      await loadBacklinks();
+      setupEventListeners();
+    }
 
-    // Initialize directory list
-    function initializeDirectories() {
-      directoryList.innerHTML = '';
-      
-      directories.forEach(directory => {
-        const authorityColor = directory.authority >= 80 ? 'text-green-600' : 
-                              directory.authority >= 60 ? 'text-yellow-600' : 'text-red-600';
-        
-        const directoryCard = document.createElement('div');
-        directoryCard.className = 'border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors cursor-pointer';
-        directoryCard.innerHTML = `
-          <div class="flex items-center justify-between mb-2">
-            <input type="checkbox" id="dir-${directory.id}" class="directory-checkbox" data-id="${directory.id}">
-            <label for="dir-${directory.id}" class="font-medium text-gray-900 cursor-pointer">${directory.name}</label>
-          </div>
-          <div class="text-sm text-gray-600 space-y-1">
-            <div>Authority: <span class="font-semibold ${authorityColor}">${directory.authority}</span></div>
-            <div>Category: ${directory.category}</div>
-            <div>Fee: ${directory.fee}</div>
-            <div>Approval: ${directory.approval}</div>
-          </div>
-        `;
-        
-        directoryList.appendChild(directoryCard);
-      });
-      
-      // Add event listeners to checkboxes
-      document.querySelectorAll('.directory-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-          const directoryId = parseInt(this.dataset.id);
-          if (this.checked) {
-            selectedDirectories.add(directoryId);
-          } else {
-            selectedDirectories.delete(directoryId);
-          }
-          
-          submitBtn.disabled = selectedDirectories.size === 0 || !websiteUrl.value.trim();
+    // Update user status banner
+    function updateUserStatus() {
+      if (isUserPremium) {
+        userStatusText.textContent = 'You are a premium user. Access to all resources (guest + premium).';
+        userStatusBanner.className = 'bg-green-100 border border-green-300 rounded-lg p-4 mb-8';
+        toggleUserTypeBtn.textContent = 'Switch to Free';
+        toggleUserTypeBtn.className = 'px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 bg-green-600 text-white hover:bg-green-700';
+      } else {
+        userStatusText.textContent = 'You are viewing as a free user. Showing guest resources only (max 50).';
+        userStatusBanner.className = 'bg-blue-100 border border-blue-300 rounded-lg p-4 mb-8';
+        toggleUserTypeBtn.textContent = 'Switch to Premium';
+        toggleUserTypeBtn.className = 'px-3 py-1 text-sm font-medium rounded-md transition-colors duration-200 bg-blue-600 text-white hover:bg-blue-700';
+      }
+    }
+
+    // Load backlinks from API
+    async function loadBacklinks() {
+      try {
+        const params = new URLSearchParams({
+          page: currentPage.toString(),
+          limit: isUserPremium ? '100' : '50',
+          premium: isUserPremium.toString(),
+          ...currentFilters
         });
+        
+        const response = await fetch(`/api/backlinks?${params}`);
+        const data = await response.json();
+        
+        allBacklinks = data.data;
+        displayedBacklinks = allBacklinks;
+        
+        renderBacklinks();
+        updatePagination(data);
+      } catch (error) {
+        console.error('Error loading backlinks:', error);
+        // Fallback to mock data if API fails
+        loadMockData();
+      }
+    }
+
+    // Load mock data as fallback
+    function loadMockData() {
+      const mockBacklinks = [
+        {
+          id: 1,
+          name: "TechCrunch",
+          websiteLink: "https://techcrunch.com",
+          dr: 92,
+          traffic: 45000000,
+          paymentType: "Paid",
+          followType: "DoFollow",
+          platformType: "content",
+          access: "premium",
+          updated: "2024-01-15",
+          featured: true
+        },
+        {
+          id: 2,
+          name: "Product Hunt",
+          websiteLink: "https://producthunt.com",
+          dr: 88,
+          traffic: 12000000,
+          paymentType: "Free",
+          followType: "DoFollow",
+          platformType: "directory",
+          access: "guest",
+          updated: "2024-01-14",
+          featured: true
+        },
+        {
+          id: 3,
+          name: "Hacker News",
+          websiteLink: "https://news.ycombinator.com",
+          dr: 91,
+          traffic: 8000000,
+          paymentType: "Free",
+          followType: "NoFollow",
+          platformType: "comment",
+          access: "guest",
+          updated: "2024-01-13",
+          featured: false
+        },
+        {
+          id: 4,
+          name: "Reddit",
+          websiteLink: "https://reddit.com",
+          dr: 96,
+          traffic: 430000000,
+          paymentType: "Free",
+          followType: "NoFollow",
+          platformType: "social",
+          access: "premium",
+          updated: "2024-01-12",
+          featured: false
+        },
+        {
+          id: 5,
+          name: "Medium",
+          websiteLink: "https://medium.com",
+          dr: 96,
+          traffic: 180000000,
+          paymentType: "Paid",
+          followType: "DoFollow",
+          platformType: "blog",
+          access: "guest",
+          updated: "2024-01-11",
+          featured: true
+        }
+      ];
+      
+      // Apply user access control
+      if (isUserPremium) {
+        // Premium users can see all data
+        allBacklinks = mockBacklinks;
+      } else {
+        // Free users can only see guest access data, limited to 50
+        const guestBacklinks = mockBacklinks.filter(item => item.access === 'guest');
+        allBacklinks = guestBacklinks.slice(0, 50);
+      }
+      displayedBacklinks = allBacklinks;
+      
+      renderBacklinks();
+      updatePagination({
+        page: 1,
+        limit: limit,
+        total: mockBacklinks.length,
+        hasMore: false
       });
     }
 
-    // Analyze website
-    analyzeBtn.addEventListener('click', function() {
-      const url = websiteUrl.value.trim();
-      if (!url) {
-        alert('Please enter a website URL');
-        return;
-      }
+    // Render backlinks table
+    function renderBacklinks() {
+      tbody.innerHTML = '';
       
-      // Simulate analysis
-      analyzeBtn.textContent = 'Analyzing...';
-      analyzeBtn.disabled = true;
+      displayedBacklinks.forEach((backlink, index) => {
+        const row = document.createElement('tr');
+        // 添加隔行交替背景色和hover效果
+        const isEven = index % 2 === 0;
+        row.className = isEven 
+          ? 'bg-white hover:bg-blue-50 transition-colors duration-150' 
+          : 'bg-gray-50 hover:bg-blue-50 transition-colors duration-150';
+        
+        row.innerHTML = `
+          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-700 text-center">
+            ${((currentPage - 1) * (isUserPremium ? 100 : 50)) + index + 1}
+          </td>
+          <td class="px-6 py-6">
+            <div class="text-sm text-gray-900">${backlink.name}</div>
+          </td>
+          <td class="px-6 py-6 whitespace-nowrap">
+            <a href="${backlink.websiteLink}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm transition-colors duration-150">
+              ${new URL(backlink.websiteLink).hostname}
+            </a>
+          </td>
+          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 text-center">${backlink.dr}</td>
+          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 text-right">${backlink.traffic}</td>
+          <td class="px-6 py-6 whitespace-nowrap text-center text-sm text-gray-900">
+            <span class="inline-flex px-2 py-1 text-sm rounded-full ${
+              backlink.paymentType === 'Free' 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-orange-100 text-orange-800'
+            }">
+              ${backlink.paymentType}
+            </span>
+          </td>
+          <td class="px-6 py-6 whitespace-nowrap text-center text-sm text-gray-900">
+            <span class="inline-flex px-2 py-1 text-sm rounded-full ${
+              backlink.followType === 'DoFollow' 
+                ? 'bg-blue-100 text-blue-800' 
+                : 'bg-gray-100 text-gray-800'
+            }">
+              ${backlink.followType}
+            </span>
+          </td>
+          <td class="px-6 py-6 whitespace-nowrap text-center text-sm text-gray-900">
+            <span class="inline-flex px-2 py-1 text-sm rounded-full bg-purple-100 text-purple-800">
+              ${backlink.platformType}
+            </span>
+          </td>
+          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-600 text-center">${backlink.updated}</td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    // Update pagination info
+    function updatePagination(data) {
+      const from = ((data.page - 1) * data.limit + 1);
+      const to = Math.min(data.page * data.limit, data.total);
       
-      setTimeout(() => {
-        // Auto-fill some fields based on "analysis"
-        if (!websiteTitle.value) {
-          websiteTitle.value = 'Sample Website Title';
-        }
-        if (!websiteDescription.value) {
-          websiteDescription.value = 'A comprehensive website offering valuable content and services to users worldwide.';
+      showingFrom.textContent = from.toString();
+      showingTo.textContent = to.toString();
+      totalItems.textContent = data.total.toString();
+      
+      prevPageBtn.disabled = data.page <= 1;
+      nextPageBtn.disabled = !data.hasMore;
+      
+      currentPage = data.page;
+    }
+
+    // Apply filters
+    function applyFilters() {
+      currentFilters = {
+        search: searchInput.value.trim() || undefined,
+        paymentType: paymentFilter.value || undefined,
+        followType: followFilter.value || undefined,
+        platformType: platformFilter.value || undefined
+      };
+      
+      // Filter the displayed backlinks
+      displayedBacklinks = allBacklinks.filter(backlink => {
+        let matches = true;
+        
+        if (currentFilters.search) {
+          const searchTerm = currentFilters.search.toLowerCase();
+          matches = matches && backlink.name.toLowerCase().includes(searchTerm);
         }
         
-        analyzeBtn.textContent = 'Analyze Website';
-        analyzeBtn.disabled = false;
+        if (currentFilters.paymentType) {
+          matches = matches && backlink.paymentType === currentFilters.paymentType;
+        }
         
-        alert('Website analysis complete! Form fields have been auto-filled.');
-      }, 2000);
-    });
-
-    // Submit to directories
-    submitBtn.addEventListener('click', function() {
-      if (selectedDirectories.size === 0) {
-        alert('Please select at least one directory');
-        return;
-      }
-      
-      submitBtn.textContent = 'Submitting...';
-      submitBtn.disabled = true;
-      
-      // Simulate submission process
-      const selectedDirs = Array.from(selectedDirectories).map(id => 
-        directories.find(dir => dir.id === id)
-      );
-      
-      statusTbody.innerHTML = '';
-      
-      selectedDirs.forEach((directory, index) => {
-        setTimeout(() => {
-          const row = document.createElement('tr');
-          row.className = 'hover:bg-gray-50';
-          
-          const status = Math.random() > 0.2 ? 'Submitted' : 'Failed';
-          const statusClass = status === 'Submitted' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
-          
-          row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${directory.name}</td>
-            <td class="px-6 py-4 whitespace-nowrap">
-              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
-                ${status}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date().toLocaleString()}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-              <button class="hover:text-blue-800">View Details</button>
-            </td>
-          `;
-          
-          statusTbody.appendChild(row);
-          
-          if (index === selectedDirs.length - 1) {
-            submitBtn.textContent = 'Submit to Directories';
-            submitBtn.disabled = false;
-            submissionStatus.classList.remove('hidden');
-          }
-        }, index * 500);
-      });
-    });
-
-    // Clear form
-    clearFormBtn.addEventListener('click', function() {
-      websiteUrl.value = '';
-      websiteTitle.value = '';
-      websiteCategory.value = '';
-      websiteDescription.value = '';
-      
-      document.querySelectorAll('.directory-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
+        if (currentFilters.followType) {
+          matches = matches && backlink.followType === currentFilters.followType;
+        }
+        
+        if (currentFilters.platformType) {
+          matches = matches && backlink.platformType === currentFilters.platformType;
+        }
+        
+        return matches;
       });
       
-      selectedDirectories.clear();
-      submitBtn.disabled = true;
-      submissionStatus.classList.add('hidden');
-    });
+      renderBacklinks();
+      
+      // Update pagination for filtered results
+      updatePagination({
+        page: 1,
+        limit: isUserPremium ? 100 : 50,
+        total: displayedBacklinks.length,
+        hasMore: false
+      });
+    }
 
-    // Enable/disable submit button based on form completion
-    websiteUrl.addEventListener('input', function() {
-      submitBtn.disabled = selectedDirectories.size === 0 || !this.value.trim();
-    });
+    // Setup event listeners
+    function setupEventListeners() {
+      // User type toggle button
+      toggleUserTypeBtn.addEventListener('click', () => {
+        isUserPremium = !isUserPremium;
+        currentPage = 1;
+        updateUserStatus();
+        loadBacklinks();
+      });
+      
+      applyFiltersBtn.addEventListener('click', applyFilters);
+      
+      // Apply filters on Enter key in search
+      searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          applyFilters();
+        }
+      });
+      
+      prevPageBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+          currentPage--;
+          loadBacklinks();
+        }
+      });
+      
+      nextPageBtn.addEventListener('click', () => {
+        currentPage++;
+        loadBacklinks();
+      });
+    }
 
-    // Initialize the page
-    initializeDirectories();
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </BaseLayout>

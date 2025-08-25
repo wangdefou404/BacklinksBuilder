@@ -20,5 +20,9 @@ export default defineConfig({
   integrations: [sitemap()],
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      'process.env.ADMIN_USERNAME': JSON.stringify(process.env.ADMIN_USERNAME),
+      'process.env.ADMIN_PASSWORD': JSON.stringify(process.env.ADMIN_PASSWORD),
+    },
   },
 });
