@@ -1,0 +1,87 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToolPageLayout from '../components/tools/ToolPageLayout.astro';
+import DomainInput from '../components/tools/DomainInput.astro';
+import ActionButtons from '../components/tools/ActionButtons.astro';
+import ProgressBar from '../components/tools/ProgressBar.astro';
+import ResultsTable from '../components/tools/ResultsTable.astro';
+import FeaturesList from '../components/tools/FeaturesList.astro';
+
+const tableColumns = [
+  { key: 'id', label: '序号', sortable: false },
+  { key: 'urlFrom', label: 'URL From', sortable: true },
+  { key: 'domainRating', label: 'Domain Rating', sortable: true },
+  { key: 'status', label: 'STATUS', sortable: false }
+];
+
+const features = [
+  {
+    icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
+    title: 'Backlink Analysis',
+    description: 'Analyze backlink profiles and discover link building opportunities for your website',
+    iconColor: 'blue'
+  },
+  {
+    icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+    title: 'Quality Insights',
+    description: 'Get detailed insights about backlink quality, domain authority, and link value',
+    iconColor: 'green'
+  },
+  {
+    icon: 'M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    title: 'Data Export',
+    description: 'Export your backlink analysis results to CSV or JSON format for further analysis',
+    iconColor: 'purple'
+  }
+];
+---
+
+<BaseLayout title="Backlink Checker - BacklinksBuilder">
+  <ToolPageLayout 
+    title="Backlink Checker"
+    description="Analyze backlink profiles and discover link building opportunities. Get comprehensive backlink insights to understand your competition and improve your SEO strategy."
+    features={features}
+  >
+    <Fragment slot="tool-content">
+      <DomainInput 
+        id="url"
+        label="Enter Website URL"
+        placeholder="Enter website URL\nExample:\nexample.com"
+        maxDomains={1}
+      />
+      
+      <ActionButtons 
+        checkButtonText="Analyze Backlinks"
+        checkButtonId="check-btn"
+        clearButtonId="clear-btn"
+        showExportButton={false}
+      />
+      
+      <ProgressBar />
+    </Fragment>
+    
+    <Fragment slot="results">
+      <ResultsTable 
+        title="Backlink Analysis Results"
+        columns={tableColumns}
+        containerId="results-section"
+        tableId="results-table"
+        tbodyId="results-table-body"
+      />
+    </Fragment>
+
+    
+
+  </ToolPageLayout>
+</BaseLayout>
+
+<script src="/js/backlink-generator.js" is:inline></script>
+
+<style>
+  .sort-asc svg {
+    transform: rotate(0deg);
+  }
+  .sort-desc svg {
+    transform: rotate(180deg);
+  }
+</style>

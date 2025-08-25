@@ -1,0 +1,55 @@
+---
+export interface Props {
+  id?: string;
+  containerId?: string;
+}
+
+const { id = "progress-bar", containerId = "progress-container" } = Astro.props;
+---
+
+<div id={containerId} class="hidden mb-8">
+  <div class="flex justify-between items-center mb-2">
+    <span class="text-sm font-medium text-gray-700">Processing...</span>
+    <span class="text-sm text-gray-500" id="progress-text">0%</span>
+  </div>
+  <div class="w-full bg-gray-200 rounded-full h-2">
+    <div id={id} class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+  </div>
+</div>
+
+<script define:vars={{ id, containerId }}>
+  // Progress bar utility functions
+  window.ProgressBar = {
+    show: function() {
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.classList.remove('hidden');
+      }
+    },
+    
+    hide: function() {
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.classList.add('hidden');
+      }
+    },
+    
+    update: function(percentage) {
+      const bar = document.getElementById(id);
+      const text = document.getElementById('progress-text');
+      
+      if (bar) {
+        bar.style.width = `${percentage}%`;
+      }
+      
+      if (text) {
+        text.textContent = `${Math.round(percentage)}%`;
+      }
+    },
+    
+    reset: function() {
+      this.update(0);
+      this.hide();
+    }
+  };
+</script>

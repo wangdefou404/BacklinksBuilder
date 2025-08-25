@@ -1,0 +1,182 @@
+---
+export interface Props {
+  title: string;
+  subtitle?: string;
+  columns: Array<{
+    key: string;
+    label: string;
+    sortable?: boolean;
+  }>;
+  containerId?: string;
+  tableId?: string;
+  tbodyId?: string;
+}
+
+const { 
+  title, 
+  subtitle = "Click on column headers to sort results",
+  columns = [],
+  containerId = "results-container",
+  tableId = "results-table",
+  tbodyId = "results-tbody"
+} = Astro.props;
+---
+
+<div id={containerId} class="hidden">
+  <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-900">{title}</h2>
+          <p class="text-sm text-gray-600 mt-1">{subtitle}</p>
+        </div>
+        <div id="export-buttons" class="hidden flex gap-2">
+          <button
+            id="export-csv-btn"
+            class="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Export as CSV
+          </button>
+          <button
+            id="export-json-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Export as JSON
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table id={tableId} class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            {columns.map((column) => (
+              <th 
+                class={`px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider ${
+                  column.sortable ? 'cursor-pointer hover:bg-gray-100' : ''
+                }`}
+                data-sort={column.sortable ? column.key : undefined}
+              >
+                {column.label}
+                {column.sortable && (
+                  <svg class="inline-block ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                  </svg>
+                )}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody id={tbodyId} class="bg-white divide-y divide-gray-200">
+          <!-- Results will be populated here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script define:vars={{ containerId, tbodyId }}>
+  // Results table utility functions
+  window.ResultsTable = {
+    show: function() {
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.classList.remove('hidden');
+      }
+    },
+    
+    hide: function() {
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.classList.add('hidden');
+      }
+      this.hideExportButton();
+    },
+    
+    clear: function() {
+      const tbody = document.getElementById(tbodyId);
+      if (tbody) {
+        tbody.innerHTML = '';
+      }
+    },
+    
+    addRow: function(rowData) {
+      const tbody = document.getElementById(tbodyId);
+      if (tbody) {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50';
+        row.innerHTML = rowData;
+        tbody.appendChild(row);
+      }
+    },
+    
+    setData: function(data) {
+      this.clear();
+      data.forEach(rowData => {
+        this.addRow(rowData);
+      });
+      this.show();
+      if (data.length > 0) {
+        this.showExportButton();
+      } else {
+        this.hideExportButton();
+      }
+    },
+    
+    showExportButton: function() {
+      const exportButtons = document.getElementById('export-buttons');
+      if (exportButtons) {
+        exportButtons.classList.remove('hidden');
+        const csvBtn = document.getElementById('export-csv-btn');
+        const jsonBtn = document.getElementById('export-json-btn');
+        if (csvBtn) csvBtn.disabled = false;
+        if (jsonBtn) jsonBtn.disabled = false;
+      }
+    },
+    
+    hideExportButton: function() {
+      const exportButtons = document.getElementById('export-buttons');
+      if (exportButtons) {
+        exportButtons.classList.add('hidden');
+        const csvBtn = document.getElementById('export-csv-btn');
+        const jsonBtn = document.getElementById('export-json-btn');
+        if (csvBtn) csvBtn.disabled = true;
+        if (jsonBtn) jsonBtn.disabled = true;
+      }
+    }
+  };
+  
+  // Table sorting functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-sort]').forEach(header => {
+      header.addEventListener('click', function() {
+        const sortBy = this.dataset.sort;
+        const isAscending = !this.classList.contains('sort-asc');
+        
+        // Remove sort classes from all headers
+        document.querySelectorAll('[data-sort]').forEach(h => {
+          h.classList.remove('sort-asc', 'sort-desc');
+        });
+        
+        // Add sort class to current header
+        this.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
+        
+        // Dispatch custom sort event
+        const event = new CustomEvent('tableSortChange', {
+          detail: { sortBy: sortBy, isAscending: isAscending }
+        });
+        document.dispatchEvent(event);
+      });
+    });
+  });
+</script>
+
+<style>
+  .sort-asc svg {
+    transform: rotate(0deg);
+  }
+  .sort-desc svg {
+    transform: rotate(180deg);
+  }
+</style>

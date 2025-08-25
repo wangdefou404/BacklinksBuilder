@@ -1,0 +1,47 @@
+---
+export interface Props {
+  checkButtonText?: string;
+  showExportButton?: boolean;
+  showClearButton?: boolean;
+  checkButtonId?: string;
+  clearButtonId?: string;
+  exportButtonId?: string;
+}
+
+const { 
+  checkButtonText = "Analyze",
+  showExportButton = true,
+  showClearButton = true,
+  checkButtonId = "check-btn",
+  clearButtonId = "clear-btn",
+  exportButtonId = "export-btn"
+} = Astro.props;
+---
+
+<div class="flex flex-wrap gap-4 mb-8 justify-end">
+  <button
+    id={checkButtonId}
+    class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+    <span id={`${checkButtonId}-text`}>{checkButtonText}</span>
+  </button>
+  
+  {showClearButton && (
+    <button
+      id={clearButtonId}
+      class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg transition-colors duration-200"
+    >
+      Clear All
+    </button>
+  )}
+  
+  {showExportButton && (
+    <button
+      id={exportButtonId}
+      class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      disabled
+    >
+      Export Results
+    </button>
+  )}
+</div>

@@ -1,0 +1,355 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Page Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">
+          Website Submit List
+        </h1>
+        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+          Manage and submit your websites to high-quality directories and platforms. Boost your SEO with strategic directory submissions.
+        </p>
+      </div>
+
+      <!-- Main Tool Section -->
+      <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+        <!-- Website Input Section -->
+        <div class="mb-8">
+          <label for="website-url" class="block text-lg font-medium text-gray-700 mb-4">
+            Website URL
+          </label>
+          <input
+            type="url"
+            id="website-url"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://example.com"
+          />
+        </div>
+
+        <!-- Website Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div>
+            <label for="website-title" class="block text-sm font-medium text-gray-700 mb-2">
+              Website Title
+            </label>
+            <input
+              type="text"
+              id="website-title"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Your Website Title"
+            />
+          </div>
+          <div>
+            <label for="website-category" class="block text-sm font-medium text-gray-700 mb-2">
+              Category
+            </label>
+            <select
+              id="website-category"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select Category</option>
+              <option value="business">Business</option>
+              <option value="technology">Technology</option>
+              <option value="health">Health</option>
+              <option value="education">Education</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="news">News</option>
+              <option value="sports">Sports</option>
+              <option value="travel">Travel</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-8">
+          <label for="website-description" class="block text-sm font-medium text-gray-700 mb-2">
+            Website Description
+          </label>
+          <textarea
+            id="website-description"
+            rows="4"
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            placeholder="Brief description of your website and its main purpose..."
+          ></textarea>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-4 mb-8">
+          <button
+            id="analyze-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors duration-200"
+          >
+            Analyze Website
+          </button>
+          <button
+            id="submit-btn"
+            class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            Submit to Directories
+          </button>
+          <button
+            id="clear-form-btn"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium px-6 py-3 rounded-lg transition-colors duration-200"
+          >
+            Clear Form
+          </button>
+        </div>
+      </div>
+
+      <!-- Directory List Section -->
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900">Available Directories</h2>
+          <p class="text-sm text-gray-600 mt-1">Select directories to submit your website</p>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="directory-list">
+            <!-- Directory items will be populated here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Submission Status -->
+      <div id="submission-status" class="hidden bg-white rounded-lg shadow-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <h2 class="text-xl font-semibold text-gray-900">Submission Status</h2>
+          <p class="text-sm text-gray-600 mt-1">Track your directory submission progress</p>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Directory
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Submitted At
+                </th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody id="status-tbody" class="bg-white divide-y divide-gray-200">
+              <!-- Status rows will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Features Section -->
+      <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Quality Directories</h3>
+          <p class="text-gray-600">Submit to hand-picked, high-authority directories that actually matter for SEO.</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Bulk Submission</h3>
+          <p class="text-gray-600">Save time with automated bulk submissions to multiple directories at once.</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Progress Tracking</h3>
+          <p class="text-gray-600">Monitor submission status and track approval rates across all directories.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Mock directory data
+    const directories = [
+      { id: 1, name: "DMOZ Alternative", authority: 85, category: "General", fee: "Free", approval: "Manual" },
+      { id: 2, name: "Best of the Web", authority: 78, category: "General", fee: "$299", approval: "Manual" },
+      { id: 3, name: "Yahoo Directory", authority: 92, category: "General", fee: "$299", approval: "Manual" },
+      { id: 4, name: "Business.com", authority: 81, category: "Business", fee: "$199", approval: "Manual" },
+      { id: 5, name: "JoeAnt", authority: 65, category: "General", fee: "Free", approval: "Auto" },
+      { id: 6, name: "Gimpsy", authority: 58, category: "General", fee: "Free", approval: "Auto" },
+      { id: 7, name: "Exactseek", authority: 62, category: "General", fee: "Free", approval: "Manual" },
+      { id: 8, name: "Alive Directory", authority: 55, category: "General", fee: "Free", approval: "Manual" },
+      { id: 9, name: "Pegasus Directory", authority: 48, category: "General", fee: "Free", approval: "Auto" }
+    ];
+
+    const websiteUrl = document.getElementById('website-url');
+    const websiteTitle = document.getElementById('website-title');
+    const websiteCategory = document.getElementById('website-category');
+    const websiteDescription = document.getElementById('website-description');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const clearFormBtn = document.getElementById('clear-form-btn');
+    const directoryList = document.getElementById('directory-list');
+    const submissionStatus = document.getElementById('submission-status');
+    const statusTbody = document.getElementById('status-tbody');
+
+    let selectedDirectories = new Set();
+
+    // Initialize directory list
+    function initializeDirectories() {
+      directoryList.innerHTML = '';
+      
+      directories.forEach(directory => {
+        const authorityColor = directory.authority >= 80 ? 'text-green-600' : 
+                              directory.authority >= 60 ? 'text-yellow-600' : 'text-red-600';
+        
+        const directoryCard = document.createElement('div');
+        directoryCard.className = 'border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors cursor-pointer';
+        directoryCard.innerHTML = `
+          <div class="flex items-center justify-between mb-2">
+            <input type="checkbox" id="dir-${directory.id}" class="directory-checkbox" data-id="${directory.id}">
+            <label for="dir-${directory.id}" class="font-medium text-gray-900 cursor-pointer">${directory.name}</label>
+          </div>
+          <div class="text-sm text-gray-600 space-y-1">
+            <div>Authority: <span class="font-semibold ${authorityColor}">${directory.authority}</span></div>
+            <div>Category: ${directory.category}</div>
+            <div>Fee: ${directory.fee}</div>
+            <div>Approval: ${directory.approval}</div>
+          </div>
+        `;
+        
+        directoryList.appendChild(directoryCard);
+      });
+      
+      // Add event listeners to checkboxes
+      document.querySelectorAll('.directory-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const directoryId = parseInt(this.dataset.id);
+          if (this.checked) {
+            selectedDirectories.add(directoryId);
+          } else {
+            selectedDirectories.delete(directoryId);
+          }
+          
+          submitBtn.disabled = selectedDirectories.size === 0 || !websiteUrl.value.trim();
+        });
+      });
+    }
+
+    // Analyze website
+    analyzeBtn.addEventListener('click', function() {
+      const url = websiteUrl.value.trim();
+      if (!url) {
+        alert('Please enter a website URL');
+        return;
+      }
+      
+      // Simulate analysis
+      analyzeBtn.textContent = 'Analyzing...';
+      analyzeBtn.disabled = true;
+      
+      setTimeout(() => {
+        // Auto-fill some fields based on "analysis"
+        if (!websiteTitle.value) {
+          websiteTitle.value = 'Sample Website Title';
+        }
+        if (!websiteDescription.value) {
+          websiteDescription.value = 'A comprehensive website offering valuable content and services to users worldwide.';
+        }
+        
+        analyzeBtn.textContent = 'Analyze Website';
+        analyzeBtn.disabled = false;
+        
+        alert('Website analysis complete! Form fields have been auto-filled.');
+      }, 2000);
+    });
+
+    // Submit to directories
+    submitBtn.addEventListener('click', function() {
+      if (selectedDirectories.size === 0) {
+        alert('Please select at least one directory');
+        return;
+      }
+      
+      submitBtn.textContent = 'Submitting...';
+      submitBtn.disabled = true;
+      
+      // Simulate submission process
+      const selectedDirs = Array.from(selectedDirectories).map(id => 
+        directories.find(dir => dir.id === id)
+      );
+      
+      statusTbody.innerHTML = '';
+      
+      selectedDirs.forEach((directory, index) => {
+        setTimeout(() => {
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-gray-50';
+          
+          const status = Math.random() > 0.2 ? 'Submitted' : 'Failed';
+          const statusClass = status === 'Submitted' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
+          
+          row.innerHTML = `
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${directory.name}</td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusClass}">
+                ${status}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date().toLocaleString()}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
+              <button class="hover:text-blue-800">View Details</button>
+            </td>
+          `;
+          
+          statusTbody.appendChild(row);
+          
+          if (index === selectedDirs.length - 1) {
+            submitBtn.textContent = 'Submit to Directories';
+            submitBtn.disabled = false;
+            submissionStatus.classList.remove('hidden');
+          }
+        }, index * 500);
+      });
+    });
+
+    // Clear form
+    clearFormBtn.addEventListener('click', function() {
+      websiteUrl.value = '';
+      websiteTitle.value = '';
+      websiteCategory.value = '';
+      websiteDescription.value = '';
+      
+      document.querySelectorAll('.directory-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      
+      selectedDirectories.clear();
+      submitBtn.disabled = true;
+      submissionStatus.classList.add('hidden');
+    });
+
+    // Enable/disable submit button based on form completion
+    websiteUrl.addEventListener('input', function() {
+      submitBtn.disabled = selectedDirectories.size === 0 || !this.value.trim();
+    });
+
+    // Initialize the page
+    initializeDirectories();
+  </script>
+</BaseLayout>
