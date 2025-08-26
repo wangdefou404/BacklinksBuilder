@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import GoogleSignInButton from "../../components/auth/GoogleSignInButton.astro";
 ---
 
 <BaseLayout>
@@ -63,10 +64,33 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
               </svg>
             </span>
-            登录
+            管理员登录
           </button>
         </div>
       </form>
+      
+      <!-- 分隔线 -->
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-2 bg-gray-100 text-gray-500">或</span>
+        </div>
+      </div>
+      
+      <!-- Google登录选项 -->
+      <div class="space-y-4">
+        <GoogleSignInButton 
+          redirectTo="/dashboard" 
+          className="w-full"
+          size="md"
+          variant="primary"
+        />
+        <p class="text-xs text-center text-gray-500">
+          使用Google账号登录可访问用户功能，管理员请使用上方表单登录
+        </p>
+      </div>
       
       <div class="text-center">
         <a href="/" class="text-sm text-blue-600 hover:text-blue-500">

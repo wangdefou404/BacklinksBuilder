@@ -1,0 +1,154 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="下拉菜单测试">
+  <div class="container mx-auto p-8">
+    <h1 class="text-2xl font-bold mb-8">下拉菜单功能测试</h1>
+    
+    <!-- 简化版的下拉菜单测试 -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">简化版下拉菜单</h2>
+      <div x-data="{ isOpen: false }" class="relative inline-block">
+        <button 
+          @click="console.log('按钮被点击，当前状态:', isOpen); isOpen = !isOpen; console.log('新状态:', isOpen)"
+          class="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          <span>点击测试</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        
+        <div 
+          x-show="isOpen" 
+          @click.away="console.log('点击外部，关闭下拉菜单'); isOpen = false"
+          x-transition:enter="transition ease-out duration-100"
+          x-transition:enter-start="transform opacity-0 scale-95"
+          x-transition:enter-end="transform opacity-100 scale-100"
+          x-transition:leave="transition ease-in duration-75"
+          x-transition:leave-start="transform opacity-100 scale-100"
+          x-transition:leave-end="transform opacity-0 scale-95"
+          class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+        >
+          <div class="py-1">
+            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">选项 1</a>
+            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">选项 2</a>
+            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">选项 3</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 模拟AuthStatus组件的下拉菜单 -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">模拟AuthStatus下拉菜单</h2>
+      <div x-data="authStatusTest" class="relative inline-block">
+        <button 
+          @click="console.log('头像按钮被点击，当前isOpen:', isOpen); toggleDropdown(); console.log('切换后isOpen:', isOpen)"
+          class="flex items-center space-x-2 bg-gray-100 rounded-full p-2 hover:bg-gray-200 transition-colors duration-150"
+        >
+          <img 
+            src="https://via.placeholder.com/32x32/4F46E5/FFFFFF?text=U" 
+            alt="用户头像" 
+            class="w-8 h-8 rounded-full"
+          >
+          <span class="text-sm font-medium text-gray-700">测试用户</span>
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+        
+        <div 
+          x-show="isOpen" 
+          @click.away="console.log('点击外部，关闭下拉菜单'); isOpen = false"
+          x-transition:enter="transition ease-out duration-100"
+          x-transition:enter-start="transform opacity-0 scale-95"
+          x-transition:enter-end="transform opacity-100 scale-100"
+          x-transition:leave="transition ease-in duration-75"
+          x-transition:leave-start="transform opacity-100 scale-100"
+          x-transition:leave-end="transform opacity-0 scale-95"
+          class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+        >
+          <!-- 用户信息 -->
+          <div class="px-4 py-3 border-b border-gray-100">
+            <div class="flex items-center space-x-3">
+              <img 
+                src="https://via.placeholder.com/40x40/4F46E5/FFFFFF?text=U" 
+                alt="用户头像" 
+                class="w-10 h-10 rounded-full"
+              >
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">测试用户</p>
+                <p class="text-xs text-gray-500 truncate">test@example.com</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 菜单项 -->
+          <div class="py-1">
+            <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              管理面板
+            </a>
+            <a href="#" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+              个人资料
+            </a>
+            <hr class="my-1 border-gray-100">
+            <button 
+              @click="console.log('退出登录按钮被点击'); handleLogout()"
+              class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            >
+              退出登录
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 调试信息 -->
+    <div class="mb-8">
+      <h2 class="text-xl font-semibold mb-4">调试信息</h2>
+      <div class="bg-gray-100 p-4 rounded">
+        <p class="mb-2">请打开浏览器开发者工具的控制台查看日志</p>
+        <button 
+          @click="console.log('Alpine.js 版本:', Alpine.version); console.log('Alpine 对象:', Alpine)"
+          class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600"
+        >
+          检查Alpine.js状态
+        </button>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script is:inline>
+  document.addEventListener('alpine:init', () => {
+    console.log('Alpine.js 初始化事件触发');
+    
+    Alpine.data('authStatusTest', () => ({
+      isOpen: false,
+      
+      init() {
+        console.log('authStatusTest 组件初始化');
+      },
+      
+      toggleDropdown() {
+        console.log('toggleDropdown 被调用，当前状态:', this.isOpen);
+        this.isOpen = !this.isOpen;
+        console.log('toggleDropdown 完成，新状态:', this.isOpen);
+      },
+      
+      handleLogout() {
+        console.log('handleLogout 被调用');
+        alert('退出登录功能测试');
+        this.isOpen = false;
+      }
+    }));
+  });
+  
+  // 页面加载完成后的额外检查
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM 加载完成');
+    console.log('Alpine 对象是否存在:', typeof Alpine !== 'undefined');
+  });
+</script>

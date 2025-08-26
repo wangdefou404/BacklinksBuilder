@@ -1,5 +1,6 @@
 ---
 import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
+import AuthStatus from "../auth/AuthStatus.astro";
 ---
 
 <header
@@ -45,7 +46,7 @@ import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
       <nav
         :class="{'h-auto': open, 'h-0': !open}"
         id="main-navigation"
-        class="flex-col items-center flex-grow gap-4 lg:gap-8 flex overflow-hidden lg:pb-0 lg:flex lg:justify-end lg:h-auto lg:flex-row">
+        class="flex-col items-center flex-grow gap-4 lg:gap-8 flex lg:overflow-visible overflow-hidden lg:pb-0 lg:flex lg:justify-end lg:h-auto lg:flex-row">
         <a
           class="text-sm text-black transition duration-300 hover:text-blue-600 lg:ml-auto"
           href="/#features">
@@ -83,14 +84,7 @@ import OptimizedImage from "../../layouts/utilities/OptimizedImage.astro";
           class="text-sm text-black transition duration-300 hover:text-blue-600 relative">
           FAQ
         </a>
-
-          <a
-            href="https://accounts.google.com/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=openid%20email%20profile&response_type=code"
-            target="_blank"
-            class="flex items-center justify-center transition-all duration-200 ring-1 focus:ring-2 ring-accent-700 focus:outline-none text-base-50 bg-accent-600 hover:bg-accent-700 focus:ring-base-500/50 h-8 px-4 py-2 text-xs font-medium rounded-md">
-            Sign In
-          </a>
-        </div>
+        <AuthStatus />
       </nav>
     </div>
   </div>

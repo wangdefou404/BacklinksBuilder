@@ -1,0 +1,372 @@
+---
+// 认证状态组件 - 根据用户登录状态显示不同内容
+import GoogleSignInButton from './GoogleSignInButton.astro';
+
+// 不在服务端获取用户信息，改为在客户端处理
+const user = null;
+---
+
+<div id="auth-status" class="flex items-center space-x-4" x-data="authStatusData()" x-cloak x-init="console.log('AuthStatus Alpine 组件已初始化', $data)">
+  <!-- 加载状态 -->
+  <div x-show="loading" class="flex items-center space-x-2">
+    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+    <span class="text-sm text-gray-600">加载中...</span>
+  </div>
+  
+  <!-- 默认显示登录按钮 -->
+  <div x-show="!loading && !user">
+    <GoogleSignInButton 
+      redirectTo="/admin/backlinks"
+      className="inline-flex items-center justify-center px-4 py-2 text-sm bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 font-medium rounded-lg transition-all duration-200 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+      size="sm"
+      variant="primary"
+    />
+  </div>
+  
+  <!-- 登录后显示用户头像 -->
+  <div x-show="!loading && user" class="relative">
+    <!-- 用户头像按钮 -->
+    <button
+      @click="toggleDropdown()"
+      @keydown.escape="isOpen = false"
+      class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none"
+      :aria-expanded="isOpen"
+      aria-label="用户菜单"
+    >
+      <!-- 头像 -->
+      <template x-if="user?.user_metadata?.avatar_url || user?.user_metadata?.picture">
+        <img
+          :src="user.user_metadata?.avatar_url || user.user_metadata?.picture"
+          :alt="userName"
+          class="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
+          loading="lazy"
+        />
+      </template>
+      
+      <template x-if="!user?.user_metadata?.avatar_url && !user?.user_metadata?.picture">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
+          <span x-text="userName.charAt(0).toUpperCase()"></span>
+        </div>
+      </template>
+      
+      <!-- 用户名 (在大屏幕上显示) -->
+      <span class="hidden md:block text-sm font-medium text-gray-700 max-w-24 truncate" x-text="userName"></span>
+      
+      <!-- 下拉箭头 -->
+      <svg
+        class="w-4 h-4 text-gray-500 transition-transform duration-200"
+        :class="{ 'rotate-180': isOpen }"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </button>
+
+    <!-- 下拉菜单 -->
+    <div
+      x-show="isOpen"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-95"
+      x-transition:enter-end="opacity-100 scale-100"
+      x-transition:leave="transition ease-in duration-150"
+      x-transition:leave-start="opacity-100 scale-100"
+      x-transition:leave-end="opacity-0 scale-95"
+      @click.away="isOpen = false"
+      class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]"
+      style="transform-origin: top right;"
+      x-init="console.log('下拉菜单元素初始化', { isOpen })"
+    >
+      <!-- 用户信息 -->
+      <div class="px-4 py-3 border-b border-gray-100">
+        <div class="flex items-center space-x-3">
+          <!-- 头像 -->
+          <template x-if="user?.user_metadata?.avatar_url || user?.user_metadata?.picture">
+            <img
+              :src="user.user_metadata?.avatar_url || user.user_metadata?.picture"
+              :alt="userName"
+              class="w-10 h-10 rounded-full object-cover"
+              loading="lazy"
+            />
+          </template>
+          
+          <template x-if="!user?.user_metadata?.avatar_url && !user?.user_metadata?.picture">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium">
+              <span x-text="userName.charAt(0).toUpperCase()"></span>
+            </div>
+          </template>
+          
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate" x-text="userName"></p>
+            <p class="text-xs text-gray-500 truncate" x-text="user?.email" x-show="user?.email"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 菜单项 -->
+      <div class="py-1">
+        <a
+          :href="isAdmin ? '/admin/backlinks' : '/admin/login'"
+          class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
+        >
+          <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+          <span x-text="isAdmin ? '管理面板' : '管理员登录'"></span>
+        </a>
+        
+        <hr class="my-1 border-gray-100">
+        
+        <button
+          @click="console.log('退出登录按钮被点击'); handleLogout()"
+          class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
+        >
+          <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          退出登录
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script is:inline>
+  document.addEventListener('alpine:init', () => {
+    console.log('Alpine.js 初始化事件触发');
+    
+    Alpine.data('authStatusData', () => ({
+      user: null,
+      isOpen: false,
+      loading: true,
+      authSubscription: null,
+      
+      async init() {
+        console.log('AuthStatus 组件初始化开始');
+        await this.loadUser();
+        this.setupAuthListener();
+        console.log('AuthStatus 组件初始化完成，用户状态:', this.user ? '已登录' : '未登录');
+        
+        // 调试：检查下拉菜单元素
+        setTimeout(() => {
+          const authContainer = document.querySelector('#auth-status');
+          const dropdown = document.querySelector('[x-show="isOpen"]');
+          console.log('调试信息:');
+          console.log('- 认证容器存在:', !!authContainer);
+          console.log('- 下拉菜单元素存在:', !!dropdown);
+          console.log('- 当前 isOpen 状态:', this.isOpen);
+          console.log('- Alpine.js 数据绑定:', authContainer?._x_dataStack ? '已绑定' : '未绑定');
+          
+          if (dropdown) {
+            console.log('- 下拉菜单计算样式:', window.getComputedStyle(dropdown).display);
+            console.log('- 下拉菜单位置:', dropdown.getBoundingClientRect());
+          }
+        }, 500);
+      },
+      
+      async loadUser() {
+        try {
+          console.log('开始加载用户信息');
+          this.loading = true;
+          const { supabase } = await import('/src/lib/supabase.ts');
+          const { data: { user }, error } = await supabase.auth.getUser();
+          
+          if (error) {
+            console.error('获取用户信息失败:', error);
+            this.user = null;
+          } else {
+            console.log('用户信息加载成功:', user);
+            this.user = user;
+          }
+        } catch (error) {
+          console.error('loadUser 异常:', error);
+          this.user = null;
+        } finally {
+          this.loading = false;
+          console.log('用户加载完成，loading状态:', this.loading);
+        }
+      },
+      
+      async setupAuthListener() {
+        try {
+          const { supabase } = await import('/src/lib/supabase.ts');
+          
+          // 设置认证状态变化监听器
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log('Auth state changed:', event, session?.user?.email || 'no user');
+            
+            switch (event) {
+              case 'SIGNED_OUT':
+                console.log('用户已退出登录');
+                this.user = null;
+                this.isOpen = false;
+                // 不在这里刷新页面，让 handleLogout 处理
+                break;
+                
+              case 'SIGNED_IN':
+                console.log('用户已登录');
+                if (session?.user) {
+                  this.user = session.user;
+                }
+                break;
+                
+              case 'TOKEN_REFRESHED':
+                console.log('Token 已刷新');
+                if (session?.user) {
+                  this.user = session.user;
+                }
+                break;
+                
+              case 'USER_UPDATED':
+                console.log('用户信息已更新');
+                if (session?.user) {
+                  this.user = session.user;
+                }
+                break;
+                
+              case 'INITIAL_SESSION':
+                console.log('初始会话');
+                if (session?.user) {
+                  this.user = session.user;
+                } else {
+                  this.user = null;
+                }
+                break;
+                
+              default:
+                console.log('未处理的认证事件:', event);
+            }
+          });
+          
+          // 保存订阅引用以便后续清理
+          this.authSubscription = subscription;
+          
+        } catch (error) {
+          console.error('设置认证监听器失败:', error);
+        }
+      },
+      
+      get userName() {
+        if (!this.user) return '用户';
+        return this.user.user_metadata?.full_name || 
+               this.user.user_metadata?.name || 
+               this.user.email?.split('@')[0] || 
+               '用户';
+      },
+      
+      // 判断是否为管理员
+      get isAdmin() {
+        if (!this.user?.email) return false;
+        
+        // 管理员邮箱列表（可以从环境变量获取）
+        const adminEmails = [
+          'admin@example.com',
+          'wangdefou@gmail.com', // 示例管理员邮箱
+          'wangpangzier@gmail.com', // 主要管理员邮箱
+          // 可以添加更多管理员邮箱
+        ];
+        
+        // 检查是否在管理员邮箱列表中
+        if (adminEmails.includes(this.user.email.toLowerCase())) {
+          return true;
+        }
+        
+        // 检查是否为特定域名（可选）
+        const adminDomains = [
+          '@yourdomain.com', // 示例公司域名
+          // 可以添加更多管理员域名
+        ];
+        
+        return adminDomains.some(domain => 
+          this.user.email.toLowerCase().endsWith(domain)
+        );
+      },
+      
+      // 切换下拉菜单显示状态
+      toggleDropdown() {
+        console.log('toggleDropdown 被调用，当前 isOpen:', this.isOpen);
+        this.isOpen = !this.isOpen;
+        console.log('toggleDropdown 执行后，新的 isOpen:', this.isOpen);
+        
+        // 使用 $nextTick 确保 DOM 更新
+        this.$nextTick(() => {
+          const dropdown = document.querySelector('#auth-status [x-show="isOpen"]');
+          if (dropdown) {
+            console.log('下拉菜单元素状态:');
+            console.log('- 显示状态:', this.isOpen ? '显示' : '隐藏');
+            console.log('- 计算样式:', window.getComputedStyle(dropdown).display);
+            console.log('- 元素可见性:', dropdown.offsetHeight > 0 ? '可见' : '不可见');
+          }
+        });
+      },
+      
+      async handleLogout() {
+        console.log('开始执行退出登录流程');
+        try {
+          // 使用 global scope 确保完全退出
+          console.log('调用 supabase.auth.signOut');
+          const { supabase } = await import('/src/lib/supabase.ts');
+          const { error } = await supabase.auth.signOut({ scope: 'global' });
+          
+          if (error) {
+            console.error('退出登录失败:', error);
+            return;
+          }
+          console.log('supabase.auth.signOut 成功');
+
+          // 手动清除本地存储
+          console.log('清除本地存储');
+          localStorage.clear();
+          sessionStorage.clear();
+          
+          // 立即更新状态
+          console.log('更新组件状态');
+          this.user = null;
+          this.isOpen = false;
+          
+          // 强制刷新页面以确保完全退出
+          console.log('重定向到首页');
+          window.location.href = '/';
+        } catch (error) {
+          console.error('退出登录过程中发生错误:', error);
+        }
+      },
+       
+       // 清理函数
+       destroy() {
+         if (this.authSubscription) {
+           console.log('清理认证监听器');
+           this.authSubscription.unsubscribe();
+           this.authSubscription = null;
+         }
+       }
+    }));
+  });
+  
+  // 页面卸载时清理订阅
+  window.addEventListener('beforeunload', () => {
+    const authComponent = document.querySelector('#auth-status');
+    if (authComponent && authComponent._x_dataStack && authComponent._x_dataStack[0]) {
+      authComponent._x_dataStack[0].destroy();
+    }
+  });
+</script>
+
+<style>
+  [x-cloak] {
+    display: none !important;
+  }
+  
+  /* 确保下拉菜单可见性 */
+  .dropdown-menu {
+    position: absolute;
+    z-index: 9999;
+  }
+  
+  .dropdown-menu[x-show] {
+    display: block;
+  }
+</style>

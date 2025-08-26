@@ -10,6 +10,8 @@ graph TD
     B --> E[Stripe SDK]
     E --> F[Stripe支付服务]
     B --> G[外部SEO API]
+    B --> H[Google OAuth 2.0]
+    H --> I[Google认证服务]
     
     subgraph "前端层"
         B
@@ -19,23 +21,26 @@ graph TD
         D
         F
         G
+        I
     end
     
     subgraph "数据层"
-        H[PostgreSQL数据库]
-        I[用户认证]
-        J[文件存储]
+        J[PostgreSQL数据库]
+        K[用户认证]
+        L[文件存储]
     end
     
-    D --> H
-    D --> I
     D --> J
+    D --> K
+    D --> L
+    I --> K
 ```
 
 ## 2. 技术描述
 
 - **前端**: Astro@5 + TailwindCSS@4 + Alpine.js + TypeScript
 - **后端**: Supabase (PostgreSQL + 认证 + 存储)
+- **认证**: Supabase Auth + Google OAuth 2.0
 - **支付**: Stripe SDK
 - **外部API**: SEO数据提供商API (Ahrefs/SEMrush/Moz)
 - **部署**: Vercel/Netlify
@@ -49,9 +54,10 @@ graph TD
 | /backlink-generator | 反链生成工具页面 |
 | /dr-checker | 域名评级检查工具页面 |
 | /traffic-checker | 流量检查工具页面 |
-| /auth/login | 用户登录页面 |
+| /auth/login | 用户登录页面，支持邮箱和Google登录 |
 | /auth/register | 用户注册页面 |
-| /auth/callback | OAuth回调处理页面 |
+| /auth/callback | OAuth回调处理页面，处理Google登录重定向 |
+| /auth/google | Google OAuth登录入口 |
 | /dashboard | 用户中心仪表板 |
 | /dashboard/usage | 使用统计页面 |
 | /dashboard/subscription | 订阅管理页面 |
@@ -81,6 +87,48 @@ POST /api/auth/login
 | success | boolean | 登录是否成功 |
 | user | object | 用户信息对象 |
 | session | object | 会话信息 |
+
+**Google OAuth 认证**
+```
+GET /api/auth/google
+```
+
+响应参数:
+| 参数名 | 参数类型 | 描述 |
+|--------|----------|------|
+| url | string | Google OAuth 授权URL |
+
+```
+POST /api/auth/callback
+```
+
+请求参数:
+| 参数名 | 参数类型 | 是否必需 | 描述 |
+|--------|----------|----------|------|
+| code | string | true | Google 授权码 |
+| state | string | false | 状态参数 |
+
+响应参数:
+| 参数名 | 参数类型 | 描述 |
+|--------|----------|------|
+| success | boolean | 认证是否成功 |
+| user | object | 用户信息对象 |
+| session | object | 会话信息 |
+
+```
+POST /api/auth/sync-user
+```
+
+请求参数:
+| 参数名 | 参数类型 | 是否必需 | 描述 |
+|--------|----------|----------|------|
+| user | object | true | Supabase 用户对象 |
+| session | object | true | 会话信息 |
+
+响应参数:
+| 参数名 | 参数类型 | 描述 |
+|--------|----------|------|
+| success | boolean | 同步是否成功 |
 
 **DR检查API**
 ```
@@ -172,6 +220,9 @@ erDiagram
         string email
         string password_hash
         string name
+        string avatar_url
+        string provider
+        string provider_id
         timestamp created_at
         timestamp updated_at
         string plan
@@ -236,6 +287,9 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255),
     name VARCHAR(100),
+    avatar_url TEXT,
+    provider VARCHAR(20) DEFAULT 'email' CHECK (provider IN ('email', 'google')),
+    provider_id TEXT,
     plan VARCHAR(20) DEFAULT 'free' CHECK (plan IN ('free', 'pro', 'super')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -243,6 +297,8 @@ CREATE TABLE users (
 
 -- 创建索引
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_provider ON users(provider);
+CREATE INDEX idx_users_provider_id ON users(provider_id);
 CREATE INDEX idx_users_plan ON users(plan);
 
 -- 启用RLS
@@ -348,6 +404,10 @@ GRANT SELECT ON query_history TO anon;
 GRANT ALL PRIVILEGES ON query_history TO authenticated;
 
 -- 初始化数据
+INSERT INTO users (email, name, plan) VALUES 
+('demo@example.com', 'Demo User', 'free')
+ON CONFLICT (email) DO NOTHING;
+
 INSERT INTO query_history (user_id, query_type, query_data, results, queries_count)
 VALUES 
 ('00000000-0000-0000-0000-000000000000', 'dr_check', '{"domains": ["example.com"]}', '{"example.com": {"dr": 85, "rank": 1500}}', 1);
