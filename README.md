@@ -49,6 +49,27 @@ There's nothing special about `src/components/`, but that's where we like to put
 
 Any static assets, like images, can be placed in the `public/` directory.
 
+## Environment Setup
+
+### 1. Environment Variables
+
+Before running the project, you need to set up your environment variables:
+
+1. Copy the example environment file:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. Fill in the required values in `.env.local`:
+   - **Supabase Configuration**: Get your project URL and API keys from [Supabase Dashboard](https://supabase.com/dashboard)
+   - **Google OAuth**: Set up OAuth credentials in [Google Cloud Console](https://console.cloud.google.com/)
+   - **Admin Credentials**: Set your admin username and password
+   - **API Keys**: Add any required API keys (e.g., RapidAPI)
+
+### 2. Security Notes
+
+⚠️ **Important**: Never commit `.env.local` to version control. This file contains sensitive information and is already included in `.gitignore`.
+
 ## Commands
 
 All commands are run from the root of the project, from a terminal:
@@ -56,7 +77,7 @@ All commands are run from the root of the project, from a terminal:
 | Command                | Action                                           |
 | :--------------------- | :----------------------------------------------- |
 | `npm install`          | Installs dependencies                            |
-| `npm run dev`          | Starts local dev server at `localhost:3000`      |
+| `npm run dev`          | Starts local dev server at `localhost:4321`      |
 | `npm run build`        | Build your production site to `./dist/`          |
 | `npm run preview`      | Preview your build locally, before deploying     |
 | `npm run astro ...`    | Run CLI commands like `astro add`, `astro check` |
