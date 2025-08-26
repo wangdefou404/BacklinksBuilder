@@ -19,7 +19,10 @@ package-lock.json
 
 # environment variables
 .env
+.env.local
+.env.development
 .env.production
+.env.test
 
 # macOS-specific files
 .DS_Store
