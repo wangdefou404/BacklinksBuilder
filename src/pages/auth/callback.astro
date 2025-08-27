@@ -203,71 +203,78 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
   async function handleOAuthCallback() {
     try {
       updateStatus('正在验证登录状态...');
+      console.log('开始处理OAuth回调...');
+      console.log('当前URL:', window.location.href);
+      console.log('URL参数:', Object.fromEntries(new URLSearchParams(window.location.search)));
 
-      // 首先尝试从URL fragment中获取认证参数
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
+      // 等待Supabase自动处理OAuth回调
+      // 在PKCE流程中，Supabase会自动检测URL中的认证信息并设置session
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (accessToken && refreshToken) {
-        console.log('从URL fragment中找到认证参数，正在设置session...');
+      // 获取当前session
+      console.log('正在获取Supabase session...');
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('获取会话失败:', sessionError);
+        throw new Error(`认证失败: ${sessionError.message}`);
+      }
+      
+      console.log('Session数据:', sessionData);
+
+      const session = sessionData.session;
+      const user = session?.user;
+      
+      if (!session || !user) {
+        console.log('第一次尝试未找到session，等待更长时间...');
+        // 再等待一段时间，让Supabase完成session设置
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // 使用Supabase的setSession方法设置session
-        const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
-        });
+        // 再次尝试获取session
+        const { data: retrySessionData, error: retryError } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('设置会话失败:', error);
-          throw new Error(`认证失败: ${error.message}`);
+        if (retryError) {
+          console.error('重试获取会话失败:', retryError);
+          throw new Error(`认证失败: ${retryError.message}`);
         }
         
-        if (!data.session || !data.session.user) {
-          throw new Error('设置会话后未找到有效的登录会话');
+        const retrySession = retrySessionData.session;
+        const retryUser = retrySession?.user;
+        
+        if (!retrySession || !retryUser) {
+          throw new Error('未找到有效的登录会话，请重新登录');
         }
         
-        console.log('从fragment参数成功设置session:', data.session.user.email);
+        // 使用重试获取的session
+        console.log('重试后成功获取session:', retryUser.email);
       } else {
-        // 如果fragment中没有参数，尝试获取现有session
-        console.log('URL fragment中未找到认证参数，尝试获取现有session...');
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('获取会话失败:', error);
-          throw new Error(`认证失败: ${error.message}`);
-        }
-
-        if (!data.session || !data.session.user) {
-          throw new Error('未找到有效的登录会话');
-        }
-      }
-
-      // 获取session数据
-      const { data: sessionData } = await supabase.auth.getSession();
-      const finalSession = sessionData.session;
-      const user = finalSession?.user;
-      
-      if (!finalSession || !user) {
-        throw new Error('设置session后无法获取用户信息');
+        console.log('成功获取session:', user.email);
       }
       
-      console.log('用户认证成功:', user.email);
-
-      // 手动设置cookies（确保在所有环境下都能正常工作）
-      const isLocalhost = window.location.hostname === 'localhost';
-      document.cookie = `sb-access-token=${finalSession.access_token}; path=/; ${isLocalhost ? '' : 'secure; '}samesite=lax; max-age=604800`; // 7天
-      document.cookie = `sb-refresh-token=${finalSession.refresh_token}; path=/; ${isLocalhost ? '' : 'secure; '}samesite=lax; max-age=2592000`; // 30天
+      // 获取最终的session数据
+      const { data: finalSessionData } = await supabase.auth.getSession();
+      const finalSession = finalSessionData.session;
+      const finalUser = finalSession?.user;
       
-      console.log('Cookies设置完成');
+      if (!finalSession || !finalUser) {
+        throw new Error('无法获取最终的用户信息');
+      }
+      
+      console.log('用户认证成功:', finalUser.email);
 
       // 同步用户数据到数据库
       updateStatus('正在同步用户数据...');
+      console.log('开始同步用户数据:', {
+        id: finalUser.id,
+        email: finalUser.email,
+        provider: finalUser.app_metadata?.provider
+      });
       try {
-        await syncUserToDatabase(user);
+        await syncUserToDatabase(finalUser);
         console.log('用户数据同步成功');
       } catch (syncError) {
         console.warn('用户数据同步失败，但登录成功:', syncError);
+        console.warn('同步错误详情:', syncError);
         // 即使同步失败，也继续登录流程
       }
 
@@ -281,20 +288,42 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         return;
       }
 
-      // 检查重定向参数（优先从search参数获取，然后从fragment获取）
+      // 检查重定向参数
       const urlParams = new URLSearchParams(window.location.search);
-      const redirectHashParams = new URLSearchParams(window.location.hash.substring(1));
-      const redirectTo = urlParams.get('redirect_to') || redirectHashParams.get('redirect_to') || '/dashboard';
+      const redirectTo = urlParams.get('redirect_to') || '/admin/backlinks';
       
+      console.log('URL参数中的redirect_to:', urlParams.get('redirect_to'));
+      console.log('最终重定向目标:', redirectTo);
       console.log('准备重定向到:', redirectTo);
       
-      // 直接使用redirectTo，不进行过度清理
+      // 如果重定向到管理面板，设置localStorage状态以通过认证检查
+      if (redirectTo === '/admin/backlinks' || redirectTo.startsWith('/admin/')) {
+        console.log('设置管理员localStorage状态...');
+        localStorage.setItem('adminLoggedIn', 'true');
+        localStorage.setItem('adminUsername', finalUser.email || 'OAuth用户');
+        localStorage.setItem('adminLoginTime', new Date().toISOString());
+        console.log('管理员localStorage状态已设置:', {
+          adminLoggedIn: localStorage.getItem('adminLoggedIn'),
+          adminUsername: localStorage.getItem('adminUsername'),
+          adminLoginTime: localStorage.getItem('adminLoginTime')
+        });
+      }
+      
+      // 跳转到目标页面
+      console.log('即将跳转到:', redirectTo);
       setTimeout(() => {
+        console.log('执行跳转到:', redirectTo);
         window.location.href = redirectTo;
-      }, 1500);
+      }, 500);
 
     } catch (error) {
       console.error('OAuth回调处理失败:', error);
+      console.error('错误堆栈:', error instanceof Error ? error.stack : error);
+      console.error('当前URL状态:', {
+        href: window.location.href,
+        search: window.location.search,
+        hash: window.location.hash
+      });
       showError(error instanceof Error ? error.message : '登录处理失败，请重试');
     }
   }
@@ -317,33 +346,65 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 
   // 页面加载时处理OAuth回调
   document.addEventListener('DOMContentLoaded', () => {
-    // 检查URL中是否包含认证相关参数（包括search和fragment）
+    console.log('=== OAuth回调页面加载 ===');
+    console.log('完整URL:', window.location.href);
+    
+    // 检查URL中是否包含认证相关参数
     const urlParams = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     
-    const hasSearchAuthParams = urlParams.has('code') || urlParams.has('access_token') || urlParams.has('error');
-    const hasFragmentAuthParams = hashParams.has('access_token') || hashParams.has('refresh_token') || hashParams.has('error');
+    // 检查是否有OAuth相关参数（code用于PKCE流程，error用于错误处理）
+    const hasAuthParams = urlParams.has('code') || urlParams.has('error') || hashParams.has('error');
     
     console.log('检查认证参数:', {
       search: Object.fromEntries(urlParams),
       fragment: Object.fromEntries(hashParams),
-      hasSearchAuthParams,
-      hasFragmentAuthParams
+      hasAuthParams,
+      userAgent: navigator.userAgent
     });
     
-    if (hasSearchAuthParams || hasFragmentAuthParams) {
-      console.log('发现认证参数，开始处理OAuth回调...');
+    if (hasAuthParams) {
+      console.log('发现OAuth参数，开始处理回调...');
+      
+      // 检查是否有错误参数
+      const error = urlParams.get('error') || hashParams.get('error');
+      const errorDescription = urlParams.get('error_description') || hashParams.get('error_description');
+      
+      if (error) {
+        console.error('OAuth错误:', error, errorDescription);
+        console.error('完整错误信息:', {
+          error,
+          errorDescription,
+          url: window.location.href
+        });
+        showError(`登录失败: ${errorDescription || error}`);
+        return;
+      }
+      
+      // 处理OAuth回调
       handleOAuthCallback();
     } else {
-      console.log('未发现认证参数，检查现有session...');
-      // 如果没有认证参数，检查是否已经登录
+      console.log('未发现OAuth参数，检查现有session...');
+      // 如果没有OAuth参数，检查是否已经登录
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
           console.log('发现现有session，直接跳转...');
           showSuccess();
           setTimeout(() => {
-            window.location.href = '/dashboard';
-          }, 1000);
+            const redirectTo = urlParams.get('redirect_to') || '/admin/backlinks';
+            console.log('现有session跳转到:', redirectTo);
+            
+            // 如果重定向到管理面板，设置localStorage状态以通过认证检查
+            if (redirectTo === '/admin/backlinks' || redirectTo.startsWith('/admin/')) {
+              console.log('为现有session设置管理员localStorage状态...');
+              localStorage.setItem('adminLoggedIn', 'true');
+              localStorage.setItem('adminUsername', session.user?.email || 'OAuth用户');
+              localStorage.setItem('adminLoginTime', new Date().toISOString());
+              console.log('现有session管理员localStorage状态已设置');
+            }
+            
+            window.location.href = redirectTo;
+          }, 500);
         } else {
           console.log('未找到现有session');
           showError('未找到有效的登录信息，请重新登录');

@@ -123,15 +123,22 @@ export const POST: APIRoute = async ({ request }) => {
       // 更新现有用户
       console.log('更新现有用户:', userData.email);
       
+      const updateData: any = {
+        email: userData.email,
+        full_name: userData.full_name,
+        avatar_url: userData.avatar_url,
+        provider: userData.provider || 'google',
+        updated_at: now
+      };
+      
+      // 根据provider设置password_hash
+      if (userData.provider === 'google' || userData.provider === 'github' || userData.provider === 'facebook') {
+        updateData.password_hash = null; // OAuth用户password_hash必须为null
+      }
+      
       const { data: updatedUser, error: updateError } = await supabaseAdmin
         .from('users')
-        .update({
-          email: userData.email,
-          full_name: userData.full_name,
-          avatar_url: userData.avatar_url,
-          provider: userData.provider || 'google',
-          updated_at: now
-        })
+        .update(updateData)
         .eq('id', userData.id)
         .select()
         .single();
@@ -158,18 +165,24 @@ export const POST: APIRoute = async ({ request }) => {
     } else {
       // 创建新用户
       console.log('创建新用户:', userData.email);
+      const insertData: any = {
+        id: userData.id,
+        email: userData.email,
+        full_name: userData.full_name,
+        avatar_url: userData.avatar_url,
+        provider: userData.provider || 'google',
+        created_at: now,
+        updated_at: now
+      };
+      
+      // 根据provider设置password_hash
+      if (userData.provider === 'google' || userData.provider === 'github' || userData.provider === 'facebook') {
+        insertData.password_hash = null; // OAuth用户password_hash必须为null
+      }
       
       const { data: newUser, error: insertError } = await supabaseAdmin
         .from('users')
-        .insert({
-          id: userData.id,
-          email: userData.email,
-          full_name: userData.full_name,
-          avatar_url: userData.avatar_url,
-          provider: userData.provider || 'google',
-          created_at: now,
-          updated_at: now
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -233,12 +246,38 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
   } catch (error) {
-    console.error('用户同步API错误:', error);
+    console.error('用户同步API错误:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      userData: userData ? { id: userData.id, email: userData.email } : 'No user data',
+      timestamp: new Date().toISOString()
+    });
+    
+    // 提供更详细的错误信息
+    let errorMessage = 'Internal server error';
+    let errorDetails = '';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      
+      // 检查常见的数据库错误
+      if (error.message.includes('foreign key constraint')) {
+        errorDetails = 'Database foreign key constraint violation. Please check table relationships.';
+      } else if (error.message.includes('duplicate key')) {
+        errorDetails = 'User already exists with this email or ID.';
+      } else if (error.message.includes('null value')) {
+        errorDetails = 'Required field is missing or null.';
+      } else if (error.message.includes('permission denied')) {
+        errorDetails = 'Database permission denied. Please check RLS policies.';
+      }
+    }
     
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: errorMessage,
+        details: errorDetails,
+        timestamp: new Date().toISOString()
       }),
       { 
         status: 500,

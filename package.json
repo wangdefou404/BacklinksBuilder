@@ -7,7 +7,26 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "check": "astro check",
+    "diagnose": "node scripts/ultimate-system-diagnosis.js",
+    "diagnose:verbose": "node scripts/comprehensive-oauth-diagnosis.js --verbose",
+    "oauth:check": "node scripts/quick-oauth-check.js",
+    "oauth:diagnose": "node scripts/comprehensive-oauth-diagnosis.js",
+    "oauth:fix": "node scripts/oauth-auto-fix.js",
+    "oauth:fix:preview": "node scripts/oauth-auto-fix.js --preview",
+    "check:comprehensive": "node scripts/comprehensive-check.js",
+    "check:full": "node scripts/comprehensive-check.js",
+    "check:ultimate": "node scripts/ultimate-check.js",
+    "check:deep-auth": "node scripts/deep-auth-diagnosis.js",
+    "check:system": "node scripts/comprehensive-system-check.js",
+    "diagnose:fix": "node scripts/ultimate-system-diagnosis.js --fix",
+    "master-check": "node scripts/master-system-check.js",
+    "master-check:fix": "node scripts/master-system-check.js --fix",
+    "master-check:verbose": "node scripts/master-system-check.js --verbose",
+    "fix:env": "node scripts/fix-missing-env.js",
+    "fix:rls": "node scripts/fix-rls-policies.js",
+    "fix:permissions": "node scripts/fix-all-permissions.js"
   },
   "devDependencies": {
     "@astrojs/sitemap": "^3.4.1",
@@ -20,10 +39,15 @@
     "tailwindcss": "^4.1.10"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.4",
     "@astrojs/vercel": "^8.2.6",
+    "@next-auth/supabase-adapter": "^0.2.1",
     "@supabase/supabase-js": "^2.56.0",
     "alpinejs": "^3.14.9",
+    "dotenv": "^17.2.1",
     "gray-matter": "^4.0.3",
-    "stripe": "^18.4.0"
+    "next-auth": "^4.24.11",
+    "stripe": "^18.4.0",
+    "typescript": "^5.9.2"
   }
 }
