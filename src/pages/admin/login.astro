@@ -1,6 +1,9 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import GoogleSignInButton from "../../components/auth/GoogleSignInButton.astro";
+
+// 获取重定向参数
+const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
 ---
 
 <BaseLayout>
@@ -82,7 +85,7 @@ import GoogleSignInButton from "../../components/auth/GoogleSignInButton.astro";
       <!-- Google登录选项 -->
       <div class="space-y-4">
         <GoogleSignInButton 
-          redirectTo="/dashboard" 
+          redirectTo={redirectTo}
           className="w-full"
           size="md"
           variant="primary"

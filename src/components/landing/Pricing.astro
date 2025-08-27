@@ -1,3 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { Icon } from 'astro-icon/components';
+---
+
 <section class="pt-20" x-data="{duration: 'monthly'}">
   <div class="mx-auto w-full lg:px-24 max-w-7xl md:px-12 items-center px-8">
     <div class="max-w-xl text-center mx-auto">
@@ -83,7 +88,7 @@
           </p>
           <div class="w-full mt-4">
             <a
-              href="https://github.com/bekturaslan/syntro-astro"
+              href="/auth/login"
               class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:text-accent-500 ring-1 ring-base-200 focus:ring-accent-500 h-9 px-4 py-2 text-sm font-medium rounded-md w-full">
               Get Started
             </a>
@@ -203,11 +208,11 @@
             </span>
           </p>
           <div class="w-full mt-4">
-            <a
-              href="https://github.com/bekturaslan/syntro-astro"
+            <button
+              onclick="handleUpgrade('pro')"
               class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:text-accent-500 ring-1 ring-base-200 focus:ring-accent-500 h-9 px-4 py-2 text-sm font-medium rounded-md w-full">
-              Get Started
-            </a>
+              Upgrade to Pro
+            </button>
           </div>
           <div class="mt-8">
             <p
@@ -340,11 +345,11 @@
             </span>
           </p>
           <div class="w-full mt-4">
-            <a
-              href="https://github.com/bekturaslan/syntro-astro"
+            <button
+              onclick="handleUpgrade('super')"
               class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:text-accent-500 ring-1 ring-base-200 focus:ring-accent-500 h-9 px-4 py-2 text-sm font-medium rounded-md w-full">
-              Get Started
-            </a>
+              Upgrade to SuperPro
+            </button>
           </div>
           <div class="mt-8">
             <p
@@ -451,3 +456,292 @@
     </div>
   </div>
 </section>
+
+<script is:inline>
+  // 防重复执行标志
+  let isUpgradeInProgress = false;
+  
+  // 调试函数：检查cookies
+  function debugCookies() {
+    console.log('=== COOKIES DEBUG ===');
+    console.log('All cookies:', document.cookie);
+    
+    // 检查特定的认证cookies
+    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {});
+    
+    console.log('Parsed cookies:', cookies);
+    console.log('sb-access-token exists:', !!cookies['sb-access-token']);
+    console.log('sb-refresh-token exists:', !!cookies['sb-refresh-token']);
+    
+    if (cookies['sb-access-token']) {
+      console.log('Access token length:', cookies['sb-access-token'].length);
+      console.log('Access token preview:', cookies['sb-access-token'].substring(0, 20) + '...');
+    }
+    
+    if (cookies['sb-refresh-token']) {
+      console.log('Refresh token length:', cookies['sb-refresh-token'].length);
+      console.log('Refresh token preview:', cookies['sb-refresh-token'].substring(0, 20) + '...');
+    }
+    
+    console.log('=== END COOKIES DEBUG ===');
+    return cookies;
+  }
+  
+  // 测试认证API的函数
+  async function testAuthAPI() {
+    console.log('=== TESTING AUTH API ===');
+    
+    try {
+      const response = await fetch('/api/auth/check', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
+      console.log('Auth API response status:', response.status);
+      console.log('Auth API response headers:', Object.fromEntries(response.headers.entries()));
+      
+      const data = await response.json();
+      console.log('Auth API response data:', data);
+      
+      return { success: response.ok, data, status: response.status };
+    } catch (error) {
+      console.error('Auth API error:', error);
+      return { success: false, error: error.message };
+    } finally {
+      console.log('=== END AUTH API TEST ===');
+    }
+  }
+  
+  // 检查是否有保存的支付数据（用户登录后自动处理支付）
+  function checkPendingPayment() {
+    const paymentData = sessionStorage.getItem('payment_data');
+    if (paymentData) {
+      try {
+        const data = JSON.parse(paymentData);
+        console.log('Found pending payment data:', data);
+        
+        // 清除保存的数据
+        sessionStorage.removeItem('payment_data');
+        
+        // 自动触发支付流程
+        setTimeout(() => {
+          console.log('Auto-triggering payment for:', data.plan);
+          handleUpgrade(data.plan);
+        }, 1000);
+      } catch (error) {
+        console.error('Error parsing payment data:', error);
+        sessionStorage.removeItem('payment_data');
+      }
+    }
+  }
+  
+  // 确保在 DOM 加载完成后初始化
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing handleUpgrade function');
+    
+    // 检查是否有待处理的支付
+    checkPendingPayment();
+    
+
+    
+    // 添加调试按钮
+    const debugButton = document.createElement('button');
+    debugButton.textContent = '🔍 调试认证状态';
+    debugButton.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 9999; background: #ff6b6b; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 12px;';
+    debugButton.onclick = async function() {
+      debugCookies();
+      const result = await testAuthAPI();
+      alert('认证测试结果：' + (result.success ? '成功' : '失败') + '\n详情请查看控制台');
+    };
+    document.body.appendChild(debugButton);
+    
+    // 将函数绑定到全局作用域
+    window.handleUpgrade = async function(plan) {
+      // 防重复执行检查
+      if (isUpgradeInProgress) {
+        console.log('Upgrade already in progress, ignoring duplicate call');
+        return;
+      }
+      
+      isUpgradeInProgress = true;
+      console.log('=== HANDLE UPGRADE START ===');
+      console.log('handleUpgrade called with plan:', plan);
+      
+      try {
+        // 首先进行详细的调试
+        const cookies = debugCookies();
+        
+        // 获取当前选择的计费周期
+        let billingCycle = 'monthly';
+        
+        // 检查按钮状态获取计费周期
+        const annualButton = document.getElementById('annual-pricing-button');
+        if (annualButton && annualButton.getAttribute('aria-pressed') === 'true') {
+          billingCycle = 'annual';
+        }
+        
+        console.log('Billing cycle:', billingCycle);
+        
+        // 检查是否有必要的cookies（只要有其中一个就认为已登录）
+        if (!cookies['sb-access-token'] && !cookies['sb-refresh-token']) {
+          console.error('❌ No authentication cookies found!');
+          console.log('Starting Google OAuth login with payment intent...');
+          
+          // 保存支付意图到sessionStorage
+          const paymentData = {
+            plan: plan,
+            billing_cycle: billingCycle,
+            timestamp: Date.now()
+          };
+          sessionStorage.setItem('payment_data', JSON.stringify(paymentData));
+          console.log('Payment data saved to sessionStorage:', paymentData);
+          
+          // 直接调用Google OAuth登录，登录成功后会自动处理支付流程
+          try {
+            // 构建回调URL，包含重定向参数
+            const redirectTo = '/pricing';
+            const callbackUrl = new URL('/auth/callback', window.location.origin);
+            callbackUrl.searchParams.set('redirect_to', redirectTo);
+            
+            // 创建Supabase客户端
+             const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+             const supabase = createClient(
+               'https://fmkekjlsfnvubnvurhbt.supabase.co',
+               'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta2VramxzZm52dWJudnVyaGJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMyNjc1NDQsImV4cCI6MjA2ODg0MzU0NH0.WzFGwqoDKG0Sjw1uj5U9rR8dc2qjTja8IRhlynofidA'
+             );
+            
+            // 执行Google OAuth登录
+            const { error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: callbackUrl.toString()
+              }
+            });
+            
+            if (error) {
+              console.error('Google OAuth error:', error);
+              throw error;
+            }
+          } catch (error) {
+            console.error('Failed to initiate Google OAuth:', error);
+            alert('登录失败，请重试');
+          }
+          return;
+        }
+        
+        // 详细的认证检查
+        console.log('🔍 Starting authentication check...');
+        
+        const authResult = await testAuthAPI();
+        
+        if (!authResult.success) {
+          console.error('❌ Authentication check failed:', authResult);
+          alert('认证检查失败：' + (authResult.error || '请重新登录'));
+          return;
+        }
+        
+        const userData = authResult.data;
+        const userId = userData.user?.id;
+        
+        if (!userId) {
+          console.error('❌ No user ID found in response:', userData);
+          alert('无法获取用户信息，请重新登录。');
+          return;
+        }
+        
+        console.log('✅ Authentication successful, user ID:', userId);
+
+        // 创建支付会话
+        console.log('🛒 Creating checkout session...');
+        console.log('Checkout payload:', { plan, billing_cycle: billingCycle, user_id: userId });
+        
+        const checkoutResponse = await fetch('/api/payment/create-checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            plan, 
+            billing_cycle: billingCycle,
+            user_id: userId 
+          }),
+        });
+
+        console.log('Checkout response status:', checkoutResponse.status);
+        console.log('Checkout response headers:', Object.fromEntries(checkoutResponse.headers.entries()));
+
+        if (!checkoutResponse.ok) {
+          const errorData = await checkoutResponse.json();
+          console.error('❌ Checkout error:', errorData);
+          throw new Error(errorData.error || 'Failed to create checkout session');
+        }
+
+        const checkoutData = await checkoutResponse.json();
+        console.log('Checkout response data:', checkoutData);
+        
+        const { checkout_url: url } = checkoutData;
+        
+        if (!url) {
+          console.error('❌ No checkout URL in response');
+          throw new Error('未能获取支付链接，请重试');
+        }
+        
+        console.log('✅ Redirecting to Stripe URL:', url);
+        console.log('=== HANDLE UPGRADE SUCCESS ===');
+        
+        // 跳转到 Stripe 支付页面
+        window.location.href = url;
+        
+      } catch (error) {
+        console.error('❌ Error in handleUpgrade:', error);
+        console.log('=== HANDLE UPGRADE FAILED ===');
+        alert('支付处理失败：' + error.message);
+      } finally {
+        // 重置标志，允许下次执行
+        isUpgradeInProgress = false;
+      }
+    };
+    
+    // 验证函数是否正确绑定
+    console.log('handleUpgrade function bound to window:', typeof window.handleUpgrade === 'function');
+    
+    // 为所有升级按钮添加事件监听器作为备用方案
+    const upgradeButtons = document.querySelectorAll('[onclick*="handleUpgrade"]');
+    console.log('Found upgrade buttons:', upgradeButtons.length);
+    
+    upgradeButtons.forEach((button, index) => {
+      console.log(`Setting up button ${index}:`, button);
+      
+      // 提取 plan 参数
+      const onclickAttr = button.getAttribute('onclick');
+      const planMatch = onclickAttr.match(/handleUpgrade\('([^']+)'\)/);
+      const plan = planMatch ? planMatch[1] : 'pro';
+      
+      // 添加事件监听器
+      button.addEventListener('click', function(e) {
+        console.log(`Button ${index} clicked for plan:`, plan);
+        e.preventDefault();
+        if (window.handleUpgrade) {
+          window.handleUpgrade(plan);
+        } else {
+          console.error('handleUpgrade function not found on window');
+        }
+      });
+    });
+  });
+  
+  // 如果页面已经加载完成，立即执行初始化
+  if (document.readyState !== 'loading') {
+    console.log('Document already loaded, triggering DOMContentLoaded handler');
+    // 触发 DOMContentLoaded 事件处理器
+    const event = new Event('DOMContentLoaded');
+    document.dispatchEvent(event);
+  }
+</script>

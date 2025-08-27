@@ -142,6 +142,7 @@ const user = null;
       user: null,
       isOpen: false,
       loading: true,
+      authError: null,
       authSubscription: null,
       
       async init() {
@@ -172,21 +173,99 @@ const user = null;
           console.log('开始加载用户信息');
           this.loading = true;
           const { supabase } = await import('/src/lib/supabase.ts');
-          const { data: { user }, error } = await supabase.auth.getUser();
           
-          if (error) {
-            console.error('获取用户信息失败:', error);
+          // 首先检查会话是否存在
+          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+          
+          if (sessionError) {
+            console.warn('获取会话失败:', sessionError);
+            // 会话错误时，尝试刷新token
+            await this.attemptTokenRefresh();
+            return;
+          }
+          
+          if (!session) {
+            console.log('没有活跃会话，用户未登录');
             this.user = null;
+            return;
+          }
+          
+          // 会话存在，获取用户信息
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            console.error('获取用户信息失败:', userError);
+            // 如果是认证错误，清理状态
+            if (userError.message?.includes('session') || userError.message?.includes('token')) {
+              console.log('认证token无效，清理用户状态');
+              this.user = null;
+              this.clearAuthState();
+            } else {
+              this.user = null;
+            }
           } else {
-            console.log('用户信息加载成功:', user);
+            console.log('用户信息加载成功:', user?.email);
             this.user = user;
           }
         } catch (error) {
           console.error('loadUser 异常:', error);
           this.user = null;
+          // 如果是网络错误，不清理状态，可能是临时问题
+          if (error.name !== 'NetworkError') {
+            this.clearAuthState();
+          }
         } finally {
           this.loading = false;
-          console.log('用户加载完成，loading状态:', this.loading);
+          console.log('用户加载完成，用户状态:', this.user ? '已登录' : '未登录');
+        }
+      },
+      
+      async attemptTokenRefresh() {
+        try {
+          console.log('尝试刷新认证token');
+          const { supabase } = await import('/src/lib/supabase.ts');
+          const { data, error } = await supabase.auth.refreshSession();
+          
+          if (error) {
+            console.warn('token刷新失败:', error);
+            this.user = null;
+            this.clearAuthState();
+          } else if (data.session) {
+            console.log('token刷新成功');
+            this.user = data.session.user;
+          } else {
+            console.log('刷新后仍无有效会话');
+            this.user = null;
+          }
+        } catch (error) {
+          console.error('token刷新异常:', error);
+          this.user = null;
+          this.clearAuthState();
+        }
+      },
+      
+      clearAuthState() {
+        console.log('清理认证状态');
+        try {
+          // 只清理认证相关的存储，保留其他数据
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('supabase') || key.includes('auth'))) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => localStorage.removeItem(key));
+          
+          // 清理会话存储中的认证数据
+          for (let i = 0; i < sessionStorage.length; i++) {
+            const key = sessionStorage.key(i);
+            if (key && (key.includes('supabase') || key.includes('auth'))) {
+              sessionStorage.removeItem(key);
+            }
+          }
+        } catch (error) {
+          console.error('清理认证状态失败:', error);
         }
       },
       
@@ -195,49 +274,65 @@ const user = null;
           const { supabase } = await import('/src/lib/supabase.ts');
           
           // 设置认证状态变化监听器
-          const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             console.log('Auth state changed:', event, session?.user?.email || 'no user');
             
-            switch (event) {
-              case 'SIGNED_OUT':
-                console.log('用户已退出登录');
-                this.user = null;
-                this.isOpen = false;
-                // 不在这里刷新页面，让 handleLogout 处理
-                break;
-                
-              case 'SIGNED_IN':
-                console.log('用户已登录');
-                if (session?.user) {
-                  this.user = session.user;
-                }
-                break;
-                
-              case 'TOKEN_REFRESHED':
-                console.log('Token 已刷新');
-                if (session?.user) {
-                  this.user = session.user;
-                }
-                break;
-                
-              case 'USER_UPDATED':
-                console.log('用户信息已更新');
-                if (session?.user) {
-                  this.user = session.user;
-                }
-                break;
-                
-              case 'INITIAL_SESSION':
-                console.log('初始会话');
-                if (session?.user) {
-                  this.user = session.user;
-                } else {
+            try {
+              switch (event) {
+                case 'SIGNED_OUT':
+                  console.log('用户已退出登录');
                   this.user = null;
-                }
-                break;
-                
-              default:
-                console.log('未处理的认证事件:', event);
+                  this.isOpen = false;
+                  // 登出时清理认证状态，但不强制刷新页面
+                  this.clearAuthState();
+                  break;
+                  
+                case 'SIGNED_IN':
+                  console.log('用户已登录');
+                  if (session?.user) {
+                    this.user = session.user;
+                    // 登录成功后，确保清理任何错误状态
+                    this.authError = null;
+                  }
+                  break;
+                  
+                case 'TOKEN_REFRESHED':
+                  console.log('Token 已刷新');
+                  if (session?.user) {
+                    this.user = session.user;
+                    this.authError = null;
+                  } else {
+                    console.warn('Token刷新后无用户信息');
+                    this.user = null;
+                  }
+                  break;
+                  
+                case 'USER_UPDATED':
+                  console.log('用户信息已更新');
+                  if (session?.user) {
+                    this.user = session.user;
+                  }
+                  break;
+                  
+                case 'INITIAL_SESSION':
+                  console.log('初始会话');
+                  if (session?.user) {
+                    this.user = session.user;
+                  } else {
+                    this.user = null;
+                  }
+                  break;
+                  
+                default:
+                  console.log('未处理的认证事件:', event);
+              }
+            } catch (error) {
+              console.error('处理认证状态变化时出错:', error);
+              this.authError = error.message;
+              // 如果是严重错误，重新加载用户状态
+              if (error.message?.includes('session') || error.message?.includes('token')) {
+                setTimeout(() => this.loadUser(), 1000);
+              }
             }
           });
           
@@ -246,6 +341,12 @@ const user = null;
           
         } catch (error) {
           console.error('设置认证监听器失败:', error);
+          this.authError = '认证监听器设置失败';
+          // 如果监听器设置失败，尝试重新设置
+          setTimeout(() => {
+            console.log('重试设置认证监听器');
+            this.setupAuthListener();
+          }, 3000);
         }
       },
       
@@ -305,33 +406,81 @@ const user = null;
       
       async handleLogout() {
         console.log('开始执行退出登录流程');
+        
+        // 立即更新UI状态，提供即时反馈
+        this.user = null;
+        this.isOpen = false;
+        
         try {
-          // 使用 global scope 确保完全退出
-          console.log('调用 supabase.auth.signOut');
+          await this.performLogout();
+        } catch (error) {
+          console.error('退出登录失败，尝试强制清理:', error);
+          // 即使登出失败，也要清理本地状态
+          this.forceCleanup();
+        }
+      },
+      
+      async performLogout(retryCount = 0) {
+        const maxRetries = 2;
+        const timeout = 5000; // 5秒超时
+        
+        try {
+          console.log(`尝试退出登录 (第${retryCount + 1}次)`);
+          
           const { supabase } = await import('/src/lib/supabase.ts');
-          const { error } = await supabase.auth.signOut({ scope: 'global' });
+          
+          // 创建带超时的Promise
+          const logoutPromise = supabase.auth.signOut({ scope: 'global' });
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('登出请求超时')), timeout)
+          );
+          
+          const { error } = await Promise.race([logoutPromise, timeoutPromise]);
           
           if (error) {
-            console.error('退出登录失败:', error);
-            return;
+            throw error;
           }
-          console.log('supabase.auth.signOut 成功');
-
-          // 手动清除本地存储
-          console.log('清除本地存储');
+          
+          console.log('Supabase 登出成功');
+          this.forceCleanup();
+          
+        } catch (error) {
+          console.error(`第${retryCount + 1}次登出尝试失败:`, error);
+          
+          if (retryCount < maxRetries) {
+            // 等待1秒后重试
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return this.performLogout(retryCount + 1);
+          } else {
+            // 所有重试都失败，抛出错误
+            throw new Error(`登出失败，已重试${maxRetries}次: ${error.message}`);
+          }
+        }
+      },
+      
+      forceCleanup() {
+        console.log('执行强制清理');
+        
+        try {
+          // 清除所有本地存储
           localStorage.clear();
           sessionStorage.clear();
           
-          // 立即更新状态
-          console.log('更新组件状态');
-          this.user = null;
-          this.isOpen = false;
+          // 清除所有相关的cookie
+          document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+          });
           
-          // 强制刷新页面以确保完全退出
+          console.log('本地数据清理完成');
+          
+          // 强制刷新页面
           console.log('重定向到首页');
           window.location.href = '/';
-        } catch (error) {
-          console.error('退出登录过程中发生错误:', error);
+          
+        } catch (cleanupError) {
+          console.error('清理过程中发生错误:', cleanupError);
+          // 即使清理失败，也要重定向
+          window.location.href = '/';
         }
       },
        
@@ -340,6 +489,19 @@ const user = null;
          if (this.authSubscription) {
            console.log('清理认证监听器');
            this.authSubscription.unsubscribe();
+           this.authSubscription = null;
+         }
+       },
+       
+       cleanup() {
+         console.log('清理认证组件资源');
+         if (this.authSubscription) {
+           try {
+             this.authSubscription.unsubscribe();
+             console.log('认证监听器已清理');
+           } catch (error) {
+             console.error('清理认证监听器失败:', error);
+           }
            this.authSubscription = null;
          }
        }
