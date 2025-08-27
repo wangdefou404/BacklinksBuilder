@@ -23,6 +23,7 @@
     "@astrojs/vercel": "^8.2.6",
     "@supabase/supabase-js": "^2.56.0",
     "alpinejs": "^3.14.9",
-    "gray-matter": "^4.0.3"
+    "gray-matter": "^4.0.3",
+    "stripe": "^18.4.0"
   }
 }
