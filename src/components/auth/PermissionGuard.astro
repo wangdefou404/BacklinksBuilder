@@ -1,0 +1,132 @@
+---
+// 权限守卫组件 - 根据用户权限控制内容显示
+export interface Props {
+  permission: string;
+  userId?: string;
+  fallback?: string;
+  showFallback?: boolean;
+}
+
+const { permission, userId, fallback = '您没有权限访问此内容', showFallback = true } = Astro.props;
+
+// 从会话中获取用户ID（如果未提供）
+let currentUserId = userId;
+if (!currentUserId) {
+  // 尝试从Astro.locals或cookies中获取用户信息
+  const userSession = Astro.locals.user || Astro.cookies.get('user')?.value;
+  if (userSession) {
+    try {
+      const userData = typeof userSession === 'string' ? JSON.parse(userSession) : userSession;
+      currentUserId = userData.id;
+    } catch (error) {
+      console.error('Failed to parse user session:', error);
+    }
+  }
+}
+
+// 检查权限
+let hasPermission = false;
+let permissionError = null;
+
+if (currentUserId && permission) {
+  try {
+    const response = await fetch(`${Astro.url.origin}/api/auth/check-permission`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        permission: permission
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      hasPermission = result.hasPermission;
+    } else {
+      const error = await response.json();
+      permissionError = error.error || 'Permission check failed';
+      console.error('Permission check failed:', error);
+    }
+  } catch (error) {
+    permissionError = 'Network error during permission check';
+    console.error('Permission check error:', error);
+  }
+}
+---
+
+{hasPermission ? (
+  <slot />
+) : (
+  showFallback && (
+    <div class="permission-denied bg-yellow-50 border border-yellow-200 rounded-lg p-4 my-4">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-yellow-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+        </svg>
+        <div>
+          <h3 class="text-sm font-medium text-yellow-800">权限不足</h3>
+          <p class="text-sm text-yellow-700 mt-1">{fallback}</p>
+          {permissionError && (
+            <p class="text-xs text-yellow-600 mt-1">错误详情: {permissionError}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+)}
+
+<style>
+  .permission-denied {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<script>
+  // 客户端权限检查（可选，用于动态权限验证）
+  class PermissionGuard {
+    static async checkPermission(userId: string, permission: string): Promise<boolean> {
+      try {
+        const response = await fetch('/api/auth/check-permission', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId, permission })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          return result.hasPermission;
+        }
+        return false;
+      } catch (error) {
+        console.error('Client-side permission check failed:', error);
+        return false;
+      }
+    }
+
+    static async toggleElementByPermission(elementId: string, userId: string, permission: string) {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+
+      const hasPermission = await this.checkPermission(userId, permission);
+      element.style.display = hasPermission ? 'block' : 'none';
+    }
+  }
+
+  // 将PermissionGuard添加到全局作用域
+  (window as any).PermissionGuard = PermissionGuard;
+</script>

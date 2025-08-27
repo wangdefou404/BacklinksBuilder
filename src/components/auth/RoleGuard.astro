@@ -1,0 +1,186 @@
+---
+// 角色守卫组件 - 根据用户角色控制内容显示
+export interface Props {
+  allowedRoles?: string[];
+  requiredRole?: string;
+  userId?: string;
+  fallback?: string;
+  showFallback?: boolean;
+  mode?: 'any' | 'all'; // 'any': 满足任一角色即可, 'all': 必须满足所有角色
+}
+
+const { 
+  allowedRoles = [], 
+  requiredRole, 
+  userId, 
+  fallback = '您的角色权限不足以访问此内容', 
+  showFallback = true,
+  mode = 'any'
+} = Astro.props;
+
+// 合并角色列表
+const rolesToCheck = requiredRole ? [requiredRole, ...allowedRoles] : allowedRoles;
+
+// 从会话中获取用户ID（如果未提供）
+let currentUserId = userId;
+if (!currentUserId) {
+  // 尝试从Astro.locals或cookies中获取用户信息
+  const userSession = Astro.locals.user || Astro.cookies.get('user')?.value;
+  if (userSession) {
+    try {
+      const userData = typeof userSession === 'string' ? JSON.parse(userSession) : userSession;
+      currentUserId = userData.id;
+    } catch (error) {
+      console.error('Failed to parse user session:', error);
+    }
+  }
+}
+
+// 检查用户角色
+let hasValidRole = false;
+let userRole = null;
+let roleError = null;
+
+if (currentUserId && rolesToCheck.length > 0) {
+  try {
+    const response = await fetch(`${Astro.url.origin}/api/auth/get-user-role`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId: currentUserId
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      userRole = result.role;
+      
+      if (mode === 'any') {
+        // 任一角色匹配即可
+        hasValidRole = rolesToCheck.includes(userRole);
+      } else {
+        // 必须满足所有角色（通常用于复合权限检查）
+        hasValidRole = rolesToCheck.every(role => role === userRole);
+      }
+    } else {
+      const error = await response.json();
+      roleError = error.error || 'Role check failed';
+      console.error('Role check failed:', error);
+    }
+  } catch (error) {
+    roleError = 'Network error during role check';
+    console.error('Role check error:', error);
+  }
+} else if (rolesToCheck.length === 0) {
+  // 如果没有指定角色要求，则允许访问
+  hasValidRole = true;
+}
+---
+
+{hasValidRole ? (
+  <slot />
+) : (
+  showFallback && (
+    <div class="role-denied bg-red-50 border border-red-200 rounded-lg p-4 my-4">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+        </svg>
+        <div>
+          <h3 class="text-sm font-medium text-red-800">角色权限不足</h3>
+          <p class="text-sm text-red-700 mt-1">{fallback}</p>
+          {userRole && (
+            <p class="text-xs text-red-600 mt-1">
+              当前角色: {userRole} | 需要角色: {rolesToCheck.join(', ')}
+            </p>
+          )}
+          {roleError && (
+            <p class="text-xs text-red-600 mt-1">错误详情: {roleError}</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+)}
+
+<style>
+  .role-denied {
+    animation: slideIn 0.3s ease-in-out;
+  }
+  
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+</style>
+
+<script>
+  // 客户端角色检查（可选，用于动态角色验证）
+  class RoleGuard {
+    static async getUserRole(userId: string): Promise<string | null> {
+      try {
+        const response = await fetch('/api/auth/get-user-role', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          return result.role;
+        }
+        return null;
+      } catch (error) {
+        console.error('Client-side role check failed:', error);
+        return null;
+      }
+    }
+
+    static async checkRole(userId: string, allowedRoles: string[], mode: 'any' | 'all' = 'any'): Promise<boolean> {
+      const userRole = await this.getUserRole(userId);
+      if (!userRole) return false;
+
+      if (mode === 'any') {
+        return allowedRoles.includes(userRole);
+      } else {
+        return allowedRoles.every(role => role === userRole);
+      }
+    }
+
+    static async toggleElementByRole(elementId: string, userId: string, allowedRoles: string[], mode: 'any' | 'all' = 'any') {
+      const element = document.getElementById(elementId);
+      if (!element) return;
+
+      const hasValidRole = await this.checkRole(userId, allowedRoles, mode);
+      element.style.display = hasValidRole ? 'block' : 'none';
+    }
+
+    // 便捷方法：检查是否为管理员
+    static async isAdmin(userId: string): Promise<boolean> {
+      return this.checkRole(userId, ['admin']);
+    }
+
+    // 便捷方法：检查是否为高级用户
+    static async isPremium(userId: string): Promise<boolean> {
+      return this.checkRole(userId, ['premium', 'admin']);
+    }
+
+    // 便捷方法：检查是否为普通用户或以上
+    static async isUser(userId: string): Promise<boolean> {
+      return this.checkRole(userId, ['user', 'premium', 'admin']);
+    }
+  }
+
+  // 将RoleGuard添加到全局作用域
+  (window as any).RoleGuard = RoleGuard;
+</script>

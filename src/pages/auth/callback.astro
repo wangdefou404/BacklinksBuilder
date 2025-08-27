@@ -288,15 +288,77 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
         return;
       }
 
-      // 检查重定向参数
+      // 智能重定向逻辑：根据用户角色决定重定向目标
       const urlParams = new URLSearchParams(window.location.search);
-      const redirectTo = urlParams.get('redirect_to') || '/admin/backlinks';
+      let redirectTo = urlParams.get('redirect_to');
       
-      console.log('URL参数中的redirect_to:', urlParams.get('redirect_to'));
+      console.log('URL参数中的redirect_to:', redirectTo);
+      
+      // 如果没有指定重定向目标，根据用户角色智能选择
+      if (!redirectTo) {
+        console.log('未指定重定向目标，开始获取用户角色...');
+        
+        try {
+          console.log('开始获取用户角色，用户ID:', finalUser.id);
+          console.log('用户邮箱:', finalUser.email);
+          
+          // 获取用户角色
+          const roleResponse = await fetch(`${window.location.origin}/api/auth/get-user-role`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: finalUser.id })
+          });
+          
+          console.log('角色API响应状态:', roleResponse.status);
+          
+          if (roleResponse.ok) {
+            const roleData = await roleResponse.json();
+            console.log('用户角色API返回数据:', JSON.stringify(roleData, null, 2));
+            
+            // 检查返回的角色数据
+            const userRole = roleData.role;
+            console.log('解析出的用户角色:', userRole);
+            console.log('角色标志:', {
+              isAdmin: roleData.isAdmin,
+              isPremium: roleData.isPremium,
+              isFree: roleData.isFree
+            });
+            
+            // 根据角色智能重定向
+            if (userRole === 'admin') {
+              redirectTo = '/admin/backlinks';
+              console.log('✅ 管理员用户，重定向到管理面板');
+            } else if (userRole === 'premium') {
+              redirectTo = '/premium/dashboard';
+              console.log('✅ 高级用户，重定向到高级面板');
+            } else {
+              redirectTo = '/user/dashboard';
+              console.log('✅ 普通用户或未知角色，重定向到用户面板');
+              // 清理可能存在的错误管理员状态
+              localStorage.removeItem('adminLoggedIn');
+              localStorage.removeItem('adminUsername');
+              localStorage.removeItem('adminLoginTime');
+              console.log('🧹 已清理非管理员用户的localStorage状态');
+            }
+          } else {
+            const errorText = await roleResponse.text();
+            console.warn('❌ 获取用户角色失败，状态码:', roleResponse.status);
+            console.warn('❌ 错误响应:', errorText);
+            redirectTo = '/user/dashboard'; // 默认重定向到普通用户面板
+          }
+        } catch (roleError) {
+          console.error('❌ 角色检查异常:', roleError);
+          console.error('❌ 错误详情:', roleError.message);
+          redirectTo = '/user/dashboard'; // 出错时默认重定向到普通用户面板
+        }
+      }
+      
       console.log('最终重定向目标:', redirectTo);
       console.log('准备重定向到:', redirectTo);
       
-      // 如果重定向到管理面板，设置localStorage状态以通过认证检查
+      // 只有真正的admin角色用户才设置localStorage状态
       if (redirectTo === '/admin/backlinks' || redirectTo.startsWith('/admin/')) {
         console.log('设置管理员localStorage状态...');
         localStorage.setItem('adminLoggedIn', 'true');
@@ -307,6 +369,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
           adminUsername: localStorage.getItem('adminUsername'),
           adminLoginTime: localStorage.getItem('adminLoginTime')
         });
+      } else {
+        // 非管理员用户，清理可能存在的管理员状态
+        localStorage.removeItem('adminLoggedIn');
+        localStorage.removeItem('adminUsername');
+        localStorage.removeItem('adminLoginTime');
+        console.log('🧹 已清理非管理员用户的localStorage状态');
       }
       
       // 跳转到目标页面
@@ -386,21 +454,91 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
     } else {
       console.log('未发现OAuth参数，检查现有session...');
       // 如果没有OAuth参数，检查是否已经登录
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
         if (session) {
-          console.log('发现现有session，直接跳转...');
+          console.log('发现现有session，开始智能重定向...');
           showSuccess();
+          
+          // 智能重定向逻辑：根据用户角色决定重定向目标
+          let redirectTo = urlParams.get('redirect_to');
+          
+          // 如果没有指定重定向目标，根据用户角色智能选择
+          if (!redirectTo) {
+            console.log('现有session未指定重定向目标，开始获取用户角色...');
+            
+            try {
+              console.log('现有session开始获取用户角色，用户ID:', session.user.id);
+              console.log('现有session用户邮箱:', session.user.email);
+              
+              // 获取用户角色
+              const roleResponse = await fetch(`${window.location.origin}/api/auth/get-user-role`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId: session.user.id })
+              });
+              
+              console.log('现有session角色API响应状态:', roleResponse.status);
+              
+              if (roleResponse.ok) {
+                const roleData = await roleResponse.json();
+                console.log('现有session用户角色API返回数据:', JSON.stringify(roleData, null, 2));
+                
+                // 检查返回的角色数据
+                const userRole = roleData.role;
+                console.log('现有session解析出的用户角色:', userRole);
+                console.log('现有session角色标志:', {
+                  isAdmin: roleData.isAdmin,
+                  isPremium: roleData.isPremium,
+                  isFree: roleData.isFree
+                });
+                
+                // 根据角色智能重定向
+                if (userRole === 'admin') {
+                  redirectTo = '/admin/backlinks';
+                  console.log('✅ 现有session管理员用户，重定向到管理面板');
+                } else if (userRole === 'premium') {
+                  redirectTo = '/premium/dashboard';
+                  console.log('✅ 现有session高级用户，重定向到高级面板');
+                } else {
+                  redirectTo = '/user/dashboard';
+                  console.log('✅ 现有session普通用户或未知角色，重定向到用户面板');
+                  // 清理可能存在的错误管理员状态
+                  localStorage.removeItem('adminLoggedIn');
+                  localStorage.removeItem('adminUsername');
+                  localStorage.removeItem('adminLoginTime');
+                  console.log('🧹 现有session已清理非管理员用户的localStorage状态');
+                }
+              } else {
+                const errorText = await roleResponse.text();
+                console.warn('❌ 现有session获取用户角色失败，状态码:', roleResponse.status);
+                console.warn('❌ 现有session错误响应:', errorText);
+                redirectTo = '/user/dashboard'; // 默认重定向到普通用户面板
+              }
+            } catch (roleError) {
+              console.error('❌ 现有session角色检查异常:', roleError);
+              console.error('❌ 现有session错误详情:', roleError.message);
+              redirectTo = '/user/dashboard'; // 出错时默认重定向到普通用户面板
+            }
+          }
+          
           setTimeout(() => {
-            const redirectTo = urlParams.get('redirect_to') || '/admin/backlinks';
             console.log('现有session跳转到:', redirectTo);
             
-            // 如果重定向到管理面板，设置localStorage状态以通过认证检查
+            // 只有真正的admin角色用户才设置localStorage状态
             if (redirectTo === '/admin/backlinks' || redirectTo.startsWith('/admin/')) {
               console.log('为现有session设置管理员localStorage状态...');
               localStorage.setItem('adminLoggedIn', 'true');
               localStorage.setItem('adminUsername', session.user?.email || 'OAuth用户');
               localStorage.setItem('adminLoginTime', new Date().toISOString());
               console.log('现有session管理员localStorage状态已设置');
+            } else {
+              // 非管理员用户，清理可能存在的管理员状态
+              localStorage.removeItem('adminLoggedIn');
+              localStorage.removeItem('adminUsername');
+              localStorage.removeItem('adminLoginTime');
+              console.log('🧹 现有session已清理非管理员用户的localStorage状态');
             }
             
             window.location.href = redirectTo;
