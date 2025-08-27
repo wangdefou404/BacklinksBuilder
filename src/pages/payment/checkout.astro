@@ -1,0 +1,309 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const { searchParams } = Astro.url;
+const plan = searchParams.get('plan') || 'pro';
+const billing = searchParams.get('billing') || 'monthly';
+
+// Plan configurations
+const planConfigs = {
+  pro: {
+    name: 'Pro',
+    description: 'Perfect for SEO professionals',
+    monthly: { price: '$29.99', priceId: 'price_pro_monthly' },
+    annual: { price: '$299.99', priceId: 'price_pro_annual' },
+    features: [
+      '1,000 DR checks per month',
+      '1,000 traffic checks per month', 
+      '1,000 backlink checks per month',
+      'Unlimited backlink views',
+      'Data export functionality',
+      'Priority email support'
+    ]
+  },
+  super: {
+    name: 'SuperPro',
+    description: 'Designed for agencies and enterprises',
+    monthly: { price: '$99.99', priceId: 'price_super_monthly' },
+    annual: { price: '$999.99', priceId: 'price_super_annual' },
+    features: [
+      '5,000 DR checks per month',
+      '5,000 traffic checks per month',
+      '5,000 backlink checks per month', 
+      'Unlimited backlink views',
+      'Data export functionality',
+      'Priority support',
+      'Early access to new features',
+      'API access'
+    ]
+  }
+};
+
+const currentPlan = planConfigs[plan] || planConfigs.pro;
+const currentPrice = currentPlan[billing];
+---
+
+<BaseLayout title="Checkout - BacklinksBuilder" description="Complete your subscription to BacklinksBuilder">
+  <section class="pt-20 pb-20">
+    <div class="mx-auto w-full lg:px-24 max-w-4xl md:px-12 items-center px-8">
+      <div class="max-w-xl text-center mx-auto mb-12">
+        <h1 class="text-xl leading-tight tracking-tight sm:text-2xl md:text-3xl capitalize lg:text-4xl mt-4 font-medium text-base-900">
+          Complete Your Subscription
+        </h1>
+        <p class="text-base leading-normal mt-4 text-base-500 font-medium">
+          You're just one step away from unlocking powerful SEO tools.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Order Summary -->
+        <div class="bg-base-50 rounded-2xl p-8">
+          <h2 class="text-lg font-medium text-base-900 mb-6">Order Summary</h2>
+          
+          <div class="space-y-4">
+            <div class="flex justify-between items-start">
+              <div>
+                <h3 class="font-medium text-base-900">{currentPlan.name} Plan</h3>
+                <p class="text-sm text-base-500">{currentPlan.description}</p>
+                <p class="text-sm text-base-500 capitalize">{billing} billing</p>
+              </div>
+              <div class="text-right">
+                <p class="font-semibold text-base-900">{currentPrice.price}</p>
+                <p class="text-sm text-base-500">/{billing === 'monthly' ? 'month' : 'year'}</p>
+              </div>
+            </div>
+            
+            <hr class="border-base-200">
+            
+            <div class="space-y-2">
+              <h4 class="font-medium text-base-900 text-sm">Included features:</h4>
+              <ul class="space-y-1">
+                {currentPlan.features.map(feature => (
+                  <li class="flex items-center gap-2 text-sm text-base-600">
+                    <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <hr class="border-base-200">
+            
+            <div class="flex justify-between items-center font-semibold text-base-900">
+              <span>Total</span>
+              <span>{currentPrice.price}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="bg-white border border-base-200 rounded-2xl p-8">
+          <h2 class="text-lg font-medium text-base-900 mb-6">Payment Details</h2>
+          
+          <!-- Loading State -->
+          <div id="loading-state" class="text-center py-8">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600 mx-auto mb-4"></div>
+            <p class="text-base-500">Preparing secure checkout...</p>
+          </div>
+          
+          <!-- Error State -->
+          <div id="error-state" class="hidden bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <p class="text-red-700 font-medium">Payment Error</p>
+            </div>
+            <p id="error-message" class="text-red-600 mt-2"></p>
+            <button 
+              id="retry-button"
+              class="mt-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              onclick="initializeCheckout()">
+              Try Again
+            </button>
+          </div>
+          
+          <!-- Checkout Button -->
+          <div id="checkout-form" class="hidden">
+            <div class="mb-6">
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <p class="text-blue-700 font-medium">Secure Payment</p>
+                </div>
+                <p class="text-blue-600 mt-2 text-sm">Your payment is processed securely through Stripe. We never store your payment information.</p>
+              </div>
+            </div>
+            
+            <button 
+              id="checkout-button"
+              class="w-full bg-accent-600 hover:bg-accent-700 text-white font-medium py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2">
+              <span id="button-text">Continue to Payment</span>
+              <span id="button-loading" class="hidden">
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Processing...
+              </span>
+            </button>
+            
+            <div class="mt-4 text-center">
+              <p class="text-xs text-base-500">
+                By continuing, you agree to our 
+                <a href="/terms" class="text-accent-600 hover:text-accent-700">Terms of Service</a> and 
+                <a href="/privacy" class="text-accent-600 hover:text-accent-700">Privacy Policy</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Security Features -->
+      <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+            </svg>
+          </div>
+          <h3 class="font-medium text-base-900">Secure Payment</h3>
+          <p class="text-sm text-base-500">256-bit SSL encryption</p>
+        </div>
+        
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="font-medium text-base-900">Money Back Guarantee</h3>
+          <p class="text-sm text-base-500">30-day refund policy</p>
+        </div>
+        
+        <div class="flex flex-col items-center">
+          <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 109.75 9.75c0-5.385-4.365-9.75-9.75-9.75z"></path>
+            </svg>
+          </div>
+          <h3 class="font-medium text-base-900">24/7 Support</h3>
+          <p class="text-sm text-base-500">Always here to help</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Get current user from Supabase
+    async function getCurrentUser() {
+      try {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabase = createClient(
+          import.meta.env.PUBLIC_SUPABASE_URL,
+          import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+        );
+        
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        return user;
+      } catch (error) {
+        console.error('Error getting user:', error);
+        return null;
+      }
+    }
+    
+    // Initialize checkout process
+    async function initializeCheckout() {
+      const loadingState = document.getElementById('loading-state');
+      const errorState = document.getElementById('error-state');
+      const checkoutForm = document.getElementById('checkout-form');
+      const errorMessage = document.getElementById('error-message');
+      
+      // Show loading state
+      loadingState.classList.remove('hidden');
+      errorState.classList.add('hidden');
+      checkoutForm.classList.add('hidden');
+      
+      try {
+        // Check if user is authenticated
+        const user = await getCurrentUser();
+        if (!user) {
+          // Redirect to login with return URL
+          const returnUrl = encodeURIComponent(window.location.href);
+          window.location.href = `/auth/login?redirect=${returnUrl}`;
+          return;
+        }
+        
+        // Show checkout form
+        loadingState.classList.add('hidden');
+        checkoutForm.classList.remove('hidden');
+        
+        // Setup checkout button click handler
+        const checkoutButton = document.getElementById('checkout-button');
+        const buttonText = document.getElementById('button-text');
+        const buttonLoading = document.getElementById('button-loading');
+        
+        checkoutButton.addEventListener('click', async () => {
+          // Show loading state
+          buttonText.classList.add('hidden');
+          buttonLoading.classList.remove('hidden');
+          checkoutButton.disabled = true;
+          
+          try {
+            // Get URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const plan = urlParams.get('plan') || 'pro';
+            const billing = urlParams.get('billing') || 'monthly';
+            
+            // Create checkout session
+            const response = await fetch('/api/payment/create-checkout', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                plan: plan,
+                billing_cycle: billing,
+                user_id: user.id
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+              throw new Error(data.error || 'Failed to create checkout session');
+            }
+            
+            // Redirect to Stripe Checkout
+            window.location.href = data.url;
+            
+          } catch (error) {
+            console.error('Checkout error:', error);
+            errorMessage.textContent = error.message || 'An unexpected error occurred. Please try again.';
+            errorState.classList.remove('hidden');
+            checkoutForm.classList.add('hidden');
+          } finally {
+            // Reset button state
+            buttonText.classList.remove('hidden');
+            buttonLoading.classList.add('hidden');
+            checkoutButton.disabled = false;
+          }
+        });
+        
+      } catch (error) {
+        console.error('Initialization error:', error);
+        loadingState.classList.add('hidden');
+        errorMessage.textContent = error.message || 'Failed to initialize checkout. Please try again.';
+        errorState.classList.remove('hidden');
+      }
+    }
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', initializeCheckout);
+  </script>
+</BaseLayout>

@@ -1,0 +1,206 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const { searchParams } = Astro.url;
+const sessionId = searchParams.get('session_id');
+---
+
+<BaseLayout title="Payment Success - BacklinksBuilder" description="Your subscription has been activated successfully">
+  <section class="pt-20 pb-20">
+    <div class="mx-auto w-full lg:px-24 max-w-4xl md:px-12 items-center px-8">
+      <!-- Success Message -->
+      <div class="text-center mb-12">
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        
+        <h1 class="text-3xl lg:text-4xl font-medium text-base-900 mb-4">
+          Payment Successful!
+        </h1>
+        
+        <p class="text-lg text-base-600 mb-2">
+          Welcome to BacklinksBuilder Pro!
+        </p>
+        
+        <p class="text-base text-base-500">
+          Your subscription has been activated and you now have access to all premium features.
+        </p>
+      </div>
+
+      <!-- Loading State for Session Details -->
+      <div id="loading-details" class="text-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-600 mx-auto mb-4"></div>
+        <p class="text-base-500">Loading subscription details...</p>
+      </div>
+
+      <!-- Subscription Details -->
+      <div id="subscription-details" class="hidden bg-white border border-base-200 rounded-2xl p-8 mb-8">
+        <h2 class="text-xl font-medium text-base-900 mb-6">Subscription Details</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-medium text-base-900 mb-2">Plan</h3>
+            <p id="plan-name" class="text-base-600">-</p>
+          </div>
+          
+          <div>
+            <h3 class="font-medium text-base-900 mb-2">Billing Cycle</h3>
+            <p id="billing-cycle" class="text-base-600">-</p>
+          </div>
+          
+          <div>
+            <h3 class="font-medium text-base-900 mb-2">Amount Paid</h3>
+            <p id="amount-paid" class="text-base-600">-</p>
+          </div>
+          
+          <div>
+            <h3 class="font-medium text-base-900 mb-2">Next Billing Date</h3>
+            <p id="next-billing" class="text-base-600">-</p>
+          </div>
+        </div>
+        
+        <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-green-800 font-medium">Subscription Active</p>
+          </div>
+          <p class="text-green-700 mt-1">Your premium features are now available and your quota has been updated.</p>
+        </div>
+      </div>
+
+      <!-- Error State -->
+      <div id="error-details" class="hidden bg-red-50 border border-red-200 rounded-lg p-6 mb-8">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-red-700 font-medium">Unable to Load Details</p>
+        </div>
+        <p class="text-red-600 mt-2">We couldn't load your subscription details, but your payment was successful. Please contact support if you need assistance.</p>
+      </div>
+
+      <!-- Next Steps -->
+      <div class="bg-base-50 rounded-2xl p-8 mb-8">
+        <h2 class="text-xl font-medium text-base-900 mb-6">What's Next?</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <span class="text-accent-600 font-medium text-sm">1</span>
+            </div>
+            <div>
+              <h3 class="font-medium text-base-900 mb-2">Start Using Premium Features</h3>
+              <p class="text-base-600 text-sm">Access advanced SEO tools, unlimited backlink views, and data export functionality.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <span class="text-accent-600 font-medium text-sm">2</span>
+            </div>
+            <div>
+              <h3 class="font-medium text-base-900 mb-2">Check Your Dashboard</h3>
+              <p class="text-base-600 text-sm">View your updated quota and subscription status in your account dashboard.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <span class="text-accent-600 font-medium text-sm">3</span>
+            </div>
+            <div>
+              <h3 class="font-medium text-base-900 mb-2">Get Support</h3>
+              <p class="text-base-600 text-sm">Need help? Our priority support team is ready to assist you with any questions.</p>
+            </div>
+          </div>
+          
+          <div class="flex items-start gap-4">
+            <div class="w-8 h-8 bg-accent-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <span class="text-accent-600 font-medium text-sm">4</span>
+            </div>
+            <div>
+              <h3 class="font-medium text-base-900 mb-2">Manage Subscription</h3>
+              <p class="text-base-600 text-sm">Update billing information, change plans, or cancel anytime from your account settings.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a 
+          href="/dashboard"
+          class="inline-flex items-center justify-center px-6 py-3 bg-accent-600 hover:bg-accent-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2">
+          Go to Dashboard
+        </a>
+        
+        <a 
+          href="/"
+          class="inline-flex items-center justify-center px-6 py-3 bg-white hover:bg-base-50 text-base-700 font-medium rounded-lg border border-base-300 transition-colors focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2">
+          Back to Home
+        </a>
+      </div>
+
+      <!-- Receipt Information -->
+      <div class="mt-12 text-center">
+        <p class="text-sm text-base-500 mb-2">
+          A receipt has been sent to your email address.
+        </p>
+        <p class="text-sm text-base-500">
+          Questions? Contact us at 
+          <a href="mailto:support@backlinksbuilder.com" class="text-accent-600 hover:text-accent-700">
+            support@backlinksbuilder.com
+          </a>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    // Load subscription details from Stripe session
+    async function loadSubscriptionDetails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const sessionId = urlParams.get('session_id');
+      
+      const loadingDetails = document.getElementById('loading-details');
+      const subscriptionDetails = document.getElementById('subscription-details');
+      const errorDetails = document.getElementById('error-details');
+      
+      if (!sessionId) {
+        loadingDetails.classList.add('hidden');
+        errorDetails.classList.remove('hidden');
+        return;
+      }
+      
+      try {
+        // In a real implementation, you would fetch session details from your API
+        // For now, we'll show the subscription details section without specific data
+        
+        // Simulate loading delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Show subscription details
+        loadingDetails.classList.add('hidden');
+        subscriptionDetails.classList.remove('hidden');
+        
+        // You would populate these with actual data from your API
+        document.getElementById('plan-name').textContent = 'Pro Plan';
+        document.getElementById('billing-cycle').textContent = 'Monthly';
+        document.getElementById('amount-paid').textContent = '$29.99';
+        document.getElementById('next-billing').textContent = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+        
+      } catch (error) {
+        console.error('Error loading subscription details:', error);
+        loadingDetails.classList.add('hidden');
+        errorDetails.classList.remove('hidden');
+      }
+    }
+    
+    // Initialize when page loads
+    document.addEventListener('DOMContentLoaded', loadSubscriptionDetails);
+  </script>
+</BaseLayout>

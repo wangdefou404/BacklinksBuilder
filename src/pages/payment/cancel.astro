@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Payment Cancelled - BacklinksBuilder">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+      <!-- Cancel Icon -->
+      <div class="text-center mb-8">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+          <svg class="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Payment Cancelled</h1>
+        <p class="text-gray-600">Your payment has been cancelled. No charges were made to your account.</p>
+      </div>
+
+      <!-- Information Card -->
+      <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">What happened?</h2>
+        <div class="space-y-3 text-sm text-gray-600">
+          <div class="flex items-start">
+            <svg class="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <span>You cancelled the payment process before completion</span>
+          </div>
+          <div class="flex items-start">
+            <svg class="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            <span>No charges were made to your payment method</span>
+          </div>
+          <div class="flex items-start">
+            <svg class="h-5 w-5 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+            </svg>
+            <span>You can try again anytime with the same or different plan</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="space-y-3">
+        <!-- Try Again Button -->
+        <a href="/pricing" 
+           class="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center">
+          <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Try Again
+        </a>
+
+        <!-- View Plans Button -->
+        <a href="/pricing" 
+           class="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-200 flex items-center justify-center">
+          <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+          </svg>
+          View All Plans
+        </a>
+
+        <!-- Back to Home -->
+        <a href="/" 
+           class="w-full bg-white text-gray-600 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center border border-gray-300">
+          <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+          </svg>
+          Back to Home
+        </a>
+      </div>
+
+      <!-- Help Section -->
+      <div class="mt-8 text-center">
+        <p class="text-sm text-gray-500 mb-2">Need help choosing the right plan?</p>
+        <a href="mailto:support@backlinksbuilder.com" 
+           class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+          Contact our support team
+        </a>
+      </div>
+
+      <!-- FAQ Section -->
+      <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Frequently Asked Questions</h3>
+        <div class="space-y-4">
+          <div>
+            <h4 class="font-medium text-gray-900 mb-1">Why was my payment cancelled?</h4>
+            <p class="text-sm text-gray-600">Payment can be cancelled if you close the payment window, navigate away, or choose to cancel during the checkout process.</p>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-1">Can I try a different payment method?</h4>
+            <p class="text-sm text-gray-600">Yes, you can try again with the same or different payment method. We accept all major credit cards.</p>
+          </div>
+          <div>
+            <h4 class="font-medium text-gray-900 mb-1">Is there a free trial available?</h4>
+            <p class="text-sm text-gray-600">Yes, our Free plan includes 10 DR checks, 10 traffic checks, and 10 backlink checks to get you started.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* Custom animations */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+</style>
+
+<script>
+  // Add fade-in animation to the main container
+  document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.max-w-md');
+    if (container) {
+      container.classList.add('animate-fade-in');
+    }
+  });
+</script>

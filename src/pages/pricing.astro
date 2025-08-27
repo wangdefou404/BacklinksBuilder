@@ -1,0 +1,579 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Pricing - BacklinksBuilder" description="Choose the perfect plan for your SEO needs. Get started with our free plan or upgrade to Pro or SuperPro for advanced features.">
+  <section class="pt-20 pb-20" x-data="{duration: 'monthly'}">
+    <div class="mx-auto w-full lg:px-24 max-w-7xl md:px-12 items-center px-8">
+      <div class="max-w-xl text-center mx-auto">
+        <h1 class="text-xl leading-tight tracking-tight sm:text-2xl md:text-3xl capitalize lg:text-4xl mt-4 font-medium text-base-900 lg:text-balance">
+          Choose Your Plan
+        </h1>
+        <p class="text-base leading-normal mt-4 text-base-500 font-medium lg:text-balance">
+          Select the perfect plan for your SEO needs. Start free and upgrade anytime.
+        </p>
+        <div
+          aria-labelledby="pricing-toggle"
+          class="w-full relative mt-8 ring-1 ring-base-200 ring-offset-2 bg-white overflow-hidden justify-center gap-4 mx-auto lg:mx-0 inline-flex p-1 rounded-md max-w-52 shadow z-0">
+          <!-- Sliding background -->
+          <div
+            class="absolute inset-0 bg-base-50 rounded-md transition-transform duration-200 ease-in-out"
+            :class="duration === 'monthly' ? 'w-1/2 translate-x-0' : 'w-1/2 translate-x-full'">
+          </div>
+          <!-- Monthly Pricing Button -->
+          <button
+            id="monthly-pricing-button"
+            class="relative flex items-center justify-center w-full px-2 h-6 text-xs font-medium focus:outline-none transition-colors duration-300 z-10"
+            :class="duration === 'monthly' ? 'text-accent-600' : 'text-base-500 hover:text-accent-500'"
+            @click="duration = 'monthly'"
+            type="button"
+            :aria-pressed="duration === 'monthly'">
+            Monthly
+          </button>
+          <!-- Annual Pricing Button -->
+          <button
+            id="annual-pricing-button"
+            class="relative flex items-center justify-center w-full px-2 h-6 text-xs font-medium focus:outline-none transition-colors duration-300 z-10"
+            :class="duration === 'annual' ? 'text-accent-600' : 'text-base-500 hover:text-accent-500'"
+            @click="duration = 'annual'"
+            type="button"
+            :aria-pressed="duration === 'annual'">
+            Annual
+          </button>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mt-12 mx-auto">
+        <!-- Free Tier -->
+        <div class="flex flex-col h-full p-1 lg:py-1 rounded-3xl bg-base-50 ring-4 ring-base-50 border border-base-200">
+          <div>
+            <div class="flex flex-col gap-4 p-8 bg-white rounded-[1.3rem] h-full">
+              <div class="flex items-start justify-between w-full">
+                <div>
+                  <h3 class="text-lg leading-normal sm:text-xl md:text-2xl font-medium text-base-900">
+                    Free
+                  </h3>
+                  <p class="text-base leading-normal font-medium text-base-500">
+                    For guest users
+                  </p>
+                </div>
+              </div>
+              <p class="text-base leading-normal font-medium text-base-500">
+                Perfect for trying out our SEO tools with limited usage.
+              </p>
+            </div>
+          </div>
+          <div class="p-8">
+            <p class="font-semibold flex lg:text-3xl items-baseline text-2xl tracking-tighter text-base-900">
+              <span data-monthly="$0" data-annual="$0" x-text="$el.dataset[duration]">
+              </span>
+              <span class="text-sm font-normal font-sans tracking-normal text-base-500">
+                <span x-show="duration === 'monthly'">/month</span>
+                <span x-show="duration === 'annual'" style="display: none">
+                  /annually
+                </span>
+              </span>
+            </p>
+            <div class="w-full mt-4">
+              <a
+                href="/auth/register"
+                class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:text-accent-500 ring-1 ring-base-200 focus:ring-accent-500 h-9 px-4 py-2 text-sm font-medium rounded-md w-full">
+                Get Started Free
+              </a>
+            </div>
+            <div class="mt-8">
+              <p class="text-sm leading-normal font-medium uppercase text-base-500">
+                Free plan includes:
+              </p>
+              <ul class="flex flex-col mt-4 gap-y-3 text-base-500" role="list">
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">10 DR checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">10 traffic checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">10 backlink checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">50 backlink views</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pro Tier -->
+        <div class="flex flex-col h-full p-1 lg:py-1 rounded-3xl bg-base-950 ring-4 ring-base-50 border border-base-200">
+          <div>
+            <div class="flex flex-col gap-4 p-8 bg-white/10 rounded-[1.3rem] h-full">
+              <div class="flex items-start justify-between w-full">
+                <div>
+                  <h3 class="text-lg leading-normal sm:text-xl md:text-2xl font-medium text-white">
+                    Pro
+                  </h3>
+                  <p class="text-base leading-normal font-medium text-base-100">
+                    For professionals
+                  </p>
+                </div>
+                <span class="inline-flex items-center font-medium relative text-base-700 bg-base-50 px-2.5 py-1 text-xs rounded-md">
+                  Popular
+                </span>
+              </div>
+              <p class="text-base leading-normal font-medium text-base-100">
+                Perfect for SEO professionals who need more queries and advanced features.
+              </p>
+            </div>
+          </div>
+          <div class="p-8">
+            <p class="font-semibold flex lg:text-3xl items-baseline text-2xl tracking-tighter text-white">
+              <span data-monthly="$29.99" data-annual="$299.99" x-text="$el.dataset[duration]">
+              </span>
+              <span class="text-sm font-normal font-sans tracking-normal text-white/50">
+                <span x-show="duration === 'monthly'">/month</span>
+                <span x-show="duration === 'annual'" style="display: none">
+                  /annually
+                </span>
+              </span>
+            </p>
+            <div class="w-full mt-4">
+              <button
+                @click="handleProUpgrade(duration)"
+                class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:text-accent-500 ring-1 ring-base-200 focus:ring-accent-500 h-9 px-4 py-2 text-sm font-medium rounded-md w-full">
+                Upgrade to Pro
+              </button>
+            </div>
+            <div class="mt-8">
+              <p class="text-sm leading-normal font-medium uppercase text-base-100">
+                Pro plan includes:
+              </p>
+              <ul class="flex flex-col mt-4 gap-y-3 text-base-100" role="list">
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">1,000 DR checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">1,000 traffic checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">1,000 backlink checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">Unlimited backlink views</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">Data export functionality</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">Priority email support</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <!-- SuperPro Tier -->
+        <div class="flex flex-col h-full p-1 lg:py-1 rounded-3xl bg-accent-700 ring-4 ring-base-50 border border-base-200">
+          <div>
+            <div class="flex flex-col gap-4 p-8 bg-white/10 rounded-[1.3rem] h-full">
+              <div class="flex items-start justify-between w-full">
+                <div>
+                  <h3 class="text-lg leading-normal sm:text-xl md:text-2xl font-medium text-white">
+                    SuperPro
+                  </h3>
+                  <p class="text-base leading-normal font-medium text-base-100">
+                    For enterprises
+                  </p>
+                </div>
+              </div>
+              <p class="text-base leading-normal font-medium text-base-100">
+                Designed for agencies and enterprises with high-volume SEO needs.
+              </p>
+            </div>
+          </div>
+          <div class="p-8">
+            <p class="font-semibold flex lg:text-3xl items-baseline text-2xl tracking-tighter text-white">
+              <span data-monthly="$99.99" data-annual="$999.99" x-text="$el.dataset[duration]">
+              </span>
+              <span class="text-sm font-normal font-sans tracking-normal text-accent-100">
+                <span x-show="duration === 'monthly'">/month</span>
+                <span x-show="duration === 'annual'" style="display: none">
+                  /annually
+                </span>
+              </span>
+            </p>
+            <div class="w-full mt-4">
+              <button
+                @click="handleSuperUpgrade(duration)"
+                class="flex items-center justify-center transition-all duration-200 focus:ring-2 focus:outline-none text-base-500 bg-white hover:text-accent-500 ring-1 ring-base-200 focus:ring-accent-500 h-9 px-4 py-2 text-sm font-medium rounded-md w-full">
+                Upgrade to SuperPro
+              </button>
+            </div>
+            <div class="mt-8">
+              <p class="text-sm leading-normal font-medium uppercase text-base-100">
+                SuperPro plan includes:
+              </p>
+              <ul class="flex flex-col mt-4 gap-y-3 text-base-100" role="list">
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">5,000 DR checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">5,000 traffic checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">5,000 backlink checks per month</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">Unlimited backlink views</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">Data export functionality</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">Priority support</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">Early access to new features</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check size-4">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M5 12l5 5l10 -10"></path>
+                  </svg>
+                  <span class="text-base leading-normal">API access</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- FAQ Section -->
+      <div class="mt-20">
+        <div class="max-w-3xl mx-auto">
+          <h2 class="text-2xl font-medium text-base-900 text-center mb-8">Frequently Asked Questions</h2>
+          <div class="space-y-4">
+            <div class="border border-base-200 rounded-lg p-6">
+              <h3 class="font-medium text-base-900 mb-2">Can I change my plan anytime?</h3>
+              <p class="text-base-600">Yes, you can upgrade or downgrade your plan at any time. Changes will be reflected in your next billing cycle.</p>
+            </div>
+            <div class="border border-base-200 rounded-lg p-6">
+              <h3 class="font-medium text-base-900 mb-2">What happens if I exceed my quota?</h3>
+              <p class="text-base-600">If you exceed your monthly quota, you'll need to upgrade to a higher plan or wait until the next billing cycle for your quota to reset.</p>
+            </div>
+            <div class="border border-base-200 rounded-lg p-6">
+              <h3 class="font-medium text-base-900 mb-2">Do you offer refunds?</h3>
+              <p class="text-base-600">We offer a 30-day money-back guarantee for all paid plans. Contact our support team if you're not satisfied.</p>
+            </div>
+            <div class="border border-base-200 rounded-lg p-6">
+              <h3 class="font-medium text-base-900 mb-2">Is there a free trial?</h3>
+              <p class="text-base-600">Yes! Our free plan allows you to test all features with limited usage. No credit card required.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  // Get current user from Supabase
+  async function getCurrentUser() {
+    try {
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+      );
+      
+      const { data: { user }, error } = await supabase.auth.getUser();
+      
+      if (error || !user) {
+         console.error('User not authenticated:', error);
+         alert('Please log in to upgrade your plan.');
+         window.location.href = '/';
+         return null;
+       }
+      
+      return user;
+    } catch (error) {
+      console.error('Error getting user:', error);
+      alert('Authentication error. Please try again.');
+      return null;
+    }
+  }
+
+  // Handle Pro plan upgrade
+  window.handleProUpgrade = async function(duration) {
+    try {
+      const user = await getCurrentUser();
+      if (!user) return;
+      
+      const response = await fetch('/api/payment/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: 'pro',
+          billing_cycle: duration,
+          user_id: user.id
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        console.error('Failed to create checkout session:', data.error);
+        alert('Failed to create checkout session. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+  
+  // Handle SuperPro plan upgrade
+  window.handleSuperUpgrade = async function(duration) {
+    try {
+      const user = await getCurrentUser();
+      if (!user) return;
+      
+      const response = await fetch('/api/payment/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: 'super',
+          billing_cycle: duration,
+          user_id: user.id
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+      } else {
+        console.error('Failed to create checkout session:', data.error);
+        alert('Failed to create checkout session. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+</script>
