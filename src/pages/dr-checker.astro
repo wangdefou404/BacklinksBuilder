@@ -42,6 +42,21 @@ const features = [
     features={features}
   >
     <Fragment slot="tool-content">
+      <!-- Quota Display -->
+      <div id="quota-display" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-medium text-blue-900">DR Check Quota</h3>
+            <p id="quota-info" class="text-sm text-blue-700">Loading quota information...</p>
+          </div>
+          <div id="quota-upgrade" class="hidden">
+            <a href="/pricing" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              Upgrade Plan
+            </a>
+          </div>
+        </div>
+      </div>
+      
       <DomainInput 
         id="domains"
         label="Enter Domains (one per line, max 100)"
@@ -70,7 +85,18 @@ const features = [
   </ToolPageLayout>
 </BaseLayout>
 
+<script src="/src/scripts/quota-manager.js" is:inline></script>
 <script src="/src/scripts/dr-checker.js" is:inline></script>
+
+<script is:inline>
+  // Initialize quota display when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    if (typeof QuotaManager !== 'undefined') {
+      const quotaManager = new QuotaManager();
+      quotaManager.initPageQuota('dr_check');
+    }
+  });
+</script>
 
 <style>
   .sort-asc svg {

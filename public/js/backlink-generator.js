@@ -6,6 +6,13 @@ class BacklinkGenerator {
     this.isAnalyzing = false;
     this.initializeElements();
     this.bindEvents();
+    
+    // Initialize quota manager
+    this.quotaManager = null;
+    if (typeof QuotaManager !== 'undefined') {
+      this.quotaManager = new QuotaManager();
+      this.quotaManager.initPageQuota('backlink_check');
+    }
   }
 
   showError(message) {
@@ -153,11 +160,31 @@ class BacklinkGenerator {
   async analyzeBacklinks() {
     const url = this.urlInput?.value.trim();
 
-    this.setLoadingState(true);
-    this.showProgress();
-    
+    // Check quota before proceeding
+    if (this.quotaManager) {
+      try {
+        await this.quotaManager.executeWithQuotaCheck('backlink_check', async () => {
+          await this.performBacklinkAnalysis(url);
+        });
+      } catch (error) {
+        if (error.message === 'Quota exceeded') {
+          console.log('Quota exceeded, stopping execution');
+          return; // Quota check failed, stop execution
+        }
+        throw error; // Re-throw other errors
+      }
+    } else {
+      // Fallback if quota manager is not available
+      await this.performBacklinkAnalysis(url);
+    }
+  }
+  
+  async performBacklinkAnalysis(url) {
     try {
-      // 立即开始连接，不等待
+      // 立即显示加载状态
+      this.setLoadingState(true);
+      this.clearResults();
+      this.showProgress();
       this.updateProgress(20, 'Connecting to API...');
       
       const response = await fetch('/api/backlink-check', {
@@ -211,11 +238,15 @@ class BacklinkGenerator {
             
             // 显示友好的提示信息
             this.showApiUnavailableMessage(result.error);
+            this.setLoadingState(false);
+            this.hideProgress();
             return;
           }
         }
         
         this.showError(`API调用失败: ${result.error}`);
+        this.setLoadingState(false);
+        this.hideProgress();
         return;
       }
       
@@ -241,6 +272,8 @@ class BacklinkGenerator {
     } catch (error) {
       console.error('Analysis error:', error);
       this.showError(`Analysis failed: ${error.message}`);
+      this.setLoadingState(false);
+      this.hideProgress();
     } finally {
       this.setLoadingState(false);
       this.hideProgress();

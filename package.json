@@ -46,7 +46,9 @@
     "alpinejs": "^3.14.9",
     "dotenv": "^17.2.1",
     "gray-matter": "^4.0.3",
+    "lucide-react": "^0.542.0",
     "next-auth": "^4.24.11",
+    "node-fetch": "2.7.0",
     "stripe": "^18.4.0",
     "typescript": "^5.9.2"
   }

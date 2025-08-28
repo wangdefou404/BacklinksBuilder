@@ -5,6 +5,13 @@ class TrafficChecker {
     this.bindEvents();
     this.results = [];
     this.isChecking = false;
+    
+    // Initialize quota manager
+    this.quotaManager = null;
+    if (typeof QuotaManager !== 'undefined') {
+      this.quotaManager = new QuotaManager();
+      this.quotaManager.initPageQuota('traffic_check');
+    }
   }
 
   initializeElements() {
@@ -66,6 +73,13 @@ class TrafficChecker {
     this.bindTableSorting();
   }
 
+  updateButtonStates() {
+    if (this.checkBtn) {
+      this.checkBtn.disabled = this.isChecking;
+      this.checkBtn.textContent = this.isChecking ? 'Checking...' : 'Check Traffic';
+    }
+  }
+
   updateDomainCount() {
     if (!this.domainsTextarea) return;
     
@@ -123,10 +137,25 @@ class TrafficChecker {
       return;
     }
     
+    // Check quota before proceeding
+    if (this.quotaManager) {
+      const canProceed = await this.quotaManager.executeWithQuotaCheck('traffic_check', async () => {
+        await this.performTrafficCheck(domains);
+      });
+      
+      if (!canProceed) {
+        return; // Quota check failed, stop execution
+      }
+    } else {
+      // Fallback if quota manager is not available
+      await this.performTrafficCheck(domains);
+    }
+  }
+  
+  async performTrafficCheck(domains) {
     this.isChecking = true;
     this.updateButtonStates();
     this.showProgress();
-    this.hideResults();
     
     try {
       const results = [];

@@ -1,0 +1,272 @@
+---
+// 升级提示组件
+export interface Props {
+  userId: string;
+  quotaType?: string; // 触发提示的配额类型
+  currentPlan?: string; // 当前计划
+  showModal?: boolean; // 是否显示为模态框
+  onClose?: () => void; // 关闭回调
+}
+
+const { 
+  userId, 
+  quotaType = '',
+  currentPlan = 'free',
+  showModal = false
+} = Astro.props;
+
+// 获取配额信息以确定升级建议
+let quotaData = null;
+let upgradeRecommendation = null;
+
+if (userId) {
+  try {
+    const response = await fetch(`${Astro.url.origin}/api/user/quota`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId })
+    });
+
+    if (response.ok) {
+      quotaData = await response.json();
+      
+      // 根据当前计划推荐升级
+      if (quotaData.planType === 'free') {
+        upgradeRecommendation = {
+          targetPlan: 'pro',
+          targetPlanName: 'Pro 计划',
+          benefits: [
+            '每月 1000 次 DR 检查',
+            '每月 500 次流量检查', 
+            '每月 200 次外链检查',
+            '每月 100 次外链查看',
+            '优先客服支持',
+            '高级分析报告'
+          ],
+          price: '$29/月',
+          savings: '比 Super 计划节省 $20/月'
+        };
+      } else if (quotaData.planType === 'pro') {
+        upgradeRecommendation = {
+          targetPlan: 'super',
+          targetPlanName: 'Super 计划',
+          benefits: [
+            '无限制 DR 检查',
+            '无限制流量检查',
+            '无限制外链检查', 
+            '无限制外链查看',
+            '专属客服支持',
+            '定制化报告',
+            'API 访问权限'
+          ],
+          price: '$49/月',
+          savings: '无限制使用，最佳性价比'
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch quota data for upgrade prompt:', error);
+  }
+}
+
+// 获取配额类型的中文名称
+const getQuotaTypeName = (type: string) => {
+  const names = {
+    'dr_checks': 'DR 检查',
+    'traffic_checks': '流量检查',
+    'backlink_checks': '外链检查',
+    'backlink_views': '外链查看'
+  };
+  return names[type] || type;
+};
+---
+
+{upgradeRecommendation && (
+  <div class={`upgrade-prompt ${showModal ? 'modal-overlay' : 'inline-prompt'}`}>
+    {showModal && (
+      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <!-- 模态框头部 -->
+          <div class="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-900">升级您的计划</h2>
+            <button 
+              type="button" 
+              class="close-modal text-gray-400 hover:text-gray-600 transition-colors"
+              onclick="closeUpgradeModal()"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- 模态框内容 -->
+          <div class="p-6">
+    )}
+    
+    {!showModal && (
+      <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
+    )}
+    
+    <!-- 提示内容 -->
+    <div class={showModal ? '' : 'max-w-4xl'}>
+      <!-- 配额不足提示 -->
+      {quotaType && (
+        <div class="mb-6">
+          <div class="flex items-center mb-4">
+            <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+              <svg class="w-6 h-6 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-gray-900">{getQuotaTypeName(quotaType)} 配额不足</h3>
+              <p class="text-sm text-gray-600">您当前的 {quotaData?.planDisplayName || '免费'} 计划配额已用完</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      <!-- 升级推荐 -->
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">升级到 {upgradeRecommendation.targetPlanName}</h3>
+        <p class="text-gray-600 mb-6">解锁更多功能，提升您的工作效率</p>
+        
+        <!-- 价格信息 -->
+        <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+          <div class="text-center mb-4">
+            <div class="text-3xl font-bold text-blue-600">{upgradeRecommendation.price}</div>
+            <div class="text-sm text-gray-500">{upgradeRecommendation.savings}</div>
+          </div>
+          
+          <!-- 功能列表 -->
+          <div class="space-y-3">
+            {upgradeRecommendation.benefits.map((benefit) => (
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-gray-700">{benefit}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <!-- 行动按钮 -->
+        <div class="flex flex-col sm:flex-row gap-4">
+          <a 
+            href="/pricing" 
+            class="flex-1 bg-blue-600 text-white text-center py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            立即升级
+          </a>
+          <a 
+            href="/pricing" 
+            class="flex-1 border border-gray-300 text-gray-700 text-center py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+          >
+            查看所有计划
+          </a>
+        </div>
+      </div>
+      
+      <!-- 当前使用情况 -->
+      {quotaData && (
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h4 class="font-medium text-gray-900 mb-3">当前使用情况</h4>
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            {Object.entries(quotaData.quotas).map(([key, quota]) => (
+              <div class="flex justify-between">
+                <span class="text-gray-600">{quota.name}:</span>
+                <span class={`font-medium ${
+                  quota.remaining === 0 ? 'text-red-600' : 
+                  quota.percentage > 80 ? 'text-yellow-600' : 'text-green-600'
+                }`}>
+                  {quota.used}/{quota.unlimited ? '∞' : quota.limit}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+    
+    {showModal && (
+          </div>
+        </div>
+      </div>
+    )}
+    
+    {!showModal && (
+      </div>
+    )}
+  </div>
+)}
+
+<script>
+  // 关闭模态框
+  function closeUpgradeModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+      modal.style.display = 'none';
+    }
+  }
+  
+  // 显示模态框
+  function showUpgradeModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+      modal.style.display = 'block';
+    }
+  }
+  
+  // ESC 键关闭模态框
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      closeUpgradeModal();
+    }
+  });
+  
+  // 点击背景关闭模态框
+  document.addEventListener('click', function(event) {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal && event.target === modal) {
+      closeUpgradeModal();
+    }
+  });
+</script>
+
+<style>
+  .modal-overlay {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .modal-overlay > div {
+    animation: slideIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideIn {
+    from { 
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .inline-prompt {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .close-modal:hover {
+    transform: scale(1.1);
+  }
+</style>

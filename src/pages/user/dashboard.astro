@@ -3,7 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Navigation from '../../components/global/Navigation.astro';
 import Footer from '../../components/global/Footer.astro';
 import RoleGuard from '../../components/auth/RoleGuard.astro';
-import QuotaDisplay from '../../components/auth/QuotaDisplay.astro';
+import UserQuotaDashboard from '../../components/user/UserQuotaDashboard.astro';
 // import AuthStatus from '../../components/auth/AuthStatus.astro'; // 暂时注释掉未使用的导入
 
 // 用户会话将在客户端获取
@@ -100,11 +100,7 @@ try {
             <p class="text-sm text-gray-600">查看您的服务使用情况和剩余配额</p>
           </div>
           <div class="px-6 py-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <QuotaDisplay quotaType="dr_checks" userId={userId} />
-              <QuotaDisplay quotaType="backlink_generations" userId={userId} />
-              <QuotaDisplay quotaType="traffic_checks" userId={userId} />
-            </div>
+            <UserQuotaDashboard userId={userId} showUpgradePrompt={true} refreshInterval={30000} />
           </div>
         </div>
 

@@ -1,4 +1,10 @@
 let currentResults = [];
+let quotaManager = null;
+
+// Initialize quota manager
+if (typeof QuotaManager !== 'undefined') {
+  quotaManager = new QuotaManager();
+}
 
 // Export button setup function - moved to global scope
 function setupExportButton() {
@@ -105,8 +111,22 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
-    checkBtn.disabled = true;
-
+    // Check quota before proceeding
+    if (quotaManager) {
+      const canProceed = await quotaManager.executeWithQuotaCheck('dr_check', async function() {
+        await performDRCheck(domains);
+      });
+      
+      if (!canProceed) {
+        return; // Quota check failed, stop execution
+      }
+    } else {
+      // Fallback if quota manager is not available
+      await performDRCheck(domains);
+    }
+  });
+  
+  async function performDRCheck(domains) {
     if (btnText) btnText.textContent = 'Checking...';
     
     if (window.ProgressBar) {
@@ -171,7 +191,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-
     if (btnText) btnText.textContent = 'Check Domain Ratings';
     if (window.ProgressBar) {
       window.ProgressBar.hide();
@@ -180,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkBtn.disabled = false;
     
     displayResults(currentResults);
-  });
+  }
   
   // Export button event listener will be added after table is shown
   
