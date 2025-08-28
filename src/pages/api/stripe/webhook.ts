@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { supabase } from '../../../lib/supabase';
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-07-30.basil',
 });
 
 const endpointSecret = import.meta.env.STRIPE_WEBHOOK_SECRET!;
@@ -169,7 +169,7 @@ async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = (invoice.lines?.data?.[0]?.subscription as string) || null;
   
   if (!subscriptionId) {
     return;
@@ -201,7 +201,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = (invoice.lines?.data?.[0]?.subscription as string) || null;
   
   if (!subscriptionId) {
     return;

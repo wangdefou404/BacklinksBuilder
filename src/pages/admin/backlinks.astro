@@ -328,9 +328,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     </div>
   </div>
 
-  <script>
+  <script is:inline>
     let currentPage = 1;
-    let totalPages = 1;
+    // let totalPages = 1; // 未使用的变量
     let currentFilters = {};
     let editingId = null;
 
@@ -341,7 +341,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     const form = document.getElementById('backlink-form');
     const addBtn = document.getElementById('add-backlink-btn');
     const cancelBtn = document.getElementById('cancel-btn');
-    const saveBtn = document.getElementById('save-btn');
+    // const saveBtn = document.getElementById('save-btn'); // 未使用的变量
     const applyFiltersBtn = document.getElementById('apply-filters-btn');
     const prevPageBtn = document.getElementById('prev-page-btn');
     const nextPageBtn = document.getElementById('next-page-btn');
@@ -371,7 +371,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     function renderBacklinks(backlinks) {
       tbody.innerHTML = '';
       
-      backlinks.forEach(backlink => {
+      backlinks.forEach((backlink) => {
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50';
         
@@ -380,10 +380,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           'Paid': 'bg-red-100 text-red-800'
         }[backlink.paymentType] || 'bg-gray-100 text-gray-800';
         
-        const followTypeClass = {
-          'DoFollow': 'bg-green-100 text-green-800',
-          'NoFollow': 'bg-red-100 text-red-800'
-        }[backlink.followType] || 'bg-gray-100 text-gray-800';
+        // const followTypeClass = {
+        //   'DoFollow': 'bg-green-100 text-green-800',
+        //   'NoFollow': 'bg-red-100 text-red-800'
+        // }[backlink.followType] || 'bg-gray-100 text-gray-800'; // 未使用的变量
         
         const accessTypeClass = {
           'guest': 'bg-blue-100 text-blue-800',

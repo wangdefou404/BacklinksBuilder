@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 
-export const GET: APIRoute = async ({ url, redirect }) => {
+export const GET: APIRoute = async ({ redirect }) => {
   const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID;
   const SITE_URL = import.meta.env.SITE_URL || 'http://localhost:4321';
   
@@ -14,11 +14,10 @@ export const GET: APIRoute = async ({ url, redirect }) => {
   // 构建 Google OAuth URL
   const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   googleAuthUrl.searchParams.set('client_id', GOOGLE_CLIENT_ID);
-  googleAuthUrl.searchParams.set('redirect_uri', `${SITE_URL}/api/auth/callback`);
+  googleAuthUrl.searchParams.set('redirect_uri', `${SITE_URL}/auth/callback`);
   googleAuthUrl.searchParams.set('response_type', 'code');
   googleAuthUrl.searchParams.set('scope', 'openid email profile');
-  googleAuthUrl.searchParams.set('access_type', 'offline');
-  googleAuthUrl.searchParams.set('prompt', 'consent');
+  googleAuthUrl.searchParams.set('prompt', 'select_account');
 
   // 生成并存储 state 参数用于安全验证
   const state = crypto.randomUUID();

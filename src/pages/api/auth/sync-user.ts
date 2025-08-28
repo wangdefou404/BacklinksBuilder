@@ -26,6 +26,8 @@ interface SyncUserRequest {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  let userData: SyncUserRequest | null = null;
+  
   try {
     // 验证请求方法
     if (request.method !== 'POST') {
@@ -68,7 +70,6 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // 解析请求体
-    let userData: SyncUserRequest;
     try {
       userData = await request.json();
     } catch (parseError) {

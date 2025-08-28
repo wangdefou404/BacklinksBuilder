@@ -3,10 +3,10 @@ import Stripe from 'stripe';
 import { supabase } from '../../../lib/supabase';
 
 const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
+  apiVersion: '2025-07-30.basil',
 });
 
-export const POST: APIRoute = async ({ request, cookies }) => {
+export const POST: APIRoute = async ({ cookies }) => {
   try {
     // 获取当前用户会话
     const sessionCookie = cookies.get('session');

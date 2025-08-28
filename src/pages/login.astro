@@ -1,8 +1,8 @@
 ---
-import Layout from '../layouts/BaseLayout.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<Layout title="Login - BacklinksBuilder">
+<BaseLayout title="Login - BacklinksBuilder">
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
       <div class="text-center">
@@ -79,7 +79,7 @@ import Layout from '../layouts/BaseLayout.astro';
     </div>
   </div>
 
-  <script>
+  <script is:inline>
     document.addEventListener('DOMContentLoaded', function() {
       const googleLoginBtn = document.getElementById('google-login-btn');
       const loadingState = document.getElementById('loading-state');
@@ -139,4 +139,4 @@ import Layout from '../layouts/BaseLayout.astro';
       }
     });
   </script>
-</Layout>
+</BaseLayout>

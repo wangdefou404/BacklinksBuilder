@@ -78,7 +78,7 @@ const currentPrice = currentPlan[billing];
             <div class="space-y-2">
               <h4 class="font-medium text-base-900 text-sm">Included features:</h4>
               <ul class="space-y-1">
-                {currentPlan.features.map(feature => (
+                {currentPlan.features.map((feature: string) => (
                   <li class="flex items-center gap-2 text-sm text-base-600">
                     <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -244,7 +244,7 @@ const currentPrice = currentPlan[billing];
         checkoutForm.classList.remove('hidden');
         
         // Setup checkout button click handler
-        const checkoutButton = document.getElementById('checkout-button');
+        const checkoutButton = document.getElementById('checkout-button') as HTMLButtonElement;
         const buttonText = document.getElementById('button-text');
         const buttonLoading = document.getElementById('button-loading');
         
@@ -252,7 +252,7 @@ const currentPrice = currentPlan[billing];
           // Show loading state
           buttonText.classList.add('hidden');
           buttonLoading.classList.remove('hidden');
-          checkoutButton.disabled = true;
+          if (checkoutButton) checkoutButton.disabled = true;
           
           try {
             // Get URL parameters
@@ -282,7 +282,7 @@ const currentPrice = currentPlan[billing];
             // Redirect to Stripe Checkout
             window.location.href = data.url;
             
-          } catch (error) {
+          } catch (error: any) {
             console.error('Checkout error:', error);
             errorMessage.textContent = error.message || 'An unexpected error occurred. Please try again.';
             errorState.classList.remove('hidden');
@@ -291,11 +291,11 @@ const currentPrice = currentPlan[billing];
             // Reset button state
             buttonText.classList.remove('hidden');
             buttonLoading.classList.add('hidden');
-            checkoutButton.disabled = false;
+            if (checkoutButton) checkoutButton.disabled = false;
           }
         });
         
-      } catch (error) {
+      } catch (error: any) {
         console.error('Initialization error:', error);
         loadingState.classList.add('hidden');
         errorMessage.textContent = error.message || 'Failed to initialize checkout. Please try again.';

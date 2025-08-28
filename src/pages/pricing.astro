@@ -1,9 +1,9 @@
 ---
-import Layout from '../layouts/BaseLayout.astro';
-import Pricing from '../components/landing/Pricing.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PricingComponent from '../components/landing/Pricing.astro';
 ---
 
-<Layout title="Pricing - BacklinksBuilder">
+<BaseLayout title="Pricing - BacklinksBuilder">
   <main class="min-h-screen bg-white">
     <!-- Header -->
     <div class="bg-white shadow-sm">
@@ -22,6 +22,6 @@ import Pricing from '../components/landing/Pricing.astro';
     </div>
 
     <!-- 使用首页的 Pricing 组件 -->
-    <Pricing />
+    <PricingComponent />
   </main>
-</Layout>
+</BaseLayout>

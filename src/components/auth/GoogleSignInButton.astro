@@ -99,17 +99,17 @@ const variantClasses = {
   import { signInWithGoogle } from '../../lib/auth';
 
   // 获取按钮元素
-  const button = document.getElementById('google-signin-btn') as HTMLButtonElement;
-  const btnText = document.getElementById('btn-text') as HTMLSpanElement;
-  const loadingSpinner = document.getElementById('loading-spinner') as SVGElement;
+  const button = document.getElementById('google-signin-btn') as HTMLButtonElement | null;
+  const btnText = document.getElementById('btn-text') as HTMLSpanElement | null;
+  const loadingSpinner = document.getElementById('loading-spinner') as unknown as SVGSVGElement | null;
 
   if (button) {
     button.addEventListener('click', async () => {
       try {
         // 显示加载状态
         button.disabled = true;
-        btnText.textContent = '登录中...';
-        loadingSpinner.classList.remove('hidden');
+        if (btnText) btnText.textContent = '登录中...';
+        if (loadingSpinner) loadingSpinner.classList.remove('hidden');
 
         // 获取重定向URL
         const redirectTo = button.dataset.redirectTo || '/dashboard';
@@ -122,8 +122,8 @@ const variantClasses = {
         
         // 恢复按钮状态
         button.disabled = false;
-        btnText.textContent = '使用 Google 登录';
-        loadingSpinner.classList.add('hidden');
+        if (btnText) btnText.textContent = '使用 Google 登录';
+        if (loadingSpinner) loadingSpinner.classList.add('hidden');
         
         // 显示错误提示
         alert('登录失败，请稍后重试');

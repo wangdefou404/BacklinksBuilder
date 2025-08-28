@@ -17,7 +17,7 @@ const { id = "progress-bar", containerId = "progress-container" } = Astro.props;
   </div>
 </div>
 
-<script define:vars={{ id, containerId }}>
+<script is:inline define:vars={{ id, containerId }}>
   // Progress bar utility functions
   window.ProgressBar = {
     show: function() {

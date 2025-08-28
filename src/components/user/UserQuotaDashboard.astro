@@ -103,7 +103,7 @@ const formatResetTime = (dateString: string | null) => {
 
     <!-- 配额使用情况网格 -->
     <div class="quota-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-      {Object.entries(quotaData.quotas).map(([key, quota]) => {
+      {Object.entries(quotaData.quotas).map(([_, quota]: [string, any]) => {
         const statusColor = quota.unlimited ? 'green' : getStatusColor(quota.percentage);
         return (
           <div class="quota-card bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
@@ -213,7 +213,7 @@ const formatResetTime = (dateString: string | null) => {
   </div>
 )}
 
-<script>
+<script is:inline>
   // 自动刷新功能
   document.addEventListener('DOMContentLoaded', function() {
     const dashboard = document.querySelector('.quota-dashboard');

@@ -181,7 +181,7 @@ const userEmail = user?.email;
     // 点击外部关闭菜单
     document.addEventListener('click', (e) => {
       const container = document.getElementById('user-avatar-container');
-      if (container && !container.contains(e.target)) {
+      if (container && !container.contains(e.target as Node)) {
         closeDropdown();
       }
     });

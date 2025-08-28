@@ -87,7 +87,7 @@ export const GET: APIRoute = async () => {
     duplicateRoles?.forEach(role => {
       roleCounts[role.user_id] = (roleCounts[role.user_id] || 0) + 1;
     });
-    const duplicates = Object.entries(roleCounts).filter(([_, count]) => count > 1);
+    const duplicates = Object.entries(roleCounts).filter(([_, count]) => (count as number) > 1);
 
     // 4. 查看所有角色记录
     const { data: allRoles, error: allRolesError } = await supabase

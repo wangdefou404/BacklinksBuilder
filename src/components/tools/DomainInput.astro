@@ -25,7 +25,7 @@ const { id, label, placeholder, maxDomains = 100, rows = 8 } = Astro.props;
   </div>
 </div>
 
-<script define:vars={{ id, maxDomains }}>
+<script is:inline define:vars={{ id, maxDomains }}>
   // Domain counter functionality
   const textarea = document.getElementById(id);
   const countElement = document.getElementById(`${id}-count`);

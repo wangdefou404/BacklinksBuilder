@@ -1,19 +1,26 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 export const GET: APIRoute = async ({ url, redirect, cookies }) => {
   const code = url.searchParams.get('code');
-  // const state = url.searchParams.get('state');
+  const state = url.searchParams.get('state');
   const error = url.searchParams.get('error');
 
   // 处理用户拒绝授权的情况
   if (error) {
     console.error('Google OAuth error:', error);
-    return redirect('/login?error=access_denied');
+    const errorParam = error === 'access_denied' ? 'access_denied' : 'oauth_error';
+    return redirect(`/login?error=${errorParam}`);
   }
 
   if (!code) {
+    console.error('No authorization code received from Google');
     return redirect('/login?error=no_code');
+  }
+
+  if (!state) {
+    console.error('No state parameter received from Google');
+    return redirect('/login?error=invalid_state');
   }
 
   const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID;
@@ -42,10 +49,12 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
     });
 
     if (!tokenResponse.ok) {
-      throw new Error('Failed to exchange code for token');
+      const errorText = await tokenResponse.text();
+      console.error('Token exchange failed:', tokenResponse.status, errorText);
+      throw new Error(`Failed to exchange code for token: ${tokenResponse.status}`);
     }
 
-    const tokenData = await tokenResponse.json();
+    const tokenData: { access_token: string } = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
     // 使用访问令牌获取用户信息
@@ -56,10 +65,16 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
     });
 
     if (!userResponse.ok) {
-      throw new Error('Failed to fetch user info');
+      const errorText = await userResponse.text();
+      console.error('User info fetch failed:', userResponse.status, errorText);
+      throw new Error(`Failed to fetch user info: ${userResponse.status}`);
     }
 
-    const userData = await userResponse.json();
+    const userData: {
+      email: string;
+      name: string;
+      picture: string;
+    } = await userResponse.json();
     
     // 检查用户是否已存在
     const { data: existingUser } = await supabase
@@ -137,6 +152,19 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
     return redirect('/user/dashboard');
   } catch (error) {
     console.error('Authentication error:', error);
-    return redirect('/login?error=auth_failed');
+    
+    // 根据错误类型提供更具体的错误信息
+    let errorParam = 'auth_failed';
+    if (error instanceof Error) {
+      if (error.message.includes('Token exchange')) {
+        errorParam = 'token_exchange_failed';
+      } else if (error.message.includes('User info')) {
+        errorParam = 'user_info_failed';
+      } else if (error.message.includes('Database')) {
+        errorParam = 'database_error';
+      }
+    }
+    
+    return redirect(`/login?error=${errorParam}`);
   }
 };

@@ -192,9 +192,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     </div>
   </main>
 
-  <script>
+  <script is:inline>
     let currentPage = 1;
-    let totalPages = 1;
+    // let totalPages = 1; // 未使用的变量
     let currentFilters = {};
     let isUserPremium = false; // This would be determined by user authentication
     let allBacklinks = [];
@@ -347,7 +347,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       renderBacklinks();
       updatePagination({
         page: 1,
-        limit: limit,
+        limit: isUserPremium ? '100' : '50',
         total: mockBacklinks.length,
         hasMore: false
       });

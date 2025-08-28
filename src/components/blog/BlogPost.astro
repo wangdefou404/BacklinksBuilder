@@ -348,8 +348,8 @@ const markdownToHtml = (markdown: string) => {
           <!-- Published Date -->
           <div class="mb-4 flex justify-between items-center">
             <p class="text-sm text-gray-500">Published</p>
-            <time datetime={post.publishedAt} class="text-sm font-medium text-gray-900">
-              {formatDate(post.publishedAt)}
+            <time datetime={post.publishedAt.toISOString()} class="text-sm font-medium text-gray-900">
+              {formatDate(post.publishedAt.toISOString())}
             </time>
           </div>
           

@@ -193,7 +193,7 @@ const QuotaDashboard: React.FC<QuotaDashboardProps> = ({ userId, className = '' 
 
       {/* Quota Cards */}
       <div className="space-y-4">
-        {quotaData.map((quota) => {
+        {quotaData.map((quota: QuotaData) => {
           const monthlyPercentage = getUsagePercentage(quota.monthlyUsed, quota.monthlyLimit);
           const dailyPercentage = getUsagePercentage(quota.dailyUsed, quota.dailyLimit);
 

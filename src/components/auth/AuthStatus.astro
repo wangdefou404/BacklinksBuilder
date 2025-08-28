@@ -3,7 +3,7 @@
 import GoogleSignInButton from './GoogleSignInButton.astro';
 
 // 不在服务端获取用户信息，改为在客户端处理
-const user = null;
+// const user = null;
 ---
 
 <div id="auth-status" class="flex items-center space-x-4" x-data="authStatusData()" x-cloak x-init="console.log('AuthStatus Alpine 组件已初始化', $data)">

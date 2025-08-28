@@ -63,11 +63,12 @@ export async function signOut(options = { retries: 2, timeout: 10000 }) {
       
       // 使用Promise.race实现超时控制
       const signOutPromise = supabase.auth.signOut({ scope: 'global' });
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<{ error: Error }>((_, reject) => {
         setTimeout(() => reject(new Error('登出请求超时')), options.timeout);
       });
       
-      const { error } = await Promise.race([signOutPromise, timeoutPromise]);
+      const result = await Promise.race([signOutPromise, timeoutPromise]) as any;
+      const { error } = result;
       
       if (error) {
         console.error('=== Supabase登出错误 ===');
@@ -147,11 +148,12 @@ export async function getCurrentUser(options = { retries: 1, timeout: 5000 }): P
       
       // 使用超时控制
       const getUserPromise = supabase.auth.getUser();
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<{ data: { user: any }, error: Error }>((_, reject) => {
         setTimeout(() => reject(new Error('获取用户信息超时')), options.timeout);
       });
       
-      const { data: { user }, error } = await Promise.race([getUserPromise, timeoutPromise]);
+      const result = await Promise.race([getUserPromise, timeoutPromise]) as any;
+      const { data: { user }, error } = result;
       
       if (error) {
         console.error('获取用户信息错误:', error.message);
@@ -205,11 +207,12 @@ export async function getCurrentSession(options = { retries: 1, timeout: 5000 })
       
       // 使用超时控制
       const getSessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise((_, reject) => {
+      const timeoutPromise = new Promise<{ data: { session: any }, error: Error }>((_, reject) => {
         setTimeout(() => reject(new Error('获取会话超时')), options.timeout);
       });
       
-      const { data: { session }, error } = await Promise.race([getSessionPromise, timeoutPromise]);
+      const result = await Promise.race([getSessionPromise, timeoutPromise]) as any;
+      const { data: { session }, error } = result;
       
       if (error) {
         console.error('获取会话错误:', error.message);

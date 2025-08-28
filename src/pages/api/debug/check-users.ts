@@ -6,7 +6,7 @@ const supabase = createClient(
   import.meta.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-export const GET: APIRoute = async ({ request }) => {
+export const GET: APIRoute = async () => {
   try {
     // 查询特定用户的数据
     const { data: specificUsers, error: specificError } = await supabase

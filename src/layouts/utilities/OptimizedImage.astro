@@ -1,6 +1,5 @@
 ---
 import type { ImageMetadata } from "astro";
-import { Image } from "astro:assets";
 
 interface BaseProps {
   src: string;
@@ -130,14 +129,13 @@ if (isLocalImage) {
     inlineSvg && imageContent ? (
       <Fragment set:html={imageContent} />
     ) : imageModule ? (
-      <Image
-        src={imageModule}
+      <img
+        src={(await imageModule).default.src}
         alt={alt}
-        width={width}
-        height={height}
+        width={Number(width)}
+        height={Number(height)}
         loading={loading}
         decoding={decoding}
-        formats={formats}
         style={style}
         class={rest.class || Astro.props.class}
         {...rest}
@@ -151,10 +149,11 @@ if (isLocalImage) {
     )
   ) : (
     /* External images */
-    <Image
+    <img
       src={src}
       alt={alt}
-      inferSize={true}
+      width={typeof width === 'string' ? parseInt(width) : width}
+      height={typeof height === 'string' ? parseInt(height) : height}
       loading={loading}
       decoding={decoding}
       style={style}

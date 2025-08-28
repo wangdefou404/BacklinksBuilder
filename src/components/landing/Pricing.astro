@@ -1,6 +1,6 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import { Icon } from 'astro-icon/components';
+// import BaseLayout from '../../layouts/BaseLayout.astro';
+// import { Icon } from 'astro-icon/components';
 ---
 
 <section class="pt-20" x-data="{duration: 'monthly'}">
@@ -551,16 +551,7 @@ import { Icon } from 'astro-icon/components';
     
 
     
-    // 添加调试按钮
-    const debugButton = document.createElement('button');
-    debugButton.textContent = '🔍 调试认证状态';
-    debugButton.style.cssText = 'position: fixed; top: 10px; right: 10px; z-index: 9999; background: #ff6b6b; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-size: 12px;';
-    debugButton.onclick = async function() {
-      debugCookies();
-      const result = await testAuthAPI();
-      alert('认证测试结果：' + (result.success ? '成功' : '失败') + '\n详情请查看控制台');
-    };
-    document.body.appendChild(debugButton);
+
     
     // 将函数绑定到全局作用域
     window.handleUpgrade = async function(plan) {
