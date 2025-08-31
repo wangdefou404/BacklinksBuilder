@@ -6,10 +6,11 @@ export const GET: APIRoute = async ({ request, redirect }) => {
     
     const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID;
     // 优先使用生产环境URL，确保在Vercel部署时使用正确的域名
-    const SITE_URL = import.meta.env.SITE_URL || 
-                     import.meta.env.PUBLIC_SITE_URL || 
-                     import.meta.env.NEXTAUTH_URL || 
-                     (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4321');
+    // 在生产环境中，优先使用SITE_URL，在开发环境中使用NEXTAUTH_URL
+    const isProduction = import.meta.env.NODE_ENV === 'production' || import.meta.env.PROD;
+    const SITE_URL = isProduction 
+      ? (import.meta.env.SITE_URL || import.meta.env.PUBLIC_SITE_URL || 'https://backlinksbuilder.net')
+      : (import.meta.env.NEXTAUTH_URL || import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321');
     
     console.log('环境变量检查:', {
       GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID ? `${GOOGLE_CLIENT_ID.substring(0, 10)}...` : 'MISSING',
@@ -48,10 +49,41 @@ export const GET: APIRoute = async ({ request, redirect }) => {
     
     // 设置state到cookie中用于验证，增加安全性
     const response = redirect(googleAuthUrl.toString());
-    const isProduction = SITE_URL.startsWith('https') || import.meta.env.NODE_ENV === 'production';
-    response.headers.set('Set-Cookie', `oauth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Secure=${isProduction}; Max-Age=600`);
     
-    console.log('设置OAuth状态Cookie:', { state, isProduction, siteUrl: SITE_URL });
+    // 从SITE_URL提取domain
+    let domain = '';
+    try {
+      const siteUrlObj = new URL(SITE_URL);
+      domain = siteUrlObj.hostname;
+      // 如果是生产环境且不是localhost，设置domain
+      if (isProduction && !domain.includes('localhost')) {
+        domain = domain.startsWith('www.') ? domain.substring(4) : domain;
+      } else {
+        domain = ''; // 本地开发不设置domain
+      }
+    } catch (e) {
+      console.warn('无法解析SITE_URL，使用默认domain设置:', e);
+      domain = '';
+    }
+    
+    // 构建Cookie字符串
+    let cookieString = `oauth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`;
+    if (isProduction) {
+      cookieString += '; Secure';
+    }
+    if (domain && isProduction) {
+      cookieString += `; Domain=${domain}`;
+    }
+    
+    response.headers.set('Set-Cookie', cookieString);
+    
+    console.log('设置OAuth状态Cookie:', { 
+      state, 
+      isProduction, 
+      siteUrl: SITE_URL, 
+      domain,
+      cookieString 
+    });
     
     return response;
     

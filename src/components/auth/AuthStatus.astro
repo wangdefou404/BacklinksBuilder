@@ -295,22 +295,48 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
         localStorage.clear();
         sessionStorage.clear();
         
-        // 清除所有相关cookie
+        // 清除所有相关cookie，使用一致的domain配置
         const cookiesToClear = [
           'sb-access-token',
           'sb-refresh-token', 
           'supabase-auth-token',
           'supabase.auth.token',
           'user_info',
-          'session'
+          'session',
+          'oauth_state'
         ];
+        
+        // 获取当前域名
+        const currentUrl = window.location.href;
+        const isProduction = currentUrl.startsWith('https') && !currentUrl.includes('localhost');
+        let domain = '';
+        
+        if (isProduction) {
+          try {
+            const urlObj = new URL(currentUrl);
+            domain = urlObj.hostname;
+            domain = domain.startsWith('www.') ? domain.substring(4) : domain;
+          } catch (e) {
+            console.warn('无法解析当前URL，使用默认domain设置:', e);
+          }
+        }
         
         cookiesToClear.forEach(cookieName => {
           // 清除不同域和路径的cookie
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=localhost`;
+          if (isProduction && domain) {
+            // 生产环境：使用正确的domain
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain}`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain}`;
+          } else {
+            // 本地环境：使用localhost
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=localhost`;
+            document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.localhost`;
+          }
+          // 通用清除（不指定domain）
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.localhost`;
         });
+        
+        console.log('✅ 已清除Cookie，domain配置:', { domain, isProduction });
         
         console.log('✅ 已清除本地存储和cookies');
       }

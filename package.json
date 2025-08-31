@@ -45,7 +45,6 @@
     "@next-auth/supabase-adapter": "^0.2.1",
     "@supabase/supabase-js": "^2.56.0",
     "alpinejs": "^3.14.9",
-    "astro-icon": "^1.1.5",
     "dotenv": "^17.2.1",
     "gray-matter": "^4.0.3",
     "lucide-react": "^0.542.0",

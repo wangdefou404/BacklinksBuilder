@@ -102,14 +102,38 @@ export const onRequest = defineMiddleware(async (context, next) => {
               role: userRole
             };
             
-            // 设置更新后的cookie
+            // 设置更新后的cookie，使用一致的domain配置
             const updatedCookieValue = encodeURIComponent(JSON.stringify(updatedSessionData));
-            context.cookies.set('session', updatedCookieValue, {
+            
+            // 获取当前请求的URL来确定domain
+            const requestUrl = context.request.url;
+            const isProduction = requestUrl.startsWith('https') && !requestUrl.includes('localhost');
+            let domain = '';
+            
+            if (isProduction) {
+              try {
+                const urlObj = new URL(requestUrl);
+                domain = urlObj.hostname;
+                domain = domain.startsWith('www.') ? domain.substring(4) : domain;
+              } catch (e) {
+                console.warn('无法解析请求URL，使用默认domain设置:', e);
+              }
+            }
+            
+            const cookieOptions: any = {
               httpOnly: true,
-              secure: true,
+              secure: isProduction,
               sameSite: 'lax',
               maxAge: 60 * 60 * 24 * 7 // 7 days
-            });
+            };
+            
+            if (domain && isProduction) {
+              cookieOptions.domain = domain;
+            }
+            
+            context.cookies.set('session', updatedCookieValue, cookieOptions);
+            
+            console.log('✅ Session cookie updated with consistent domain config:', { domain, isProduction });
             
             console.log('✅ Session cookie updated with new role:', userRole);
           }

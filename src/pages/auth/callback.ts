@@ -73,6 +73,28 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
       
       console.log('回调参数:', { code: code ? '存在' : '不存在', state, error, redirectTo });
       
+      // 检查必需的环境变量（移到前面以确保siteUrl可用）
+      const clientId = import.meta.env.GOOGLE_CLIENT_ID;
+      const clientSecret = import.meta.env.GOOGLE_CLIENT_SECRET;
+      // 优先使用生产环境URL，确保在Vercel部署时使用正确的域名
+      // 在生产环境中，优先使用SITE_URL，在开发环境中使用NEXTAUTH_URL
+      const isProduction = import.meta.env.NODE_ENV === 'production' || import.meta.env.PROD;
+      const siteUrl = isProduction 
+        ? (import.meta.env.SITE_URL || import.meta.env.PUBLIC_SITE_URL || 'https://backlinksbuilder.net')
+        : (import.meta.env.NEXTAUTH_URL || import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321');
+      
+      console.log('环境变量检查:', {
+        clientId: clientId ? `${clientId.substring(0, 10)}...` : 'MISSING',
+        clientSecret: clientSecret ? `${clientSecret.substring(0, 10)}...` : 'MISSING',
+        siteUrl,
+        allEnvVars: Object.keys(import.meta.env).filter(key => key.includes('GOOGLE') || key.includes('SITE'))
+      });
+      
+      if (!clientId || !clientSecret) {
+        console.error('Google OAuth配置缺失:', { clientId: !!clientId, clientSecret: !!clientSecret });
+        return redirect('/login?error=config_missing');
+      }
+      
       // 检查是否有错误参数
       if (error) {
         console.error('OAuth错误:', error);
@@ -112,30 +134,29 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
     return redirect('/login?error=invalid_state&message=' + encodeURIComponent('状态验证失败：参数不匹配'));
   }
   
-  // 清除状态cookie
-  cookies.delete('oauth_state', { path: '/' });
-  console.log('状态参数验证成功，已清除状态cookie');
-
-  // 检查必需的环境变量
-  const clientId = import.meta.env.GOOGLE_CLIENT_ID;
-  const clientSecret = import.meta.env.GOOGLE_CLIENT_SECRET;
-  // 优先使用生产环境URL，确保在Vercel部署时使用正确的域名
-  const siteUrl = import.meta.env.SITE_URL || 
-                  import.meta.env.PUBLIC_SITE_URL || 
-                  import.meta.env.NEXTAUTH_URL || 
-                  'http://localhost:4321';
-  
-  console.log('环境变量检查:', {
-    clientId: clientId ? `${clientId.substring(0, 10)}...` : 'MISSING',
-    clientSecret: clientSecret ? `${clientSecret.substring(0, 10)}...` : 'MISSING',
-    siteUrl,
-    allEnvVars: Object.keys(import.meta.env).filter(key => key.includes('GOOGLE') || key.includes('SITE'))
-  });
-  
-  if (!clientId || !clientSecret) {
-    console.error('Google OAuth配置缺失:', { clientId: !!clientId, clientSecret: !!clientSecret });
-    return redirect('/login?error=config_missing');
+  // 清除状态cookie，使用与设置时相同的domain配置
+  // 使用与前面相同的isProduction判断逻辑
+  let domain = '';
+  try {
+    const siteUrlObj = new URL(siteUrl);
+    domain = siteUrlObj.hostname;
+    if (isProduction && !domain.includes('localhost')) {
+      domain = domain.startsWith('www.') ? domain.substring(4) : domain;
+    } else {
+      domain = '';
+    }
+  } catch (e) {
+    console.warn('无法解析siteUrl，使用默认domain设置:', e);
+    domain = '';
   }
+  
+  const deleteOptions: any = { path: '/' };
+  if (domain && isProduction) {
+    deleteOptions.domain = domain;
+  }
+  
+  cookies.delete('oauth_state', deleteOptions);
+  console.log('状态参数验证成功，已清除状态cookie', { domain, deleteOptions });
 
   try {
       // 使用授权码交换访问令牌（带超时控制和重试机制）
@@ -358,23 +379,28 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
       avatar_url: user.avatar_url,
     };
 
-    // 设置会话 cookie
-    const isProduction = siteUrl.startsWith('https') || import.meta.env.NODE_ENV === 'production';
-    cookies.set('session', JSON.stringify(sessionData), {
-      httpOnly: true,
+    // 设置会话 cookie，使用一致的domain配置
+    const cookieOptions: any = {
       secure: isProduction,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 天
       path: '/',
+    };
+    
+    // 在生产环境中设置domain
+    if (domain && isProduction) {
+      cookieOptions.domain = domain;
+    }
+    
+    cookies.set('session', JSON.stringify(sessionData), {
+      ...cookieOptions,
+      httpOnly: true,
     });
 
     // 同时设置用户角色cookie，供前端使用
     cookies.set('user_role', user.role, {
+      ...cookieOptions,
       httpOnly: false, // 前端需要访问
-      secure: isProduction,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 天
-      path: '/',
     });
 
     // 设置用户信息cookie，供前端AuthStatus组件使用
@@ -387,12 +413,11 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
     };
     
     cookies.set('user_info', JSON.stringify(userInfo), {
+      ...cookieOptions,
       httpOnly: false, // 前端需要访问
-      secure: isProduction,
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 天
-      path: '/',
     });
+    
+    console.log('设置会话Cookie:', { domain, cookieOptions, isProduction });
 
     // 重定向到用户仪表板
     return redirect(redirectTo);
