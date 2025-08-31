@@ -5,7 +5,11 @@ export const GET: APIRoute = async ({ request, redirect }) => {
     console.log('=== Google OAuth登录请求 ===');
     
     const GOOGLE_CLIENT_ID = import.meta.env.GOOGLE_CLIENT_ID;
-    const SITE_URL = import.meta.env.SITE_URL || import.meta.env.PUBLIC_SITE_URL || import.meta.env.NEXTAUTH_URL || 'http://localhost:4321';
+    // 优先使用生产环境URL，确保在Vercel部署时使用正确的域名
+    const SITE_URL = import.meta.env.SITE_URL || 
+                     import.meta.env.PUBLIC_SITE_URL || 
+                     import.meta.env.NEXTAUTH_URL || 
+                     (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4321');
     
     console.log('环境变量检查:', {
       GOOGLE_CLIENT_ID: GOOGLE_CLIENT_ID ? `${GOOGLE_CLIENT_ID.substring(0, 10)}...` : 'MISSING',
@@ -44,7 +48,10 @@ export const GET: APIRoute = async ({ request, redirect }) => {
     
     // 设置state到cookie中用于验证，增加安全性
     const response = redirect(googleAuthUrl.toString());
-    response.headers.set('Set-Cookie', `oauth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Secure=${SITE_URL.startsWith('https')}; Max-Age=600`);
+    const isProduction = SITE_URL.startsWith('https') || import.meta.env.NODE_ENV === 'production';
+    response.headers.set('Set-Cookie', `oauth_state=${state}; Path=/; HttpOnly; SameSite=Lax; Secure=${isProduction}; Max-Age=600`);
+    
+    console.log('设置OAuth状态Cookie:', { state, isProduction, siteUrl: SITE_URL });
     
     return response;
     

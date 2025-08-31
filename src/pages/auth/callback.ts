@@ -119,7 +119,11 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
   // 检查必需的环境变量
   const clientId = import.meta.env.GOOGLE_CLIENT_ID;
   const clientSecret = import.meta.env.GOOGLE_CLIENT_SECRET;
-  const siteUrl = import.meta.env.SITE_URL || import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
+  // 优先使用生产环境URL，确保在Vercel部署时使用正确的域名
+  const siteUrl = import.meta.env.SITE_URL || 
+                  import.meta.env.PUBLIC_SITE_URL || 
+                  import.meta.env.NEXTAUTH_URL || 
+                  'http://localhost:4321';
   
   console.log('环境变量检查:', {
     clientId: clientId ? `${clientId.substring(0, 10)}...` : 'MISSING',
@@ -355,9 +359,10 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
     };
 
     // 设置会话 cookie
+    const isProduction = siteUrl.startsWith('https') || import.meta.env.NODE_ENV === 'production';
     cookies.set('session', JSON.stringify(sessionData), {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 天
       path: '/',
@@ -366,7 +371,7 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
     // 同时设置用户角色cookie，供前端使用
     cookies.set('user_role', user.role, {
       httpOnly: false, // 前端需要访问
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 天
       path: '/',
@@ -383,7 +388,7 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
     
     cookies.set('user_info', JSON.stringify(userInfo), {
       httpOnly: false, // 前端需要访问
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProduction,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 天
       path: '/',
