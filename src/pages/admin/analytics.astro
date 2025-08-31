@@ -1,0 +1,716 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RoleGuard from '../../components/auth/RoleGuard.astro';
+import Footer from '../../components/global/Footer.astro';
+
+// 获取用户会话信息
+const session = Astro.locals.session;
+const user = Astro.locals.user;
+
+// 如果用户未登录，重定向到登录页面
+if (!session || !user) {
+  return Astro.redirect('/login?redirect=/admin/analytics');
+}
+
+const userId = user.id;
+
+// 获取用户角色信息
+let userRole = null;
+try {
+  const response = await fetch(`${Astro.url.origin}/api/auth/get-user-role`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ userId })
+  });
+
+  if (response.ok) {
+    userRole = await response.json();
+  }
+} catch (error) {
+  console.error('Role fetch error:', error);
+}
+
+// 获取分析数据
+let analyticsData = {
+  overview: {
+    totalUsers: 1247,
+    activeUsers: 892,
+    totalChecks: 15634,
+    successRate: 87.5,
+    avgResponseTime: 1.2
+  },
+  userGrowth: [
+    { date: '2024-01-01', users: 850, premium: 120 },
+    { date: '2024-01-02', users: 867, premium: 125 },
+    { date: '2024-01-03', users: 891, premium: 132 },
+    { date: '2024-01-04', users: 923, premium: 145 },
+    { date: '2024-01-05', users: 956, premium: 158 },
+    { date: '2024-01-06', users: 1002, premium: 167 },
+    { date: '2024-01-07', users: 1034, premium: 178 }
+  ],
+  checksData: [
+    { date: '2024-01-01', checks: 1234, success: 1089, failed: 145 },
+    { date: '2024-01-02', checks: 1456, success: 1278, failed: 178 },
+    { date: '2024-01-03', checks: 1678, success: 1467, failed: 211 },
+    { date: '2024-01-04', checks: 1892, success: 1654, failed: 238 },
+    { date: '2024-01-05', checks: 2134, success: 1876, failed: 258 },
+    { date: '2024-01-06', checks: 2356, success: 2089, failed: 267 },
+    { date: '2024-01-07', checks: 2578, success: 2267, failed: 311 }
+  ],
+  topDomains: [
+    { domain: 'example.com', checks: 1234, success: 1089 },
+    { domain: 'test.org', checks: 987, success: 876 },
+    { domain: 'demo.net', checks: 756, success: 678 },
+    { domain: 'sample.io', checks: 543, success: 489 },
+    { domain: 'website.co', checks: 432, success: 398 }
+  ],
+  revenueData: [
+    { month: '2023-07', revenue: 12450, subscriptions: 89 },
+    { month: '2023-08', revenue: 13670, subscriptions: 97 },
+    { month: '2023-09', revenue: 15230, subscriptions: 108 },
+    { month: '2023-10', revenue: 16890, subscriptions: 119 },
+    { month: '2023-11', revenue: 18450, subscriptions: 131 },
+    { month: '2023-12', revenue: 20120, subscriptions: 142 },
+    { month: '2024-01', revenue: 21780, subscriptions: 154 }
+  ]
+};
+
+try {
+  const analyticsResponse = await fetch(`${Astro.url.origin}/api/admin/analytics`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  if (analyticsResponse.ok) {
+    const result = await analyticsResponse.json();
+    analyticsData = { ...analyticsData, ...result.data };
+  }
+} catch (error) {
+  console.error('Analytics fetch error:', error);
+}
+---
+
+<BaseLayout title="数据统计 - 管理员面板">
+  <main class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- 页面标题和导航 -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <a href="/admin/dashboard" class="text-purple-600 hover:text-purple-800 mr-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </a>
+            <svg class="w-8 h-8 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">数据统计</h1>
+              <p class="mt-2 text-gray-600">系统数据分析和报表</p>
+            </div>
+          </div>
+          <div class="flex space-x-3">
+            <button 
+              onclick="refreshData()"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              刷新数据
+            </button>
+            <button 
+              onclick="exportReport()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              导出报表
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 角色守卫 -->
+      <RoleGuard allowedRoles={['admin', 'super']} userId={userId}>
+        
+        <!-- 时间范围选择器 -->
+        <div class="mb-6">
+          <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-medium text-gray-900">时间范围</h3>
+              <div class="flex space-x-4">
+                <select 
+                  id="timeRange"
+                  onchange="updateTimeRange()"
+                  class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="7d">最近7天</option>
+                  <option value="30d" selected>最近30天</option>
+                  <option value="90d">最近90天</option>
+                  <option value="1y">最近1年</option>
+                  <option value="custom">自定义</option>
+                </select>
+                <div id="customDateRange" class="hidden flex space-x-2">
+                  <input 
+                    type="date" 
+                    id="startDate"
+                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                  <span class="self-center text-gray-500">至</span>
+                  <input 
+                    type="date" 
+                    id="endDate"
+                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                  <button 
+                    onclick="applyCustomRange()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    应用
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 概览统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-blue-100 rounded-full">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">总用户数</p>
+                <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.totalUsers.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-green-100 rounded-full">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">活跃用户</p>
+                <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.activeUsers.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-purple-100 rounded-full">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">总检查数</p>
+                <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.totalChecks.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-yellow-100 rounded-full">
+                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">成功率</p>
+                <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.successRate}%</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-red-100 rounded-full">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">平均响应时间</p>
+                <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.avgResponseTime}s</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <!-- 用户增长图表 -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">用户增长趋势</h3>
+              <div class="flex space-x-2">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span class="w-2 h-2 bg-blue-600 rounded-full mr-1"></span>
+                  总用户
+                </span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span class="w-2 h-2 bg-green-600 rounded-full mr-1"></span>
+                  高级用户
+                </span>
+              </div>
+            </div>
+            <div class="h-64">
+              <canvas id="userGrowthChart" class="w-full h-full"></canvas>
+            </div>
+          </div>
+
+          <!-- 检查统计图表 -->
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium text-gray-900">检查统计</h3>
+              <div class="flex space-x-2">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                  <span class="w-2 h-2 bg-purple-600 rounded-full mr-1"></span>
+                  总检查
+                </span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span class="w-2 h-2 bg-green-600 rounded-full mr-1"></span>
+                  成功
+                </span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  <span class="w-2 h-2 bg-red-600 rounded-full mr-1"></span>
+                  失败
+                </span>
+              </div>
+            </div>
+            <div class="h-64">
+              <canvas id="checksChart" class="w-full h-full"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- 收入趋势图表 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">收入趋势</h3>
+            <div class="flex space-x-2">
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span class="w-2 h-2 bg-green-600 rounded-full mr-1"></span>
+                收入
+              </span>
+              <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span class="w-2 h-2 bg-blue-600 rounded-full mr-1"></span>
+                订阅数
+              </span>
+            </div>
+          </div>
+          <div class="h-80">
+            <canvas id="revenueChart" class="w-full h-full"></canvas>
+          </div>
+        </div>
+
+        <!-- 数据表格区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- 热门域名 -->
+          <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">热门检查域名</h3>
+            </div>
+            <div class="overflow-hidden">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">域名</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">检查次数</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成功率</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {analyticsData.topDomains.map((domain, index) => (
+                    <tr key={index}>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {domain.domain}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {domain.checks.toLocaleString()}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center">
+                          <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                            <div 
+                              class="bg-green-600 h-2 rounded-full" 
+                              style={`width: ${(domain.success / domain.checks * 100)}%`}
+                            ></div>
+                          </div>
+                          <span class="text-xs font-medium">
+                            {Math.round(domain.success / domain.checks * 100)}%
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 实时活动 -->
+          <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+              <h3 class="text-lg font-medium text-gray-900">实时活动</h3>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4" id="realTimeActivity">
+                <div class="flex items-center space-x-3">
+                  <div class="flex-shrink-0">
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-900">用户 user@example.com 完成了外链检查</p>
+                    <p class="text-xs text-gray-500">2分钟前</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="flex-shrink-0">
+                    <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-900">新用户注册: newuser@test.com</p>
+                    <p class="text-xs text-gray-500">5分钟前</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="flex-shrink-0">
+                    <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-900">premium@user.com 升级到高级版</p>
+                    <p class="text-xs text-gray-500">8分钟前</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="flex-shrink-0">
+                    <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-900">检查失败: timeout.com</p>
+                    <p class="text-xs text-gray-500">12分钟前</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <div class="flex-shrink-0">
+                    <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm text-gray-900">系统备份完成</p>
+                    <p class="text-xs text-gray-500">15分钟前</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </RoleGuard>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script define:vars={{ analyticsData }}>
+  // 初始化图表
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeCharts();
+    startRealTimeUpdates();
+  });
+
+  function initializeCharts() {
+    // 用户增长图表
+    const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
+    new Chart(userGrowthCtx, {
+      type: 'line',
+      data: {
+        labels: analyticsData.userGrowth.map(item => new Date(item.date).toLocaleDateString()),
+        datasets: [{
+          label: '总用户',
+          data: analyticsData.userGrowth.map(item => item.users),
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4
+        }, {
+          label: '高级用户',
+          data: analyticsData.userGrowth.map(item => item.premium),
+          borderColor: 'rgb(34, 197, 94)',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // 检查统计图表
+    const checksCtx = document.getElementById('checksChart').getContext('2d');
+    new Chart(checksCtx, {
+      type: 'bar',
+      data: {
+        labels: analyticsData.checksData.map(item => new Date(item.date).toLocaleDateString()),
+        datasets: [{
+          label: '总检查',
+          data: analyticsData.checksData.map(item => item.checks),
+          backgroundColor: 'rgba(147, 51, 234, 0.8)'
+        }, {
+          label: '成功',
+          data: analyticsData.checksData.map(item => item.success),
+          backgroundColor: 'rgba(34, 197, 94, 0.8)'
+        }, {
+          label: '失败',
+          data: analyticsData.checksData.map(item => item.failed),
+          backgroundColor: 'rgba(239, 68, 68, 0.8)'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            stacked: false
+          },
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+
+    // 收入趋势图表
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+      type: 'line',
+      data: {
+        labels: analyticsData.revenueData.map(item => item.month),
+        datasets: [{
+          label: '收入 ($)',
+          data: analyticsData.revenueData.map(item => item.revenue),
+          borderColor: 'rgb(34, 197, 94)',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y'
+        }, {
+          label: '订阅数',
+          data: analyticsData.revenueData.map(item => item.subscriptions),
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.4,
+          yAxisID: 'y1'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: '月份'
+            }
+          },
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            title: {
+              display: true,
+              text: '收入 ($)'
+            }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            title: {
+              display: true,
+              text: '订阅数'
+            },
+            grid: {
+              drawOnChartArea: false,
+            },
+          }
+        }
+      }
+    });
+  }
+
+  // 时间范围更新
+  function updateTimeRange() {
+    const timeRange = document.getElementById('timeRange').value;
+    const customDateRange = document.getElementById('customDateRange');
+    
+    if (timeRange === 'custom') {
+      customDateRange.classList.remove('hidden');
+    } else {
+      customDateRange.classList.add('hidden');
+      // 这里可以根据选择的时间范围重新加载数据
+      refreshData();
+    }
+  }
+
+  // 应用自定义时间范围
+  function applyCustomRange() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (!startDate || !endDate) {
+      alert('请选择开始和结束日期');
+      return;
+    }
+    
+    if (new Date(startDate) > new Date(endDate)) {
+      alert('开始日期不能晚于结束日期');
+      return;
+    }
+    
+    // 这里可以根据自定义时间范围重新加载数据
+    refreshData();
+  }
+
+  // 刷新数据
+  async function refreshData() {
+    try {
+      const response = await fetch('/api/admin/analytics', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        // 更新页面数据
+        location.reload();
+      } else {
+        alert('刷新数据失败，请重试。');
+      }
+    } catch (error) {
+      console.error('刷新数据错误:', error);
+      alert('刷新失败，请检查网络连接。');
+    }
+  }
+
+  // 导出报表
+  async function exportReport() {
+    try {
+      const response = await fetch('/api/admin/analytics', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'export_report' })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `analytics-report-${new Date().toISOString().split('T')[0]}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('导出报表失败，请重试。');
+      }
+    } catch (error) {
+      console.error('导出报表错误:', error);
+      alert('导出失败，请检查网络连接。');
+    }
+  }
+
+  // 启动实时更新
+  function startRealTimeUpdates() {
+    // 每30秒更新一次实时活动
+    setInterval(updateRealTimeActivity, 30000);
+  }
+
+  // 更新实时活动
+  async function updateRealTimeActivity() {
+    try {
+      const response = await fetch('/api/admin/analytics?type=realtime', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        const activityContainer = document.getElementById('realTimeActivity');
+        
+        // 更新实时活动显示
+        if (result.activities && result.activities.length > 0) {
+          activityContainer.innerHTML = result.activities.map(activity => `
+            <div class="flex items-center space-x-3">
+              <div class="flex-shrink-0">
+                <div class="w-2 h-2 bg-${activity.color}-400 rounded-full animate-pulse"></div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-900">${activity.message}</p>
+                <p class="text-xs text-gray-500">${activity.time}</p>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+    } catch (error) {
+      console.error('更新实时活动错误:', error);
+    }
+  }
+</script>
+
+<style>
+  .transition-colors {
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .5;
+    }
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+</style>

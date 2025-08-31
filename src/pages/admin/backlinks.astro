@@ -1,19 +1,20 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+
+// 服务器端认证检查
+const user = Astro.locals.user;
+const userRole = Astro.locals.userRole;
+
+// 如果用户未登录或不是管理员，重定向到登录页面
+if (!user || userRole !== 'admin') {
+  return Astro.redirect('/admin/login');
+}
 ---
 
 <BaseLayout>
   <main class="min-h-screen bg-gray-100 py-8">
-    <!-- 认证检查加载中状态 -->
-    <div id="auth-loading" class="fixed inset-0 bg-white flex items-center justify-center z-50">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p class="mt-4 text-gray-600">正在验证身份...</p>
-      </div>
-    </div>
-    
     <!-- 主要内容区域 -->
-    <div id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 hidden">
+    <div id="main-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Page Header -->
       <div class="flex justify-between items-center mb-8">
         <div>
@@ -585,34 +586,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
     });
 
-    // 认证检查函数
-    function checkAuth() {
-      const isLoggedIn = localStorage.getItem('adminLoggedIn') === 'true';
-      const loginTime = localStorage.getItem('adminLoginTime');
-      
-      if (!isLoggedIn || !loginTime) {
-        // 未登录，重定向到登录页
-        window.location.href = '/admin/login';
-        return false;
-      }
-      
-      // 检查登录是否过期（24小时）
-      const loginDate = new Date(loginTime);
-      const now = new Date();
-      const hoursDiff = (now - loginDate) / (1000 * 60 * 60);
-      
-      if (hoursDiff > 24) {
-        // 登录过期，清除状态并重定向
-        localStorage.removeItem('adminLoggedIn');
-        localStorage.removeItem('adminUsername');
-        localStorage.removeItem('adminLoginTime');
-        alert('登录已过期，请重新登录');
-        window.location.href = '/admin/login';
-        return false;
-      }
-      
-      return true;
-    }
+    // 认证已在服务器端完成，无需客户端检查
     
     // 登出函数
     window.logout = function() {
@@ -624,32 +598,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
     };
     
-    // 页面加载时进行认证检查
+    // 页面加载时初始化
     document.addEventListener('DOMContentLoaded', function() {
-      if (checkAuth()) {
-        // 认证通过，显示主要内容
-        document.getElementById('auth-loading').style.display = 'none';
-        document.getElementById('main-content').classList.remove('hidden');
-        
-        // 显示用户信息
-        const username = localStorage.getItem('adminUsername');
-        if (username) {
-          const userInfo = document.createElement('div');
-          userInfo.className = 'text-sm text-gray-600 mb-4';
-          userInfo.innerHTML = `
-            <div class="flex justify-between items-center bg-blue-50 px-4 py-2 rounded-lg">
-              <span>欢迎，<strong>${username}</strong> 管理员</span>
-              <button onclick="logout()" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                退出登录
-              </button>
-            </div>
-          `;
-          document.querySelector('#main-content').insertBefore(userInfo, document.querySelector('#main-content').firstChild);
-        }
-        
-        // 初始化页面数据
-        loadBacklinks();
-      }
+      // 初始化页面数据
+      loadBacklinks();
     });
   </script>
 </BaseLayout>

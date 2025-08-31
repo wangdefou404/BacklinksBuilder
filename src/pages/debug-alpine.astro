@@ -82,15 +82,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   document.addEventListener('alpine:init', () => {
     console.log('Alpine.js 已初始化');
     
-    // 注册authStatusData以便测试
-    Alpine.data('authStatusData', () => ({
-      user: null,
-      isOpen: false,
-      loading: false,
-      
-      init() {
-        console.log('authStatusData 已初始化');
-      }
-    }));
+    // authStatusData 已在 AuthStatus 组件中定义，这里不需要重复定义
+    console.log('Alpine.js 调试页面初始化完成');
   });
 </script>

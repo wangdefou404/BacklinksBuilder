@@ -1,0 +1,673 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RoleGuard from '../../components/auth/RoleGuard.astro';
+import Footer from '../../components/global/Footer.astro';
+
+// 获取用户会话信息
+const session = Astro.locals.session;
+const user = Astro.locals.user;
+
+// 如果用户未登录，重定向到登录页面
+if (!session || !user) {
+  return Astro.redirect('/login?redirect=/admin/users');
+}
+
+const userId = user.id;
+
+// 获取用户角色信息
+let userRole = null;
+try {
+  const response = await fetch(`${Astro.url.origin}/api/auth/get-user-role`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ userId })
+  });
+
+  if (response.ok) {
+    userRole = await response.json();
+  }
+} catch (error) {
+  console.error('Role fetch error:', error);
+}
+
+// 获取用户列表数据
+let users = [];
+let totalUsers = 0;
+try {
+  const usersResponse = await fetch(`${Astro.url.origin}/api/admin/users`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  if (usersResponse.ok) {
+    const result = await usersResponse.json();
+    users = result.users || [];
+    totalUsers = result.total || 0;
+  }
+} catch (error) {
+  console.error('Users fetch error:', error);
+}
+---
+
+<BaseLayout title="用户管理 - 管理员面板">
+  <main class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- 页面标题和导航 -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <a href="/admin/dashboard" class="text-purple-600 hover:text-purple-800 mr-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </a>
+            <svg class="w-8 h-8 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+            </svg>
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">用户管理</h1>
+              <p class="mt-2 text-gray-600">管理系统用户账户和权限</p>
+            </div>
+          </div>
+          <div class="text-sm text-gray-500">
+            总用户数: <span class="font-semibold text-gray-900">{totalUsers}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 角色守卫 -->
+      <RoleGuard allowedRoles={['admin', 'super']} userId={userId}>
+        
+        <!-- 用户统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center">
+              <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">总用户</p>
+                <p class="text-2xl font-semibold text-gray-900">{totalUsers}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center">
+              <div class="p-3 rounded-full bg-green-100 text-green-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">高级用户</p>
+                <p class="text-2xl font-semibold text-gray-900">{users.filter(u => u.subscription_status === 'active').length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center">
+              <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">管理员</p>
+                <p class="text-2xl font-semibold text-gray-900">{users.filter(u => u.role === 'admin' || u.role === 'super').length}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center">
+              <div class="p-3 rounded-full bg-orange-100 text-orange-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">今日活跃</p>
+                <p class="text-2xl font-semibold text-gray-900">{users.filter(u => {
+                  const lastActive = new Date(u.last_sign_in_at || u.created_at);
+                  const today = new Date();
+                  return lastActive.toDateString() === today.toDateString();
+                }).length}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 用户管理面板 -->
+        <div class="bg-white shadow-lg rounded-lg">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-medium text-gray-900">用户列表</h2>
+                <p class="text-sm text-gray-600">管理所有注册用户的账户和权限</p>
+              </div>
+              <button 
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                onclick="openAddUserModal()"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                添加用户
+              </button>
+            </div>
+          </div>
+
+          <!-- 搜索和筛选 -->
+          <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">搜索用户</label>
+                <input 
+                  type="text" 
+                  id="searchInput"
+                  placeholder="邮箱或用户名"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  oninput="filterUsers()"
+                >
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">角色筛选</label>
+                <select 
+                  id="roleFilter"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onchange="filterUsers()"
+                >
+                  <option value="">所有角色</option>
+                  <option value="user">普通用户</option>
+                  <option value="premium">高级用户</option>
+                  <option value="admin">管理员</option>
+                  <option value="super">超级管理员</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">状态筛选</label>
+                <select 
+                  id="statusFilter"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onchange="filterUsers()"
+                >
+                  <option value="">所有状态</option>
+                  <option value="active">活跃</option>
+                  <option value="inactive">非活跃</option>
+                  <option value="suspended">已暂停</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">排序方式</label>
+                <select 
+                  id="sortBy"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onchange="sortUsers()"
+                >
+                  <option value="created_at_desc">注册时间(新到旧)</option>
+                  <option value="created_at_asc">注册时间(旧到新)</option>
+                  <option value="last_sign_in_desc">最后登录(新到旧)</option>
+                  <option value="email_asc">邮箱(A-Z)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 用户表格 -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                  </th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户信息</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">角色</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">注册时间</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最后登录</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
+                {users.map((user, index) => (
+                  <tr class="hover:bg-gray-50 user-row" data-user-id={user.id}>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <input type="checkbox" class="user-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500" value={user.id}>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="flex items-center">
+                        <div class="flex-shrink-0 h-10 w-10">
+                          <img class="h-10 w-10 rounded-full" src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email)}&background=6366f1&color=fff`} alt="">
+                        </div>
+                        <div class="ml-4">
+                          <div class="text-sm font-medium text-gray-900">{user.email}</div>
+                          <div class="text-sm text-gray-500">ID: {user.id.substring(0, 8)}...</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        user.role === 'super' ? 'bg-red-100 text-red-800' :
+                        user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                        user.subscription_status === 'active' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {user.role === 'super' ? '超级管理员' :
+                         user.role === 'admin' ? '管理员' :
+                         user.subscription_status === 'active' ? '高级用户' : '普通用户'}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        user.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                        user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 'bg-green-100 text-green-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {user.status === 'suspended' ? '已暂停' :
+                         user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? '活跃' : '非活跃'}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(user.created_at).toLocaleDateString('zh-CN')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('zh-CN') : '从未登录'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div class="flex space-x-2">
+                        <button 
+                          onclick={`editUser('${user.id}')`}
+                          class="text-blue-600 hover:text-blue-900 transition-colors"
+                          title="编辑用户"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                          </svg>
+                        </button>
+                        <button 
+                          onclick={`viewUser('${user.id}')`}
+                          class="text-green-600 hover:text-green-900 transition-colors"
+                          title="查看详情"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                          </svg>
+                        </button>
+                        {user.status !== 'suspended' ? (
+                          <button 
+                            onclick={`suspendUser('${user.id}')`}
+                            class="text-yellow-600 hover:text-yellow-900 transition-colors"
+                            title="暂停用户"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                          </button>
+                        ) : (
+                          <button 
+                            onclick={`activateUser('${user.id}')`}
+                            class="text-green-600 hover:text-green-900 transition-colors"
+                            title="激活用户"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10V9a4 4 0 118 0v1M9 10H5a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2h-4"></path>
+                            </svg>
+                          </button>
+                        )}
+                        <button 
+                          onclick={`deleteUser('${user.id}')`}
+                          class="text-red-600 hover:text-red-900 transition-colors"
+                          title="删除用户"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 批量操作 -->
+          <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-700">已选择 <span id="selectedCount">0</span> 个用户</span>
+                <div class="flex space-x-2">
+                  <button 
+                    onclick="batchSuspend()"
+                    class="px-3 py-1 text-sm bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200 transition-colors"
+                    disabled
+                    id="batchSuspendBtn"
+                  >
+                    批量暂停
+                  </button>
+                  <button 
+                    onclick="batchActivate()"
+                    class="px-3 py-1 text-sm bg-green-100 text-green-800 rounded hover:bg-green-200 transition-colors"
+                    disabled
+                    id="batchActivateBtn"
+                  >
+                    批量激活
+                  </button>
+                  <button 
+                    onclick="batchDelete()"
+                    class="px-3 py-1 text-sm bg-red-100 text-red-800 rounded hover:bg-red-200 transition-colors"
+                    disabled
+                    id="batchDeleteBtn"
+                  >
+                    批量删除
+                  </button>
+                </div>
+              </div>
+              <div class="text-sm text-gray-500">
+                显示 {users.length} 个用户
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </RoleGuard>
+    </div>
+  </main>
+
+  <Footer />
+</BaseLayout>
+
+<!-- 添加用户模态框 -->
+<div id="addUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen px-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900">添加新用户</h3>
+      </div>
+      <form id="addUserForm" class="px-6 py-4">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">邮箱地址</label>
+            <input type="email" id="newUserEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">临时密码</label>
+            <input type="password" id="newUserPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">用户角色</label>
+            <select id="newUserRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="user">普通用户</option>
+              <option value="premium">高级用户</option>
+              <option value="admin">管理员</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button" onclick="closeAddUserModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+            取消
+          </button>
+          <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+            添加用户
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 用户数据
+  let allUsers = [];
+  let filteredUsers = [];
+
+  // 初始化
+  document.addEventListener('DOMContentLoaded', function() {
+    // 从服务器端渲染的数据中获取用户列表
+    allUsers = Array.from(document.querySelectorAll('.user-row')).map(row => {
+      const userId = row.dataset.userId;
+      const cells = row.querySelectorAll('td');
+      return {
+        id: userId,
+        email: cells[1].querySelector('.text-sm.font-medium').textContent,
+        role: cells[2].querySelector('span').textContent,
+        status: cells[3].querySelector('span').textContent,
+        created_at: cells[4].textContent.trim(),
+        last_sign_in_at: cells[5].textContent.trim()
+      };
+    });
+    filteredUsers = [...allUsers];
+    updateSelectedCount();
+  });
+
+  // 搜索和筛选功能
+  function filterUsers() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const roleFilter = document.getElementById('roleFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+
+    const rows = document.querySelectorAll('.user-row');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const email = row.querySelector('.text-sm.font-medium').textContent.toLowerCase();
+      const role = row.querySelector('td:nth-child(3) span').textContent;
+      const status = row.querySelector('td:nth-child(4) span').textContent;
+
+      const matchesSearch = email.includes(searchTerm);
+      const matchesRole = !roleFilter || role.includes(roleFilter) || 
+                         (roleFilter === 'user' && role === '普通用户') ||
+                         (roleFilter === 'premium' && role === '高级用户') ||
+                         (roleFilter === 'admin' && role === '管理员') ||
+                         (roleFilter === 'super' && role === '超级管理员');
+      const matchesStatus = !statusFilter || status.includes(statusFilter) ||
+                           (statusFilter === 'active' && status === '活跃') ||
+                           (statusFilter === 'inactive' && status === '非活跃') ||
+                           (statusFilter === 'suspended' && status === '已暂停');
+
+      if (matchesSearch && matchesRole && matchesStatus) {
+        row.style.display = '';
+        visibleCount++;
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  // 排序功能
+  function sortUsers() {
+    const sortBy = document.getElementById('sortBy').value;
+    const tbody = document.getElementById('usersTableBody');
+    const rows = Array.from(tbody.querySelectorAll('.user-row'));
+
+    rows.sort((a, b) => {
+      let aValue, bValue;
+      
+      switch(sortBy) {
+        case 'created_at_desc':
+          aValue = new Date(a.querySelector('td:nth-child(5)').textContent.trim());
+          bValue = new Date(b.querySelector('td:nth-child(5)').textContent.trim());
+          return bValue - aValue;
+        case 'created_at_asc':
+          aValue = new Date(a.querySelector('td:nth-child(5)').textContent.trim());
+          bValue = new Date(b.querySelector('td:nth-child(5)').textContent.trim());
+          return aValue - bValue;
+        case 'last_sign_in_desc':
+          aValue = a.querySelector('td:nth-child(6)').textContent.trim();
+          bValue = b.querySelector('td:nth-child(6)').textContent.trim();
+          if (aValue === '从未登录') aValue = new Date(0);
+          else aValue = new Date(aValue);
+          if (bValue === '从未登录') bValue = new Date(0);
+          else bValue = new Date(bValue);
+          return bValue - aValue;
+        case 'email_asc':
+          aValue = a.querySelector('.text-sm.font-medium').textContent.toLowerCase();
+          bValue = b.querySelector('.text-sm.font-medium').textContent.toLowerCase();
+          return aValue.localeCompare(bValue);
+        default:
+          return 0;
+      }
+    });
+
+    // 重新排列DOM元素
+    rows.forEach(row => tbody.appendChild(row));
+  }
+
+  // 全选功能
+  function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+      const row = checkbox.closest('.user-row');
+      if (row.style.display !== 'none') {
+        checkbox.checked = selectAll.checked;
+      }
+    });
+    
+    updateSelectedCount();
+  }
+
+  // 更新选中数量
+  function updateSelectedCount() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    const count = selectedCheckboxes.length;
+    document.getElementById('selectedCount').textContent = count;
+    
+    // 启用/禁用批量操作按钮
+    const batchButtons = ['batchSuspendBtn', 'batchActivateBtn', 'batchDeleteBtn'];
+    batchButtons.forEach(btnId => {
+      const btn = document.getElementById(btnId);
+      btn.disabled = count === 0;
+      if (count === 0) {
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    });
+  }
+
+  // 监听复选框变化
+  document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('user-checkbox')) {
+      updateSelectedCount();
+    }
+  });
+
+  // 用户操作函数
+  function editUser(userId) {
+    // 实现编辑用户功能
+    alert(`编辑用户: ${userId}`);
+  }
+
+  function viewUser(userId) {
+    // 实现查看用户详情功能
+    alert(`查看用户详情: ${userId}`);
+  }
+
+  function suspendUser(userId) {
+    if (confirm('确定要暂停这个用户吗？')) {
+      // 实现暂停用户功能
+      alert(`暂停用户: ${userId}`);
+    }
+  }
+
+  function activateUser(userId) {
+    if (confirm('确定要激活这个用户吗？')) {
+      // 实现激活用户功能
+      alert(`激活用户: ${userId}`);
+    }
+  }
+
+  function deleteUser(userId) {
+    if (confirm('确定要删除这个用户吗？此操作不可撤销！')) {
+      // 实现删除用户功能
+      alert(`删除用户: ${userId}`);
+    }
+  }
+
+  // 批量操作函数
+  function batchSuspend() {
+    const selectedUsers = getSelectedUsers();
+    if (selectedUsers.length > 0 && confirm(`确定要暂停选中的 ${selectedUsers.length} 个用户吗？`)) {
+      alert(`批量暂停用户: ${selectedUsers.join(', ')}`);
+    }
+  }
+
+  function batchActivate() {
+    const selectedUsers = getSelectedUsers();
+    if (selectedUsers.length > 0 && confirm(`确定要激活选中的 ${selectedUsers.length} 个用户吗？`)) {
+      alert(`批量激活用户: ${selectedUsers.join(', ')}`);
+    }
+  }
+
+  function batchDelete() {
+    const selectedUsers = getSelectedUsers();
+    if (selectedUsers.length > 0 && confirm(`确定要删除选中的 ${selectedUsers.length} 个用户吗？此操作不可撤销！`)) {
+      alert(`批量删除用户: ${selectedUsers.join(', ')}`);
+    }
+  }
+
+  function getSelectedUsers() {
+    const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
+    return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
+  }
+
+  // 添加用户模态框
+  function openAddUserModal() {
+    document.getElementById('addUserModal').classList.remove('hidden');
+  }
+
+  function closeAddUserModal() {
+    document.getElementById('addUserModal').classList.add('hidden');
+    document.getElementById('addUserForm').reset();
+  }
+
+  // 添加用户表单提交
+  document.getElementById('addUserForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('newUserEmail').value;
+    const password = document.getElementById('newUserPassword').value;
+    const role = document.getElementById('newUserRole').value;
+    
+    // 实现添加用户功能
+    alert(`添加新用户: ${email}, 角色: ${role}`);
+    closeAddUserModal();
+  });
+
+  // 点击模态框外部关闭
+  document.getElementById('addUserModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeAddUserModal();
+    }
+  });
+</script>
+
+<style>
+  .transition-colors {
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  }
+  
+  .hover\:bg-gray-50:hover {
+    background-color: #f9fafb;
+  }
+  
+  .opacity-50 {
+    opacity: 0.5;
+  }
+  
+  .cursor-not-allowed {
+    cursor: not-allowed;
+  }
+</style>

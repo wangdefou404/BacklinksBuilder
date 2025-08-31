@@ -1,0 +1,1175 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RoleGuard from '../../components/auth/RoleGuard.astro';
+import Footer from '../../components/global/Footer.astro';
+
+// 获取用户会话信息
+const session = Astro.locals.session;
+const user = Astro.locals.user;
+
+// 如果用户未登录，重定向到登录页面
+if (!session || !user) {
+  return Astro.redirect('/login?redirect=/admin/payments');
+}
+
+const userId = user.id;
+
+// 获取用户角色信息
+let userRole = null;
+try {
+  const response = await fetch(`${Astro.url.origin}/api/auth/get-user-role`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ userId })
+  });
+
+  if (response.ok) {
+    userRole = await response.json();
+  }
+} catch (error) {
+  console.error('Role fetch error:', error);
+}
+
+// 获取支付数据
+let paymentsData = {
+  overview: {
+    totalRevenue: 125680.50,
+    monthlyRevenue: 18750.25,
+    totalTransactions: 2847,
+    successRate: 98.5,
+    pendingRefunds: 12,
+    averageOrderValue: 44.15
+  },
+  transactions: [
+    {
+      id: 'txn_1234567890',
+      orderId: 'ORD-2024-001',
+      userId: 'user123',
+      userEmail: 'john@example.com',
+      amount: 29.99,
+      currency: 'USD',
+      status: 'completed',
+      paymentMethod: 'stripe',
+      plan: 'Premium Monthly',
+      createdAt: '2024-01-07 14:30:25',
+      updatedAt: '2024-01-07 14:30:45',
+      stripePaymentId: 'pi_1234567890',
+      description: 'Premium subscription upgrade'
+    },
+    {
+      id: 'txn_1234567891',
+      orderId: 'ORD-2024-002',
+      userId: 'user456',
+      userEmail: 'jane@test.com',
+      amount: 99.99,
+      currency: 'USD',
+      status: 'completed',
+      paymentMethod: 'stripe',
+      plan: 'Premium Annual',
+      createdAt: '2024-01-07 13:45:12',
+      updatedAt: '2024-01-07 13:45:30',
+      stripePaymentId: 'pi_1234567891',
+      description: 'Annual subscription purchase'
+    },
+    {
+      id: 'txn_1234567892',
+      orderId: 'ORD-2024-003',
+      userId: 'user789',
+      userEmail: 'admin@site.com',
+      amount: 19.99,
+      currency: 'USD',
+      status: 'pending',
+      paymentMethod: 'stripe',
+      plan: 'Basic Monthly',
+      createdAt: '2024-01-07 12:20:18',
+      updatedAt: '2024-01-07 12:20:18',
+      stripePaymentId: 'pi_1234567892',
+      description: 'Basic subscription renewal'
+    },
+    {
+      id: 'txn_1234567893',
+      orderId: 'ORD-2024-004',
+      userId: 'user321',
+      userEmail: 'test@demo.org',
+      amount: 49.99,
+      currency: 'USD',
+      status: 'failed',
+      paymentMethod: 'stripe',
+      plan: 'Pro Monthly',
+      createdAt: '2024-01-07 11:15:33',
+      updatedAt: '2024-01-07 11:15:50',
+      stripePaymentId: 'pi_1234567893',
+      description: 'Pro subscription upgrade',
+      failureReason: 'Insufficient funds'
+    },
+    {
+      id: 'txn_1234567894',
+      orderId: 'ORD-2024-005',
+      userId: 'user654',
+      userEmail: 'premium@user.net',
+      amount: 199.99,
+      currency: 'USD',
+      status: 'refunded',
+      paymentMethod: 'stripe',
+      plan: 'Enterprise Annual',
+      createdAt: '2024-01-06 16:30:25',
+      updatedAt: '2024-01-07 10:45:12',
+      stripePaymentId: 'pi_1234567894',
+      description: 'Enterprise subscription',
+      refundAmount: 199.99,
+      refundReason: 'Customer request'
+    }
+  ],
+  refunds: [
+    {
+      id: 'ref_1234567890',
+      transactionId: 'txn_1234567894',
+      orderId: 'ORD-2024-005',
+      userId: 'user654',
+      userEmail: 'premium@user.net',
+      originalAmount: 199.99,
+      refundAmount: 199.99,
+      currency: 'USD',
+      status: 'completed',
+      reason: 'Customer request',
+      createdAt: '2024-01-07 09:30:15',
+      processedAt: '2024-01-07 10:45:12',
+      stripeRefundId: 'ref_1234567890',
+      notes: 'Customer not satisfied with service'
+    },
+    {
+      id: 'ref_1234567891',
+      transactionId: 'txn_1234567895',
+      orderId: 'ORD-2024-006',
+      userId: 'user987',
+      userEmail: 'refund@test.com',
+      originalAmount: 29.99,
+      refundAmount: 29.99,
+      currency: 'USD',
+      status: 'pending',
+      reason: 'Billing error',
+      createdAt: '2024-01-07 08:15:22',
+      processedAt: null,
+      stripeRefundId: null,
+      notes: 'Duplicate charge reported by customer'
+    },
+    {
+      id: 'ref_1234567892',
+      transactionId: 'txn_1234567896',
+      orderId: 'ORD-2024-007',
+      userId: 'user555',
+      userEmail: 'dispute@example.org',
+      originalAmount: 99.99,
+      refundAmount: 50.00,
+      currency: 'USD',
+      status: 'partial',
+      reason: 'Service dispute',
+      createdAt: '2024-01-06 15:45:33',
+      processedAt: '2024-01-06 18:20:15',
+      stripeRefundId: 'ref_1234567892',
+      notes: 'Partial refund agreed upon after dispute resolution'
+    }
+  ],
+  subscriptions: [
+    {
+      id: 'sub_1234567890',
+      userId: 'user123',
+      userEmail: 'john@example.com',
+      plan: 'Premium Monthly',
+      status: 'active',
+      amount: 29.99,
+      currency: 'USD',
+      interval: 'month',
+      currentPeriodStart: '2024-01-07',
+      currentPeriodEnd: '2024-02-07',
+      cancelAtPeriodEnd: false,
+      createdAt: '2023-12-07 14:30:25',
+      stripeSubscriptionId: 'sub_1234567890'
+    },
+    {
+      id: 'sub_1234567891',
+      userId: 'user456',
+      userEmail: 'jane@test.com',
+      plan: 'Premium Annual',
+      status: 'active',
+      amount: 299.99,
+      currency: 'USD',
+      interval: 'year',
+      currentPeriodStart: '2024-01-07',
+      currentPeriodEnd: '2025-01-07',
+      cancelAtPeriodEnd: false,
+      createdAt: '2024-01-07 13:45:12',
+      stripeSubscriptionId: 'sub_1234567891'
+    },
+    {
+      id: 'sub_1234567892',
+      userId: 'user789',
+      userEmail: 'cancel@user.com',
+      plan: 'Basic Monthly',
+      status: 'canceled',
+      amount: 19.99,
+      currency: 'USD',
+      interval: 'month',
+      currentPeriodStart: '2024-01-01',
+      currentPeriodEnd: '2024-01-31',
+      cancelAtPeriodEnd: true,
+      createdAt: '2023-11-01 10:20:15',
+      canceledAt: '2024-01-05 16:30:22',
+      stripeSubscriptionId: 'sub_1234567892'
+    }
+  ]
+};
+
+try {
+  const paymentsResponse = await fetch(`${Astro.url.origin}/api/admin/payments`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  });
+
+  if (paymentsResponse.ok) {
+    const result = await paymentsResponse.json();
+    paymentsData = { ...paymentsData, ...result.data };
+  }
+} catch (error) {
+  console.error('Payments fetch error:', error);
+}
+---
+
+<BaseLayout title="支付管理 - 管理员面板">
+  <main class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- 页面标题和导航 -->
+      <div class="mb-8">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <a href="/admin/dashboard" class="text-purple-600 hover:text-purple-800 mr-4">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </a>
+            <svg class="w-8 h-8 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v2a2 2 0 002 2z"></path>
+            </svg>
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">支付管理</h1>
+              <p class="mt-2 text-gray-600">交易记录、支付统计和退款管理</p>
+            </div>
+          </div>
+          <div class="flex space-x-3">
+            <button 
+              onclick="refreshPayments()"
+              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              刷新数据
+            </button>
+            <button 
+              onclick="exportPayments()"
+              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              导出报表
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 角色守卫 -->
+      <RoleGuard allowedRoles={['admin', 'super']} userId={userId}>
+        
+        <!-- 支付统计概览 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-green-100 rounded-full">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">总收入</p>
+                <p class="text-2xl font-bold text-gray-900">${paymentsData.overview.totalRevenue.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-blue-100 rounded-full">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">月收入</p>
+                <p class="text-2xl font-bold text-gray-900">${paymentsData.overview.monthlyRevenue.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-purple-100 rounded-full">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">总交易</p>
+                <p class="text-2xl font-bold text-gray-900">{paymentsData.overview.totalTransactions.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-yellow-100 rounded-full">
+                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">成功率</p>
+                <p class="text-2xl font-bold text-gray-900">{paymentsData.overview.successRate}%</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-red-100 rounded-full">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">待处理退款</p>
+                <p class="text-2xl font-bold text-gray-900">{paymentsData.overview.pendingRefunds}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+              <div class="p-3 bg-indigo-100 rounded-full">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">平均订单</p>
+                <p class="text-2xl font-bold text-gray-900">${paymentsData.overview.averageOrderValue}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 筛选和搜索 -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">交易状态</label>
+              <select 
+                id="statusFilter"
+                onchange="filterPayments()"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">全部状态</option>
+                <option value="completed">已完成</option>
+                <option value="pending">待处理</option>
+                <option value="failed">失败</option>
+                <option value="refunded">已退款</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">支付方式</label>
+              <select 
+                id="methodFilter"
+                onchange="filterPayments()"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">全部方式</option>
+                <option value="stripe">Stripe</option>
+                <option value="paypal">PayPal</option>
+                <option value="alipay">支付宝</option>
+                <option value="wechat">微信支付</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">时间范围</label>
+              <select 
+                id="timeFilter"
+                onchange="filterPayments()"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="today">今天</option>
+                <option value="week" selected>本周</option>
+                <option value="month">本月</option>
+                <option value="quarter">本季度</option>
+                <option value="year">本年</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">金额范围</label>
+              <select 
+                id="amountFilter"
+                onchange="filterPayments()"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">全部金额</option>
+                <option value="0-50">$0 - $50</option>
+                <option value="50-100">$50 - $100</option>
+                <option value="100-500">$100 - $500</option>
+                <option value="500+">$500+</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">搜索</label>
+              <input 
+                type="text" 
+                id="searchInput"
+                placeholder="搜索订单ID、用户邮箱..."
+                oninput="filterPayments()"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- 支付管理标签页 -->
+        <div class="bg-white rounded-lg shadow">
+          <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
+              <button 
+                onclick="switchTab('transactions')"
+                id="tab-transactions"
+                class="tab-button active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+              >
+                交易记录
+              </button>
+              <button 
+                onclick="switchTab('refunds')"
+                id="tab-refunds"
+                class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+              >
+                退款管理
+              </button>
+              <button 
+                onclick="switchTab('subscriptions')"
+                id="tab-subscriptions"
+                class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+              >
+                订阅管理
+              </button>
+            </nav>
+          </div>
+
+          <!-- 交易记录标签页 -->
+          <div id="content-transactions" class="tab-content">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">订单ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金额</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">支付方式</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">套餐</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {paymentsData.transactions.map((transaction, index) => (
+                    <tr key={index} class="hover:bg-gray-50">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {transaction.orderId}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div>
+                          <div class="font-medium">{transaction.userEmail}</div>
+                          <div class="text-gray-500">{transaction.userId}</div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="font-medium">${transaction.amount}</div>
+                        <div class="text-gray-500">{transaction.currency}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          transaction.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          transaction.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          transaction.status === 'failed' ? 'bg-red-100 text-red-800' :
+                          transaction.status === 'refunded' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {transaction.status === 'completed' ? '已完成' :
+                           transaction.status === 'pending' ? '待处理' :
+                           transaction.status === 'failed' ? '失败' :
+                           transaction.status === 'refunded' ? '已退款' : transaction.status}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {transaction.paymentMethod.toUpperCase()}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {transaction.plan}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {transaction.createdAt}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button 
+                          onclick={`viewTransactionDetails('${transaction.id}')`}
+                          class="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          查看详情
+                        </button>
+                        {transaction.status === 'completed' && (
+                          <button 
+                            onclick={`initiateRefund('${transaction.id}')`}
+                            class="text-red-600 hover:text-red-900"
+                          >
+                            退款
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 退款管理标签页 -->
+          <div id="content-refunds" class="tab-content hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">退款ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">原订单</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">退款金额</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">原因</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">申请时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {paymentsData.refunds.map((refund, index) => (
+                    <tr key={index} class="hover:bg-gray-50">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {refund.id}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div>
+                          <div class="font-medium">{refund.orderId}</div>
+                          <div class="text-gray-500">{refund.transactionId}</div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div>
+                          <div class="font-medium">{refund.userEmail}</div>
+                          <div class="text-gray-500">{refund.userId}</div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="font-medium">${refund.refundAmount}</div>
+                        <div class="text-gray-500">原价: ${refund.originalAmount}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          refund.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          refund.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          refund.status === 'partial' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {refund.status === 'completed' ? '已完成' :
+                           refund.status === 'pending' ? '待处理' :
+                           refund.status === 'partial' ? '部分退款' : refund.status}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-900">
+                        {refund.reason}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {refund.createdAt}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button 
+                          onclick={`viewRefundDetails('${refund.id}')`}
+                          class="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          查看详情
+                        </button>
+                        {refund.status === 'pending' && (
+                          <button 
+                            onclick={`processRefund('${refund.id}')`}
+                            class="text-green-600 hover:text-green-900"
+                          >
+                            处理
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 订阅管理标签页 -->
+          <div id="content-subscriptions" class="tab-content hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">订阅ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">套餐</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">金额</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">周期</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">到期时间</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  {paymentsData.subscriptions.map((subscription, index) => (
+                    <tr key={index} class="hover:bg-gray-50">
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {subscription.id}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div>
+                          <div class="font-medium">{subscription.userEmail}</div>
+                          <div class="text-gray-500">{subscription.userId}</div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {subscription.plan}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div class="font-medium">${subscription.amount}</div>
+                        <div class="text-gray-500">{subscription.currency}</div>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          subscription.status === 'active' ? 'bg-green-100 text-green-800' :
+                          subscription.status === 'canceled' ? 'bg-red-100 text-red-800' :
+                          subscription.status === 'past_due' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {subscription.status === 'active' ? '活跃' :
+                           subscription.status === 'canceled' ? '已取消' :
+                           subscription.status === 'past_due' ? '逾期' : subscription.status}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {subscription.interval === 'month' ? '月付' : subscription.interval === 'year' ? '年付' : subscription.interval}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {subscription.currentPeriodEnd}
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button 
+                          onclick={`viewSubscriptionDetails('${subscription.id}')`}
+                          class="text-blue-600 hover:text-blue-900 mr-3"
+                        >
+                          查看详情
+                        </button>
+                        {subscription.status === 'active' && (
+                          <button 
+                            onclick={`cancelSubscription('${subscription.id}')`}
+                            class="text-red-600 hover:text-red-900"
+                          >
+                            取消
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </RoleGuard>
+    </div>
+  </main>
+
+  <!-- 交易详情模态框 -->
+  <div id="transactionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">交易详情</h3>
+        <button onclick="closeModal('transactionModal')" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div id="transactionContent" class="space-y-4">
+        <!-- 交易详情内容将在这里动态加载 -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 退款处理模态框 -->
+  <div id="refundModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-2/3 shadow-lg rounded-md bg-white">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-medium text-gray-900">退款处理</h3>
+        <button onclick="closeModal('refundModal')" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div id="refundContent" class="space-y-4">
+        <!-- 退款处理内容将在这里动态加载 -->
+      </div>
+    </div>
+  </div>
+
+  <Footer />
+</BaseLayout>
+
+<script define:vars={{ paymentsData }}>
+  let currentTab = 'transactions';
+  let allPayments = paymentsData;
+
+  // 标签页切换
+  function switchTab(tab) {
+    // 更新标签按钮状态
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+      btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    document.getElementById(`tab-${tab}`).classList.add('active', 'border-blue-500', 'text-blue-600');
+    document.getElementById(`tab-${tab}`).classList.remove('border-transparent', 'text-gray-500');
+
+    // 显示对应内容
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.add('hidden');
+    });
+    
+    document.getElementById(`content-${tab}`).classList.remove('hidden');
+    currentTab = tab;
+  }
+
+  // 筛选支付数据
+  function filterPayments() {
+    const status = document.getElementById('statusFilter').value;
+    const method = document.getElementById('methodFilter').value;
+    const timeRange = document.getElementById('timeFilter').value;
+    const amountRange = document.getElementById('amountFilter').value;
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+    // 这里应该调用API重新获取筛选后的数据
+    console.log('筛选条件:', { status, method, timeRange, amountRange, searchTerm });
+  }
+
+  // 查看交易详情
+  function viewTransactionDetails(transactionId) {
+    const transaction = allPayments.transactions.find(t => t.id === transactionId);
+    if (!transaction) return;
+
+    const content = document.getElementById('transactionContent');
+    content.innerHTML = `
+      <div class="grid grid-cols-2 gap-4">
+        <div><strong>交易ID:</strong> ${transaction.id}</div>
+        <div><strong>订单ID:</strong> ${transaction.orderId}</div>
+        <div><strong>用户邮箱:</strong> ${transaction.userEmail}</div>
+        <div><strong>用户ID:</strong> ${transaction.userId}</div>
+        <div><strong>金额:</strong> $${transaction.amount} ${transaction.currency}</div>
+        <div><strong>状态:</strong> <span class="px-2 py-1 text-xs rounded-full ${getStatusClass(transaction.status)}">${getStatusText(transaction.status)}</span></div>
+        <div><strong>支付方式:</strong> ${transaction.paymentMethod.toUpperCase()}</div>
+        <div><strong>套餐:</strong> ${transaction.plan}</div>
+        <div><strong>创建时间:</strong> ${transaction.createdAt}</div>
+        <div><strong>更新时间:</strong> ${transaction.updatedAt}</div>
+        <div><strong>Stripe支付ID:</strong> ${transaction.stripePaymentId}</div>
+        ${transaction.failureReason ? `<div><strong>失败原因:</strong> ${transaction.failureReason}</div>` : ''}
+      </div>
+      <div class="mt-4">
+        <strong>描述:</strong>
+        <p class="mt-2 p-3 bg-gray-50 rounded">${transaction.description}</p>
+      </div>
+      ${transaction.refundAmount ? `
+        <div class="mt-4">
+          <strong>退款信息:</strong>
+          <div class="mt-2 p-3 bg-red-50 rounded">
+            <p><strong>退款金额:</strong> $${transaction.refundAmount}</p>
+            <p><strong>退款原因:</strong> ${transaction.refundReason}</p>
+          </div>
+        </div>
+      ` : ''}
+    `;
+
+    document.getElementById('transactionModal').classList.remove('hidden');
+  }
+
+  // 查看退款详情
+  function viewRefundDetails(refundId) {
+    const refund = allPayments.refunds.find(r => r.id === refundId);
+    if (!refund) return;
+
+    const content = document.getElementById('transactionContent');
+    content.innerHTML = `
+      <div class="grid grid-cols-2 gap-4">
+        <div><strong>退款ID:</strong> ${refund.id}</div>
+        <div><strong>原交易ID:</strong> ${refund.transactionId}</div>
+        <div><strong>订单ID:</strong> ${refund.orderId}</div>
+        <div><strong>用户邮箱:</strong> ${refund.userEmail}</div>
+        <div><strong>原金额:</strong> $${refund.originalAmount} ${refund.currency}</div>
+        <div><strong>退款金额:</strong> $${refund.refundAmount} ${refund.currency}</div>
+        <div><strong>状态:</strong> <span class="px-2 py-1 text-xs rounded-full ${getRefundStatusClass(refund.status)}">${getRefundStatusText(refund.status)}</span></div>
+        <div><strong>申请时间:</strong> ${refund.createdAt}</div>
+        ${refund.processedAt ? `<div><strong>处理时间:</strong> ${refund.processedAt}</div>` : ''}
+        ${refund.stripeRefundId ? `<div><strong>Stripe退款ID:</strong> ${refund.stripeRefundId}</div>` : ''}
+      </div>
+      <div class="mt-4">
+        <strong>退款原因:</strong>
+        <p class="mt-2 p-3 bg-gray-50 rounded">${refund.reason}</p>
+      </div>
+      ${refund.notes ? `
+        <div class="mt-4">
+          <strong>备注:</strong>
+          <p class="mt-2 p-3 bg-yellow-50 rounded">${refund.notes}</p>
+        </div>
+      ` : ''}
+    `;
+
+    document.getElementById('transactionModal').classList.remove('hidden');
+  }
+
+  // 查看订阅详情
+  function viewSubscriptionDetails(subscriptionId) {
+    const subscription = allPayments.subscriptions.find(s => s.id === subscriptionId);
+    if (!subscription) return;
+
+    const content = document.getElementById('transactionContent');
+    content.innerHTML = `
+      <div class="grid grid-cols-2 gap-4">
+        <div><strong>订阅ID:</strong> ${subscription.id}</div>
+        <div><strong>用户邮箱:</strong> ${subscription.userEmail}</div>
+        <div><strong>用户ID:</strong> ${subscription.userId}</div>
+        <div><strong>套餐:</strong> ${subscription.plan}</div>
+        <div><strong>金额:</strong> $${subscription.amount} ${subscription.currency}</div>
+        <div><strong>状态:</strong> <span class="px-2 py-1 text-xs rounded-full ${getSubscriptionStatusClass(subscription.status)}">${getSubscriptionStatusText(subscription.status)}</span></div>
+        <div><strong>计费周期:</strong> ${subscription.interval === 'month' ? '月付' : subscription.interval === 'year' ? '年付' : subscription.interval}</div>
+        <div><strong>当前周期开始:</strong> ${subscription.currentPeriodStart}</div>
+        <div><strong>当前周期结束:</strong> ${subscription.currentPeriodEnd}</div>
+        <div><strong>周期结束时取消:</strong> ${subscription.cancelAtPeriodEnd ? '是' : '否'}</div>
+        <div><strong>创建时间:</strong> ${subscription.createdAt}</div>
+        ${subscription.canceledAt ? `<div><strong>取消时间:</strong> ${subscription.canceledAt}</div>` : ''}
+        <div><strong>Stripe订阅ID:</strong> ${subscription.stripeSubscriptionId}</div>
+      </div>
+    `;
+
+    document.getElementById('transactionModal').classList.remove('hidden');
+  }
+
+  // 发起退款
+  function initiateRefund(transactionId) {
+    const transaction = allPayments.transactions.find(t => t.id === transactionId);
+    if (!transaction) return;
+
+    const content = document.getElementById('refundContent');
+    content.innerHTML = `
+      <form onsubmit="processRefundRequest(event, '${transactionId}')">
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div><strong>交易ID:</strong> ${transaction.id}</div>
+          <div><strong>订单ID:</strong> ${transaction.orderId}</div>
+          <div><strong>用户:</strong> ${transaction.userEmail}</div>
+          <div><strong>原金额:</strong> $${transaction.amount}</div>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">退款金额</label>
+          <input type="number" id="refundAmount" max="${transaction.amount}" step="0.01" 
+                 class="w-full px-3 py-2 border border-gray-300 rounded-md" 
+                 placeholder="输入退款金额" required>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">退款原因</label>
+          <select id="refundReason" class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+            <option value="">选择退款原因</option>
+            <option value="customer_request">客户要求</option>
+            <option value="billing_error">计费错误</option>
+            <option value="service_issue">服务问题</option>
+            <option value="duplicate_charge">重复收费</option>
+            <option value="fraud">欺诈</option>
+            <option value="other">其他</option>
+          </select>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">备注</label>
+          <textarea id="refundNotes" rows="3" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md" 
+                    placeholder="退款备注（可选）"></textarea>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+          <button type="button" onclick="closeModal('refundModal')" 
+                  class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+            取消
+          </button>
+          <button type="submit" 
+                  class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+            确认退款
+          </button>
+        </div>
+      </form>
+    `;
+
+    document.getElementById('refundModal').classList.remove('hidden');
+  }
+
+  // 处理退款请求
+  async function processRefundRequest(event, transactionId) {
+    event.preventDefault();
+    
+    const refundAmount = document.getElementById('refundAmount').value;
+    const refundReason = document.getElementById('refundReason').value;
+    const refundNotes = document.getElementById('refundNotes').value;
+
+    try {
+      const response = await fetch('/api/admin/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'process_refund',
+          transactionId,
+          refundAmount: parseFloat(refundAmount),
+          reason: refundReason,
+          notes: refundNotes
+        })
+      });
+
+      if (response.ok) {
+        alert('退款请求已提交处理。');
+        closeModal('refundModal');
+        location.reload();
+      } else {
+        alert('退款处理失败，请重试。');
+      }
+    } catch (error) {
+      console.error('退款处理错误:', error);
+      alert('退款处理失败，请检查网络连接。');
+    }
+  }
+
+  // 处理退款
+  async function processRefund(refundId) {
+    if (!confirm('确定要处理这个退款请求吗？')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'approve_refund',
+          refundId: refundId
+        })
+      });
+
+      if (response.ok) {
+        alert('退款已处理完成。');
+        location.reload();
+      } else {
+        alert('退款处理失败，请重试。');
+      }
+    } catch (error) {
+      console.error('退款处理错误:', error);
+      alert('退款处理失败，请检查网络连接。');
+    }
+  }
+
+  // 取消订阅
+  async function cancelSubscription(subscriptionId) {
+    if (!confirm('确定要取消这个订阅吗？此操作不可撤销。')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/admin/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'cancel_subscription',
+          subscriptionId: subscriptionId
+        })
+      });
+
+      if (response.ok) {
+        alert('订阅已取消。');
+        location.reload();
+      } else {
+        alert('取消订阅失败，请重试。');
+      }
+    } catch (error) {
+      console.error('取消订阅错误:', error);
+      alert('取消订阅失败，请检查网络连接。');
+    }
+  }
+
+  // 刷新支付数据
+  async function refreshPayments() {
+    try {
+      const response = await fetch('/api/admin/payments?refresh=true', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert('刷新失败，请重试。');
+      }
+    } catch (error) {
+      console.error('刷新错误:', error);
+      alert('刷新失败，请检查网络连接。');
+    }
+  }
+
+  // 导出支付报表
+  async function exportPayments() {
+    try {
+      const response = await fetch('/api/admin/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'export_payments',
+          timeRange: document.getElementById('timeFilter').value,
+          status: document.getElementById('statusFilter').value
+        })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `payments_report_${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('导出失败，请重试。');
+      }
+    } catch (error) {
+      console.error('导出错误:', error);
+      alert('导出失败，请检查网络连接。');
+    }
+  }
+
+  // 关闭模态框
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+  }
+
+  // 获取状态样式类
+  function getStatusClass(status) {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'failed': return 'bg-red-100 text-red-800';
+      case 'refunded': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  // 获取状态文本
+  function getStatusText(status) {
+    switch (status) {
+      case 'completed': return '已完成';
+      case 'pending': return '待处理';
+      case 'failed': return '失败';
+      case 'refunded': return '已退款';
+      default: return status;
+    }
+  }
+
+  // 获取退款状态样式类
+  function getRefundStatusClass(status) {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'partial': return 'bg-blue-100 text-blue-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  // 获取退款状态文本
+  function getRefundStatusText(status) {
+    switch (status) {
+      case 'completed': return '已完成';
+      case 'pending': return '待处理';
+      case 'partial': return '部分退款';
+      default: return status;
+    }
+  }
+
+  // 获取订阅状态样式类
+  function getSubscriptionStatusClass(status) {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'canceled': return 'bg-red-100 text-red-800';
+      case 'past_due': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  // 获取订阅状态文本
+  function getSubscriptionStatusText(status) {
+    switch (status) {
+      case 'active': return '活跃';
+      case 'canceled': return '已取消';
+      case 'past_due': return '逾期';
+      default: return status;
+    }
+  }
+
+  // 点击模态框外部关闭
+  window.onclick = function(event) {
+    const transactionModal = document.getElementById('transactionModal');
+    const refundModal = document.getElementById('refundModal');
+    
+    if (event.target === transactionModal) {
+      transactionModal.classList.add('hidden');
+    }
+    if (event.target === refundModal) {
+      refundModal.classList.add('hidden');
+    }
+  }
+</script>

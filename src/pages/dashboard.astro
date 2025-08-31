@@ -1,0 +1,186 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navigation from '../components/global/Navigation.astro';
+import Footer from '../components/global/Footer.astro';
+
+// 获取用户会话信息
+const session = Astro.locals.session;
+const user = Astro.locals.user;
+
+console.log('🔍 Dashboard - session:', session ? 'exists' : 'null');
+console.log('🔍 Dashboard - user:', user ? 'exists' : 'null');
+if (user) {
+  console.log('🔍 Dashboard - user details:', { id: user.id, email: user.email, role: user.role });
+}
+
+// 如果服务端检测到用户未登录，显示加载页面让客户端处理
+let serverSideAuth = false;
+let userRole = 'user';
+let userId = null;
+let userEmail = null;
+
+if (session && user) {
+  serverSideAuth = true;
+  userId = user.id;
+  userEmail = user.email;
+  
+  // 从中间件设置的user对象中获取角色信息
+  if (user.role) {
+    userRole = user.role;
+  }
+  
+  console.log('服务端检测到用户:', userEmail, '角色:', userRole);
+  
+  // 根据用户角色重定向到相应的dashboard页面
+  console.log('🚀 Redirecting user with role:', userRole);
+  switch (userRole) {
+    case 'admin':
+      console.log('🔑 Admin user, redirecting to admin dashboard');
+      return Astro.redirect('/admin/dashboard');
+    case 'super':
+      console.log('⭐ Super user, redirecting to super dashboard');
+      return Astro.redirect('/super/dashboard');
+    case 'premium':
+      console.log('💎 Premium user, redirecting to premium dashboard');
+      return Astro.redirect('/premium/dashboard');
+    case 'user':
+    case 'free':
+    default:
+      console.log('👤 Regular/Free user, redirecting to user dashboard');
+      // 默认跳转到普通用户面板
+      return Astro.redirect('/user/dashboard');
+  }
+}
+---
+
+<BaseLayout title="Dashboard - 正在加载...">
+  <Navigation />
+  
+  <main class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">正在加载您的仪表盘...</h1>
+        <p class="text-gray-600">请稍候，我们正在为您准备个性化的仪表盘体验。</p>
+        
+        <!-- 备用导航链接 -->
+        <div class="mt-8 space-y-2">
+          <p class="text-sm text-gray-500">如果页面没有自动跳转，请手动选择：</p>
+          <div class="flex flex-wrap justify-center gap-4 mt-4">
+            <a href="/user/dashboard" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              用户仪表盘
+            </a>
+            <a href="/premium/dashboard" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              高级仪表盘
+            </a>
+            <a href="/admin/dashboard" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              管理员仪表盘
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  
+  <Footer />
+</BaseLayout>
+
+<style>
+  .transition-colors {
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  }
+  
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+</style>
+
+<script>
+  import { getCurrentUser, getCurrentSession } from '../lib/auth';
+  
+  // 客户端认证逻辑
+  async function handleClientAuth() {
+    try {
+      console.log('开始客户端认证检查...');
+      
+      // 获取当前用户和会话
+      const [user, session] = await Promise.all([
+        getCurrentUser(),
+        getCurrentSession()
+      ]);
+      
+      console.log('用户信息:', user);
+      console.log('会话信息:', session);
+      
+      // 如果用户未登录，重定向到登录页面
+      if (!user || !session) {
+        console.log('用户未登录，重定向到登录页面');
+        window.location.href = '/login?redirect=/dashboard';
+        return;
+      }
+      
+      // 获取用户角色
+      try {
+        const response = await fetch(`/api/auth/get-user-role?userId=${user.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          const userRole = data.role || 'user';
+          
+          console.log('用户角色:', userRole);
+          
+          // 根据用户角色重定向到相应的dashboard页面
+          console.log('🚀 Client-side redirecting user with role:', userRole);
+          switch (userRole) {
+            case 'admin':
+              console.log('🔑 Admin user, redirecting to admin dashboard');
+              window.location.href = '/admin/dashboard';
+              break;
+            case 'super':
+              console.log('⭐ Super user, redirecting to super dashboard');
+              window.location.href = '/super/dashboard';
+              break;
+            case 'premium':
+              console.log('💎 Premium user, redirecting to premium dashboard');
+              window.location.href = '/premium/dashboard';
+              break;
+            case 'user':
+            case 'free':
+            default:
+              console.log('👤 Regular/Free user, redirecting to user dashboard');
+              // 默认跳转到普通用户面板
+              window.location.href = '/user/dashboard';
+              break;
+          }
+        } else {
+          console.error('获取用户角色失败，默认跳转到用户dashboard');
+          window.location.href = '/user/dashboard';
+        }
+      } catch (error) {
+        console.error('获取用户角色时出错:', error);
+        window.location.href = '/user/dashboard';
+      }
+      
+    } catch (error) {
+      console.error('客户端认证失败:', error);
+      // 如果认证失败，重定向到登录页面
+      window.location.href = '/login?redirect=/dashboard';
+    }
+  }
+  
+  // 页面加载完成后执行认证检查
+  document.addEventListener('DOMContentLoaded', () => {
+    handleClientAuth();
+  });
+  
+  // 备用超时重定向（10秒后）
+  setTimeout(() => {
+    console.log('超时重定向到用户dashboard');
+    window.location.href = '/user/dashboard';
+  }, 10000);
+</script>

@@ -1,0 +1,395 @@
+import type { APIRoute } from 'astro';
+import { supabase } from '../../../lib/supabase';
+
+export const GET: APIRoute = async ({ request, locals }) => {
+  try {
+    // 验证用户是否已登录
+    const session = locals.session;
+    const user = locals.user;
+    
+    if (!session || !user) {
+      return new Response(JSON.stringify({ error: '未授权访问' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 获取用户角色
+    const { data: userRole, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (roleError || !userRole || !['admin', 'super'].includes(userRole.role)) {
+      return new Response(JSON.stringify({ error: '权限不足' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 获取URL参数
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const search = url.searchParams.get('search') || '';
+    const drFilter = url.searchParams.get('dr') || '';
+    const trafficFilter = url.searchParams.get('traffic') || '';
+    const paymentFilter = url.searchParams.get('payment') || '';
+    const followFilter = url.searchParams.get('follow') || '';
+    const platformFilter = url.searchParams.get('platform') || '';
+    const accessFilter = url.searchParams.get('access') || '';
+    const sortBy = url.searchParams.get('sortBy') || 'updated_at';
+    const sortOrder = url.searchParams.get('sortOrder') || 'desc';
+
+    // 构建查询
+    let query = supabase
+      .from('backlinks')
+      .select(`
+        id,
+        name,
+        website,
+        dr,
+        traffic,
+        payment_type,
+        follow_type,
+        platform_type,
+        access_type,
+        submit_url,
+        created_at,
+        updated_at,
+        status
+      `);
+
+    // 添加搜索条件
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,website.ilike.%${search}%`);
+    }
+
+    // 添加筛选条件
+    if (drFilter) {
+      const [min, max] = drFilter.split('-').map(Number);
+      if (max) {
+        query = query.gte('dr', min).lte('dr', max);
+      } else {
+        query = query.gte('dr', min);
+      }
+    }
+
+    if (trafficFilter) {
+      const [min, max] = trafficFilter.split('-').map(Number);
+      if (max) {
+        query = query.gte('traffic', min).lte('traffic', max);
+      } else {
+        query = query.gte('traffic', min);
+      }
+    }
+
+    if (paymentFilter) {
+      query = query.eq('payment_type', paymentFilter);
+    }
+
+    if (followFilter) {
+      query = query.eq('follow_type', followFilter);
+    }
+
+    if (platformFilter) {
+      query = query.eq('platform_type', platformFilter);
+    }
+
+    if (accessFilter) {
+      query = query.eq('access_type', accessFilter);
+    }
+
+    // 获取总数
+    const { count: totalCount } = await query
+      .select('*', { count: 'exact', head: true });
+
+    // 获取分页数据
+    const { data: backlinks, error: backlinksError } = await query
+      .order(sortBy, { ascending: sortOrder === 'asc' })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (backlinksError) {
+      console.error('获取反向链接列表失败:', backlinksError);
+      return new Response(JSON.stringify({ error: '获取反向链接列表失败' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(JSON.stringify({
+      backlinks: backlinks || [],
+      total: totalCount || 0,
+      page,
+      limit,
+      totalPages: Math.ceil((totalCount || 0) / limit)
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('反向链接管理API错误:', error);
+    return new Response(JSON.stringify({ error: '服务器内部错误' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+
+export const POST: APIRoute = async ({ request, locals }) => {
+  try {
+    // 验证用户是否已登录
+    const session = locals.session;
+    const user = locals.user;
+    
+    if (!session || !user) {
+      return new Response(JSON.stringify({ error: '未授权访问' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 获取用户角色
+    const { data: userRole, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (roleError || !userRole || !['admin', 'super'].includes(userRole.role)) {
+      return new Response(JSON.stringify({ error: '权限不足' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const { action, backlinkId, data } = await request.json();
+
+    switch (action) {
+      case 'create':
+        // 创建新反向链接
+        const {
+          name,
+          website,
+          dr,
+          traffic,
+          payment_type,
+          follow_type,
+          platform_type,
+          access_type,
+          submit_url
+        } = data;
+        
+        const { data: newBacklink, error: createError } = await supabase
+          .from('backlinks')
+          .insert({
+            name,
+            website,
+            dr: parseInt(dr),
+            traffic: parseInt(traffic),
+            payment_type,
+            follow_type,
+            platform_type,
+            access_type,
+            submit_url,
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('创建反向链接失败:', createError);
+          return new Response(JSON.stringify({ error: '创建反向链接失败: ' + createError.message }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true, backlink: newBacklink }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+      case 'update':
+        // 更新反向链接信息
+        const updateData = {
+          ...data,
+          updated_at: new Date().toISOString()
+        };
+        
+        // 转换数字字段
+        if (updateData.dr) updateData.dr = parseInt(updateData.dr);
+        if (updateData.traffic) updateData.traffic = parseInt(updateData.traffic);
+        
+        const { data: updatedBacklink, error: updateError } = await supabase
+          .from('backlinks')
+          .update(updateData)
+          .eq('id', backlinkId)
+          .select()
+          .single();
+
+        if (updateError) {
+          console.error('更新反向链接失败:', updateError);
+          return new Response(JSON.stringify({ error: '更新反向链接失败: ' + updateError.message }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true, backlink: updatedBacklink }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+      case 'delete':
+        // 删除反向链接
+        const { error: deleteError } = await supabase
+          .from('backlinks')
+          .delete()
+          .eq('id', backlinkId);
+
+        if (deleteError) {
+          console.error('删除反向链接失败:', deleteError);
+          return new Response(JSON.stringify({ error: '删除反向链接失败: ' + deleteError.message }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+      case 'toggle_status':
+        // 切换反向链接状态
+        const { status } = data;
+        
+        const { error: statusError } = await supabase
+          .from('backlinks')
+          .update({ 
+            status,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', backlinkId);
+
+        if (statusError) {
+          console.error('更新反向链接状态失败:', statusError);
+          return new Response(JSON.stringify({ error: '更新状态失败: ' + statusError.message }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+      case 'batch':
+        // 批量操作
+        const { backlinkIds, batchAction } = data;
+        const results = [];
+
+        for (const id of backlinkIds) {
+          try {
+            switch (batchAction) {
+              case 'activate':
+                await supabase
+                  .from('backlinks')
+                  .update({ 
+                    status: 'active',
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', id);
+                break;
+              case 'deactivate':
+                await supabase
+                  .from('backlinks')
+                  .update({ 
+                    status: 'inactive',
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('id', id);
+                break;
+              case 'delete':
+                await supabase
+                  .from('backlinks')
+                  .delete()
+                  .eq('id', id);
+                break;
+            }
+            results.push({ backlinkId: id, success: true });
+          } catch (error) {
+            results.push({ backlinkId: id, success: false, error: error.message });
+          }
+        }
+
+        return new Response(JSON.stringify({ success: true, results }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+      case 'stats':
+        // 获取统计信息
+        const { data: stats } = await supabase
+          .from('backlinks')
+          .select('status, payment_type, follow_type, platform_type')
+          .then(({ data }) => {
+            if (!data) return { data: null };
+            
+            const totalCount = data.length;
+            const activeCount = data.filter(b => b.status === 'active').length;
+            const inactiveCount = data.filter(b => b.status === 'inactive').length;
+            
+            const paymentStats = data.reduce((acc, b) => {
+              acc[b.payment_type] = (acc[b.payment_type] || 0) + 1;
+              return acc;
+            }, {});
+            
+            const followStats = data.reduce((acc, b) => {
+              acc[b.follow_type] = (acc[b.follow_type] || 0) + 1;
+              return acc;
+            }, {});
+            
+            const platformStats = data.reduce((acc, b) => {
+              acc[b.platform_type] = (acc[b.platform_type] || 0) + 1;
+              return acc;
+            }, {});
+            
+            return {
+              data: {
+                total: totalCount,
+                active: activeCount,
+                inactive: inactiveCount,
+                payment: paymentStats,
+                follow: followStats,
+                platform: platformStats
+              }
+            };
+          });
+
+        return new Response(JSON.stringify({ success: true, stats }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+      default:
+        return new Response(JSON.stringify({ error: '无效的操作' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' }
+        });
+    }
+
+  } catch (error) {
+    console.error('反向链接管理操作错误:', error);
+    return new Response(JSON.stringify({ error: '服务器内部错误' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};

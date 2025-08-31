@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import vercel from "@astrojs/vercel";
 
 export default defineConfig({
-  site: "https://yoursite.com",
+  site: "http://localhost:4321",
   output: "server",
   adapter: vercel(),
   experimental: {

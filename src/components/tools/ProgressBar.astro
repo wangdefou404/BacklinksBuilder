@@ -17,39 +17,27 @@ const { id = "progress-bar", containerId = "progress-container" } = Astro.props;
   </div>
 </div>
 
-<script is:inline define:vars={{ id, containerId }}>
-  // Progress bar utility functions
-  window.ProgressBar = {
-    show: function() {
-      const container = document.getElementById(containerId);
-      if (container) {
-        container.classList.remove('hidden');
-      }
-    },
+<script is:inline define:vars={{ containerId }}>
+  document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById(containerId);
+    if (!container) return;
     
-    hide: function() {
-      const container = document.getElementById(containerId);
-      if (container) {
-        container.classList.add('hidden');
-      }
-    },
+    const progressBar = container.querySelector('.progress-bar');
+    const progressText = container.querySelector('.progress-text');
     
-    update: function(percentage) {
-      const bar = document.getElementById(id);
-      const text = document.getElementById('progress-text');
-      
-      if (bar) {
-        bar.style.width = `${percentage}%`;
+    if (!progressBar || !progressText) return;
+    
+    // 模拟进度更新
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 10;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
       }
       
-      if (text) {
-        text.textContent = `${Math.round(percentage)}%`;
-      }
-    },
-    
-    reset: function() {
-      this.update(0);
-      this.hide();
-    }
-  };
+      progressBar.style.width = `${progress}%`;
+      progressText.textContent = `${Math.round(progress)}%`;
+    }, 500);
+  });
 </script>

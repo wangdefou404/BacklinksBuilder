@@ -1,21 +1,21 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Navigation from '../../components/global/Navigation.astro';
-import Footer from '../../components/global/Footer.astro';
 import RoleGuard from '../../components/auth/RoleGuard.astro';
 import UserQuotaDashboard from '../../components/user/UserQuotaDashboard.astro';
+import Footer from '../../components/global/Footer.astro';
 // import AuthStatus from '../../components/auth/AuthStatus.astro'; // 暂时注释掉未使用的导入
 
-// 用户会话将在客户端获取
-const userData = null;
+// 获取用户会话信息
+const session = Astro.locals.session;
+const user = Astro.locals.user;
 
 // 如果用户未登录，重定向到登录页面
-if (!userData) {
-  return Astro.redirect('/admin/login?redirect=/user/dashboard');
+if (!session || !user) {
+  return Astro.redirect('/login?redirect=/user/dashboard');
 }
 
-const userId = userData.id;
-const userEmail = userData.email;
+const userId = user.id;
+const userEmail = user.email;
 
 // 获取用户角色信息
 let userRole = null;
@@ -44,7 +44,6 @@ try {
 ---
 
 <BaseLayout title="用户面板 - BacklinksBuilder">
-  <Navigation />
   
   <main class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -6,7 +6,328 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
 // const user = null;
 ---
 
-<div id="auth-status" class="flex items-center space-x-4" x-data="authStatusData()" x-cloak x-init="console.log('AuthStatus Alpine 组件已初始化', $data)">
+<script>
+  // 导入Supabase客户端
+  import { supabase } from '/src/lib/supabase.ts';
+  
+  // 将supabase实例挂载到window对象，供Alpine.js使用
+  window.supabaseClient = supabase;
+</script>
+
+<div id="auth-status" class="flex items-center space-x-4" x-data="{ 
+  user: null,
+  isOpen: false,
+  loading: true,
+  authError: null,
+  authSubscription: null,
+  
+  async init() {
+    console.log('AuthStatus 组件初始化开始');
+    this.loading = true;
+    
+    try {
+      // 首先尝试从cookie读取用户信息
+      await this.loadUserFromCookie();
+      
+      // 然后加载完整的用户信息
+      await this.loadUser();
+      this.setupAuthListener();
+      
+      console.log('AuthStatus 组件初始化完成，用户状态:', this.user ? '已登录' : '未登录');
+    } catch (error) {
+      console.error('AuthStatus 初始化失败:', error);
+      this.authError = '认证系统初始化失败';
+    } finally {
+      this.loading = false;
+    }
+  },
+  
+  // 从cookie加载用户信息
+  loadUserFromCookie() {
+    console.log('🍪 开始从cookie加载用户信息');
+    console.log('🍪 当前所有cookies:', document.cookie);
+    
+    try {
+      // 首先尝试从session cookie加载
+      const sessionCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('session='));
+      
+      if (sessionCookie) {
+        console.log('🍪 找到session cookie');
+        const sessionStr = decodeURIComponent(sessionCookie.split('=')[1]);
+        console.log('🍪 解码后的session:', sessionStr);
+        const sessionInfo = JSON.parse(sessionStr);
+        
+        // 构造用户对象，模拟Supabase用户格式
+        this.user = {
+          id: sessionInfo.userId,
+          email: sessionInfo.email,
+          user_metadata: {
+            full_name: sessionInfo.name,
+            name: sessionInfo.name,
+            picture: sessionInfo.avatar_url,
+            avatar_url: sessionInfo.avatar_url
+          },
+          avatar_url: sessionInfo.avatar_url,
+          role: sessionInfo.role
+        };
+        
+        console.log('✅ 从session cookie加载用户信息成功:', this.user);
+        return true;
+      }
+      
+      // 如果没有session cookie，尝试user_info cookie
+      const userInfoCookie = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('user_info='));
+      
+      if (userInfoCookie) {
+        console.log('🍪 找到user_info cookie');
+        const userInfoStr = decodeURIComponent(userInfoCookie.split('=')[1]);
+        console.log('🍪 解码后的user_info:', userInfoStr);
+        const userInfo = JSON.parse(userInfoStr);
+        
+        // 构造用户对象，模拟Supabase用户格式
+        this.user = {
+          id: userInfo.id,
+          email: userInfo.email,
+          user_metadata: {
+            full_name: userInfo.name,
+            name: userInfo.name,
+            picture: userInfo.avatar_url,
+            avatar_url: userInfo.avatar_url
+          },
+          avatar_url: userInfo.avatar_url,
+          role: userInfo.role
+        };
+        
+        console.log('✅ 从user_info cookie加载用户信息成功:', this.user);
+        return true;
+      }
+      
+      console.log('❌ 没有找到任何用户cookie');
+    } catch (error) {
+      console.error('❌ 从cookie加载用户信息失败:', error);
+    }
+    return false;
+  },
+  
+  get userName() {
+    if (!this.user) return '用户';
+    return this.user.user_metadata?.full_name || 
+           this.user.user_metadata?.name || 
+           this.user.email?.split('@')[0] || 
+           '用户';
+  },
+  
+  // 判断是否为管理员
+  get isAdmin() {
+    if (!this.user?.email) return false;
+    
+    // 管理员邮箱列表（可以从环境变量获取）
+    const adminEmails = [
+      'admin@example.com',
+      'wangdefou@gmail.com', // 示例管理员邮箱
+      'wangpangzier@gmail.com', // 主要管理员邮箱
+      // 可以添加更多管理员邮箱
+    ];
+    
+    // 检查是否在管理员邮箱列表中
+    if (adminEmails.includes(this.user.email.toLowerCase())) {
+      return true;
+    }
+    
+    // 检查是否为特定域名（可选）
+    const adminDomains = [
+      '@yourdomain.com', // 示例公司域名
+      // 可以添加更多管理员域名
+    ];
+    
+    return adminDomains.some(domain => 
+      this.user.email.toLowerCase().endsWith(domain)
+    );
+  },
+  
+  // 切换下拉菜单显示状态
+  toggleDropdown() {
+    console.log('toggleDropdown 被调用，当前 isOpen:', this.isOpen);
+    this.isOpen = !this.isOpen;
+    console.log('toggleDropdown 执行后，新的 isOpen:', this.isOpen);
+  },
+  
+  // 从Supabase加载用户信息
+  async loadUser() {
+    console.log('开始加载用户信息');
+    
+    try {
+      const supabase = window.supabaseClient;
+      
+      // 获取当前会话
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('获取会话失败:', sessionError);
+        this.authError = '获取会话失败';
+        return;
+      }
+      
+      if (!session?.user) {
+        console.log('没有活跃会话，用户未登录');
+        // 如果已经从cookie加载了用户信息，就不要清除
+        if (!this.user) {
+          this.user = null;
+        }
+        console.log('用户加载完成，用户状态:', this.user ? '已登录' : '未登录');
+        return;
+      }
+      
+      // 如果已经从cookie加载了用户信息，就不需要重新设置
+      if (!this.user) {
+        console.log('从Supabase会话获取用户信息');
+        
+        try {
+          // 尝试从数据库获取更完整的用户信息
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (userError && userError.code !== 'PGRST116') {
+            console.error('获取用户数据失败:', userError);
+          }
+          
+          // 合并Supabase Auth用户信息和数据库用户信息
+          this.user = {
+            ...session.user,
+            ...userData,
+            user_metadata: {
+              ...session.user.user_metadata,
+              ...userData?.user_metadata
+            }
+          };
+          
+          console.log('用户信息加载成功:', this.user);
+        } catch (dbError) {
+          console.error('数据库查询异常:', dbError);
+          // 如果数据库查询失败，至少使用Auth用户信息
+          this.user = session.user;
+        }
+      }
+      
+      console.log('用户加载完成，用户状态:', this.user ? '已登录' : '未登录');
+      
+    } catch (error) {
+      console.error('加载用户信息时发生错误:', error);
+      this.authError = '加载用户信息失败';
+    }
+  },
+  
+  // 设置认证状态监听器
+  setupAuthListener() {
+    console.log('设置认证状态监听器');
+    
+    try {
+      const supabase = window.supabaseClient;
+      this.authSubscription = supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth state changed:', event, session?.user ? 'user logged in' : 'no user');
+        
+        if (event === 'INITIAL_SESSION') {
+          console.log('初始会话');
+          // 初始会话已经在loadUser中处理
+          return;
+        }
+        
+        if (event === 'SIGNED_IN') {
+          console.log('用户登录');
+          this.loadUser();
+        } else if (event === 'SIGNED_OUT') {
+          console.log('用户登出');
+          this.user = null;
+          this.isOpen = false;
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('Token已刷新');
+          // Token刷新时重新加载用户信息
+          this.loadUser();
+        }
+      });
+    } catch (error) {
+      console.error('设置认证监听器失败:', error);
+    }
+  },
+  
+  // 处理登出
+  async handleLogout() {
+    try {
+      console.log('🚪 开始登出流程...');
+      
+      // 调用服务端登出API - 使用正确的端口
+      const apiUrl = window.location.origin + '/api/auth/logout';
+      console.log('🚪 登出API URL:', apiUrl);
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+      });
+      
+      console.log('🚪 登出API响应状态:', response.status);
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('🚪 登出API响应:', result);
+      } else {
+        console.warn('🚪 登出API失败，但继续清除本地状态:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.warn('🚪 登出API调用失败，但继续清除本地状态:', error);
+    }
+    
+    // 无论API调用是否成功，都要清除本地状态
+    try {
+      console.log('🧹 清除本地存储和cookies...');
+      
+      // 清除本地存储
+      if (typeof window !== 'undefined') {
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // 清除所有相关cookie
+        const cookiesToClear = [
+          'sb-access-token',
+          'sb-refresh-token', 
+          'supabase-auth-token',
+          'supabase.auth.token',
+          'user_info',
+          'session'
+        ];
+        
+        cookiesToClear.forEach(cookieName => {
+          // 清除不同域和路径的cookie
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=localhost`;
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
+          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.localhost`;
+        });
+        
+        console.log('✅ 已清除本地存储和cookies');
+      }
+      
+      // 重置用户状态
+      this.user = null;
+      
+      console.log('🔄 重定向到首页...');
+      // 强制刷新页面，重定向到首页
+      window.location.href = '/';
+    } catch (error) {
+      console.error('❌ 清除本地状态时发生错误:', error);
+      // 即使清除失败，也要尝试重定向
+      window.location.href = '/';
+    }
+  }
+}" x-cloak x-init="console.log('AuthStatus Alpine 组件已初始化', $data)">
   <!-- 加载状态 -->
   <div x-show="loading" class="flex items-center space-x-2">
     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
@@ -107,7 +428,7 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
       <!-- 菜单项 -->
       <div class="py-1">
         <a
-          :href="isAdmin ? '/admin/backlinks' : '/admin/login'"
+          :href="isAdmin ? '/admin/dashboard' : '/dashboard'"
           class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-150"
         >
           <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,404 +452,3 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
     </div>
   </div>
 </div>
-
-
-
-<script is:inline>
-  document.addEventListener('alpine:init', () => {
-    console.log('Alpine.js 初始化事件触发');
-    
-    Alpine.data('authStatusData', () => ({
-      user: null,
-      isOpen: false,
-      loading: true,
-      authError: null,
-      authSubscription: null,
-      
-      async init() {
-        console.log('AuthStatus 组件初始化开始');
-        await this.loadUser();
-        this.setupAuthListener();
-        console.log('AuthStatus 组件初始化完成，用户状态:', this.user ? '已登录' : '未登录');
-        
-        // 调试：检查下拉菜单元素
-        setTimeout(() => {
-          const authContainer = document.querySelector('#auth-status');
-          const dropdown = document.querySelector('[x-show="isOpen"]');
-          console.log('调试信息:');
-          console.log('- 认证容器存在:', !!authContainer);
-          console.log('- 下拉菜单元素存在:', !!dropdown);
-          console.log('- 当前 isOpen 状态:', this.isOpen);
-          console.log('- Alpine.js 数据绑定:', authContainer?._x_dataStack ? '已绑定' : '未绑定');
-          
-          if (dropdown) {
-            console.log('- 下拉菜单计算样式:', window.getComputedStyle(dropdown).display);
-            console.log('- 下拉菜单位置:', dropdown.getBoundingClientRect());
-          }
-        }, 500);
-      },
-      
-      async loadUser() {
-        try {
-          console.log('开始加载用户信息');
-          this.loading = true;
-          const { supabase } = await import('/src/lib/supabase.ts');
-          
-          // 首先检查会话是否存在
-          const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-          
-          if (sessionError) {
-            console.warn('获取会话失败:', sessionError);
-            // 会话错误时，尝试刷新token
-            await this.attemptTokenRefresh();
-            return;
-          }
-          
-          if (!session) {
-            console.log('没有活跃会话，用户未登录');
-            this.user = null;
-            return;
-          }
-          
-          // 会话存在，获取用户信息
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
-          if (userError) {
-            console.error('获取用户信息失败:', userError);
-            // 如果是认证错误，清理状态
-            if (userError.message?.includes('session') || userError.message?.includes('token')) {
-              console.log('认证token无效，清理用户状态');
-              this.user = null;
-              this.clearAuthState();
-            } else {
-              this.user = null;
-            }
-          } else {
-            console.log('用户信息加载成功:', user?.email);
-            this.user = user;
-          }
-        } catch (error) {
-          console.error('loadUser 异常:', error);
-          this.user = null;
-          // 如果是网络错误，不清理状态，可能是临时问题
-          if (error.name !== 'NetworkError') {
-            this.clearAuthState();
-          }
-        } finally {
-          this.loading = false;
-          console.log('用户加载完成，用户状态:', this.user ? '已登录' : '未登录');
-        }
-      },
-      
-      async attemptTokenRefresh() {
-        try {
-          console.log('尝试刷新认证token');
-          const { supabase } = await import('/src/lib/supabase.ts');
-          const { data, error } = await supabase.auth.refreshSession();
-          
-          if (error) {
-            console.warn('token刷新失败:', error);
-            this.user = null;
-            this.clearAuthState();
-          } else if (data.session) {
-            console.log('token刷新成功');
-            this.user = data.session.user;
-          } else {
-            console.log('刷新后仍无有效会话');
-            this.user = null;
-          }
-        } catch (error) {
-          console.error('token刷新异常:', error);
-          this.user = null;
-          this.clearAuthState();
-        }
-      },
-      
-      clearAuthState() {
-        console.log('清理认证状态');
-        try {
-          // 只清理认证相关的存储，保留其他数据
-          const keysToRemove = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && (key.includes('supabase') || key.includes('auth'))) {
-              keysToRemove.push(key);
-            }
-          }
-          keysToRemove.forEach(key => localStorage.removeItem(key));
-          
-          // 清理会话存储中的认证数据
-          for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            if (key && (key.includes('supabase') || key.includes('auth'))) {
-              sessionStorage.removeItem(key);
-            }
-          }
-        } catch (error) {
-          console.error('清理认证状态失败:', error);
-        }
-      },
-      
-      async setupAuthListener() {
-        try {
-          const { supabase } = await import('/src/lib/supabase.ts');
-          
-          // 设置认证状态变化监听器
-          const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-            console.log('Auth state changed:', event, session?.user?.email || 'no user');
-            
-            try {
-              switch (event) {
-                case 'SIGNED_OUT':
-                  console.log('用户已退出登录');
-                  this.user = null;
-                  this.isOpen = false;
-                  // 登出时清理认证状态，但不强制刷新页面
-                  this.clearAuthState();
-                  break;
-                  
-                case 'SIGNED_IN':
-                  console.log('用户已登录');
-                  if (session?.user) {
-                    this.user = session.user;
-                    // 登录成功后，确保清理任何错误状态
-                    this.authError = null;
-                  }
-                  break;
-                  
-                case 'TOKEN_REFRESHED':
-                  console.log('Token 已刷新');
-                  if (session?.user) {
-                    this.user = session.user;
-                    this.authError = null;
-                  } else {
-                    console.warn('Token刷新后无用户信息');
-                    this.user = null;
-                  }
-                  break;
-                  
-                case 'USER_UPDATED':
-                  console.log('用户信息已更新');
-                  if (session?.user) {
-                    this.user = session.user;
-                  }
-                  break;
-                  
-                case 'INITIAL_SESSION':
-                  console.log('初始会话');
-                  if (session?.user) {
-                    this.user = session.user;
-                  } else {
-                    this.user = null;
-                  }
-                  break;
-                  
-                default:
-                  console.log('未处理的认证事件:', event);
-              }
-            } catch (error) {
-              console.error('处理认证状态变化时出错:', error);
-              this.authError = error.message;
-              // 如果是严重错误，重新加载用户状态
-              if (error.message?.includes('session') || error.message?.includes('token')) {
-                setTimeout(() => this.loadUser(), 1000);
-              }
-            }
-          });
-          
-          // 保存订阅引用以便后续清理
-          this.authSubscription = subscription;
-          
-        } catch (error) {
-          console.error('设置认证监听器失败:', error);
-          this.authError = '认证监听器设置失败';
-          // 如果监听器设置失败，尝试重新设置
-          setTimeout(() => {
-            console.log('重试设置认证监听器');
-            this.setupAuthListener();
-          }, 3000);
-        }
-      },
-      
-      get userName() {
-        if (!this.user) return '用户';
-        return this.user.user_metadata?.full_name || 
-               this.user.user_metadata?.name || 
-               this.user.email?.split('@')[0] || 
-               '用户';
-      },
-      
-      // 判断是否为管理员
-      get isAdmin() {
-        if (!this.user?.email) return false;
-        
-        // 管理员邮箱列表（可以从环境变量获取）
-        const adminEmails = [
-          'admin@example.com',
-          'wangdefou@gmail.com', // 示例管理员邮箱
-          'wangpangzier@gmail.com', // 主要管理员邮箱
-          // 可以添加更多管理员邮箱
-        ];
-        
-        // 检查是否在管理员邮箱列表中
-        if (adminEmails.includes(this.user.email.toLowerCase())) {
-          return true;
-        }
-        
-        // 检查是否为特定域名（可选）
-        const adminDomains = [
-          '@yourdomain.com', // 示例公司域名
-          // 可以添加更多管理员域名
-        ];
-        
-        return adminDomains.some(domain => 
-          this.user.email.toLowerCase().endsWith(domain)
-        );
-      },
-      
-      // 切换下拉菜单显示状态
-      toggleDropdown() {
-        console.log('toggleDropdown 被调用，当前 isOpen:', this.isOpen);
-        this.isOpen = !this.isOpen;
-        console.log('toggleDropdown 执行后，新的 isOpen:', this.isOpen);
-        
-        // 使用 $nextTick 确保 DOM 更新
-        this.$nextTick(() => {
-          const dropdown = document.querySelector('#auth-status [x-show="isOpen"]');
-          if (dropdown) {
-            console.log('下拉菜单元素状态:');
-            console.log('- 显示状态:', this.isOpen ? '显示' : '隐藏');
-            console.log('- 计算样式:', window.getComputedStyle(dropdown).display);
-            console.log('- 元素可见性:', dropdown.offsetHeight > 0 ? '可见' : '不可见');
-          }
-        });
-      },
-      
-      async handleLogout() {
-        console.log('开始执行退出登录流程');
-        
-        // 立即更新UI状态，提供即时反馈
-        this.user = null;
-        this.isOpen = false;
-        
-        try {
-          await this.performLogout();
-        } catch (error) {
-          console.error('退出登录失败，尝试强制清理:', error);
-          // 即使登出失败，也要清理本地状态
-          this.forceCleanup();
-        }
-      },
-      
-      async performLogout(retryCount = 0) {
-        const maxRetries = 2;
-        const timeout = 5000; // 5秒超时
-        
-        try {
-          console.log(`尝试退出登录 (第${retryCount + 1}次)`);
-          
-          const { supabase } = await import('/src/lib/supabase.ts');
-          
-          // 创建带超时的Promise
-          const logoutPromise = supabase.auth.signOut({ scope: 'global' });
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('登出请求超时')), timeout)
-          );
-          
-          const { error } = await Promise.race([logoutPromise, timeoutPromise]);
-          
-          if (error) {
-            throw error;
-          }
-          
-          console.log('Supabase 登出成功');
-          this.forceCleanup();
-          
-        } catch (error) {
-          console.error(`第${retryCount + 1}次登出尝试失败:`, error);
-          
-          if (retryCount < maxRetries) {
-            // 等待1秒后重试
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            return this.performLogout(retryCount + 1);
-          } else {
-            // 所有重试都失败，抛出错误
-            throw new Error(`登出失败，已重试${maxRetries}次: ${error.message}`);
-          }
-        }
-      },
-      
-      forceCleanup() {
-        console.log('执行强制清理');
-        
-        try {
-          // 清除所有本地存储
-          localStorage.clear();
-          sessionStorage.clear();
-          
-          // 清除所有相关的cookie
-          document.cookie.split(";").forEach(function(c) { 
-            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
-          });
-          
-          console.log('本地数据清理完成');
-          
-          // 强制刷新页面
-          console.log('重定向到首页');
-          window.location.href = '/';
-          
-        } catch (cleanupError) {
-          console.error('清理过程中发生错误:', cleanupError);
-          // 即使清理失败，也要重定向
-          window.location.href = '/';
-        }
-      },
-       
-       // 清理函数
-       destroy() {
-         if (this.authSubscription) {
-           console.log('清理认证监听器');
-           this.authSubscription.unsubscribe();
-           this.authSubscription = null;
-         }
-       },
-       
-       cleanup() {
-         console.log('清理认证组件资源');
-         if (this.authSubscription) {
-           try {
-             this.authSubscription.unsubscribe();
-             console.log('认证监听器已清理');
-           } catch (error) {
-             console.error('清理认证监听器失败:', error);
-           }
-           this.authSubscription = null;
-         }
-       }
-    }));
-  });
-  
-  // 页面卸载时清理订阅
-  window.addEventListener('beforeunload', () => {
-    const authComponent = document.querySelector('#auth-status');
-    if (authComponent && authComponent._x_dataStack && authComponent._x_dataStack[0]) {
-      authComponent._x_dataStack[0].destroy();
-    }
-  });
-</script>
-
-<style>
-  [x-cloak] {
-    display: none !important;
-  }
-  
-  /* 确保下拉菜单可见性 */
-  .dropdown-menu {
-    position: absolute;
-    z-index: 9999;
-  }
-  
-  .dropdown-menu[x-show] {
-    display: block;
-  }
-</style>
