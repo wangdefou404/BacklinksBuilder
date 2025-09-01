@@ -1,16 +1,16 @@
 ---
-// 认证状态组件 - 根据用户登录状态显示不同内容
+// Authentication status component - displays different content based on user login status
 import GoogleSignInButton from './GoogleSignInButton.astro';
 
-// 不在服务端获取用户信息，改为在客户端处理
+// Don't fetch user info on server side, handle on client side instead
 // const user = null;
 ---
 
 <script>
-  // 导入Supabase客户端
+  // Import Supabase client
   import { supabase } from '/src/lib/supabase.ts';
   
-  // 将supabase实例挂载到window对象，供Alpine.js使用
+  // Mount supabase instance to window object for Alpine.js usage
   window.supabaseClient = supabase;
 </script>
 
@@ -22,44 +22,44 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
   authSubscription: null,
   
   async init() {
-    console.log('AuthStatus 组件初始化开始');
+    console.log('AuthStatus component initialization started');
     this.loading = true;
     
     try {
-      // 首先尝试从cookie读取用户信息
+      // First try to load user info from cookie
       await this.loadUserFromCookie();
       
-      // 然后加载完整的用户信息
+      // Then load complete user information
       await this.loadUser();
       this.setupAuthListener();
       
-      console.log('AuthStatus 组件初始化完成，用户状态:', this.user ? '已登录' : '未登录');
+      console.log('AuthStatus component initialization completed, user status:', this.user ? 'logged in' : 'not logged in');
     } catch (error) {
-      console.error('AuthStatus 初始化失败:', error);
-      this.authError = '认证系统初始化失败';
+      console.error('AuthStatus initialization failed:', error);
+      this.authError = 'Authentication system initialization failed';
     } finally {
       this.loading = false;
     }
   },
   
-  // 从cookie加载用户信息
+  // Load user info from cookie
   loadUserFromCookie() {
-    console.log('🍪 开始从cookie加载用户信息');
-    console.log('🍪 当前所有cookies:', document.cookie);
+    console.log('🍪 Starting to load user info from cookie');
+    console.log('🍪 Current all cookies:', document.cookie);
     
     try {
-      // 首先尝试从session cookie加载
+      // First try to load from session cookie
       const sessionCookie = document.cookie
         .split('; ')
         .find(row => row.startsWith('session='));
       
       if (sessionCookie) {
-        console.log('🍪 找到session cookie');
+        console.log('🍪 Found session cookie');
         const sessionStr = decodeURIComponent(sessionCookie.split('=')[1]);
-        console.log('🍪 解码后的session:', sessionStr);
+        console.log('🍪 Decoded session:', sessionStr);
         const sessionInfo = JSON.parse(sessionStr);
         
-        // 构造用户对象，模拟Supabase用户格式
+        // Construct user object, simulating Supabase user format
         this.user = {
           id: sessionInfo.userId,
           email: sessionInfo.email,
@@ -73,22 +73,22 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
           role: sessionInfo.role
         };
         
-        console.log('✅ 从session cookie加载用户信息成功:', this.user);
+        console.log('✅ Successfully loaded user info from session cookie:', this.user);
         return true;
       }
       
-      // 如果没有session cookie，尝试user_info cookie
+      // If no session cookie, try user_info cookie
       const userInfoCookie = document.cookie
         .split('; ')
         .find(row => row.startsWith('user_info='));
       
       if (userInfoCookie) {
-        console.log('🍪 找到user_info cookie');
+        console.log('🍪 Found user_info cookie');
         const userInfoStr = decodeURIComponent(userInfoCookie.split('=')[1]);
-        console.log('🍪 解码后的user_info:', userInfoStr);
+        console.log('🍪 Decoded user_info:', userInfoStr);
         const userInfo = JSON.parse(userInfoStr);
         
-        // 构造用户对象，模拟Supabase用户格式
+        // Construct user object, simulating Supabase user format
         this.user = {
           id: userInfo.id,
           email: userInfo.email,
@@ -102,46 +102,46 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
           role: userInfo.role
         };
         
-        console.log('✅ 从user_info cookie加载用户信息成功:', this.user);
+        console.log('✅ Successfully loaded user info from user_info cookie:', this.user);
         return true;
       }
       
-      console.log('❌ 没有找到任何用户cookie');
+      console.log('❌ No user cookies found');
     } catch (error) {
-      console.error('❌ 从cookie加载用户信息失败:', error);
+      console.error('❌ Failed to load user info from cookie:', error);
     }
     return false;
   },
   
   get userName() {
-    if (!this.user) return '用户';
+    if (!this.user) return 'User';
     return this.user.user_metadata?.full_name || 
            this.user.user_metadata?.name || 
            this.user.email?.split('@')[0] || 
-           '用户';
+           'User';
   },
   
-  // 判断是否为管理员
+  // Check if user is admin
   get isAdmin() {
     if (!this.user?.email) return false;
     
-    // 管理员邮箱列表（可以从环境变量获取）
+    // Admin email list (can be obtained from environment variables)
     const adminEmails = [
       'admin@example.com',
-      'wangdefou@gmail.com', // 示例管理员邮箱
-      'wangpangzier@gmail.com', // 主要管理员邮箱
-      // 可以添加更多管理员邮箱
+      'wangdefou@gmail.com', // Example admin email
+      'wangpangzier@gmail.com', // Main admin email
+      // Can add more admin emails
     ];
     
-    // 检查是否在管理员邮箱列表中
+    // Check if in admin email list
     if (adminEmails.includes(this.user.email.toLowerCase())) {
       return true;
     }
     
-    // 检查是否为特定域名（可选）
+    // Check if from specific domain (optional)
     const adminDomains = [
-      '@yourdomain.com', // 示例公司域名
-      // 可以添加更多管理员域名
+      '@yourdomain.com', // Example company domain
+      // Can add more admin domains
     ];
     
     return adminDomains.some(domain => 
@@ -149,45 +149,45 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
     );
   },
   
-  // 切换下拉菜单显示状态
+  // Toggle dropdown menu display state
   toggleDropdown() {
-    console.log('toggleDropdown 被调用，当前 isOpen:', this.isOpen);
+    console.log('toggleDropdown called, current isOpen:', this.isOpen);
     this.isOpen = !this.isOpen;
-    console.log('toggleDropdown 执行后，新的 isOpen:', this.isOpen);
+    console.log('toggleDropdown executed, new isOpen:', this.isOpen);
   },
   
-  // 从Supabase加载用户信息
+  // Load user info from Supabase
   async loadUser() {
-    console.log('开始加载用户信息');
+    console.log('Starting to load user info');
     
     try {
       const supabase = window.supabaseClient;
       
-      // 获取当前会话
+      // Get current session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.error('获取会话失败:', sessionError);
-        this.authError = '获取会话失败';
+        console.error('Failed to get session:', sessionError);
+        this.authError = 'Failed to get session';
         return;
       }
       
       if (!session?.user) {
-        console.log('没有活跃会话，用户未登录');
-        // 如果已经从cookie加载了用户信息，就不要清除
+        console.log('No active session, user not logged in');
+        // If user info was already loaded from cookie, don't clear it
         if (!this.user) {
           this.user = null;
         }
-        console.log('用户加载完成，用户状态:', this.user ? '已登录' : '未登录');
+        console.log('User loading completed, user status:', this.user ? 'logged in' : 'not logged in');
         return;
       }
       
-      // 如果已经从cookie加载了用户信息，就不需要重新设置
+      // If user info was already loaded from cookie, no need to reset
       if (!this.user) {
-        console.log('从Supabase会话获取用户信息');
+        console.log('Getting user info from Supabase session');
         
         try {
-          // 尝试从数据库获取更完整的用户信息
+          // Try to get more complete user info from database
           const { data: userData, error: userError } = await supabase
             .from('users')
             .select('*')
@@ -195,10 +195,10 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
             .single();
           
           if (userError && userError.code !== 'PGRST116') {
-            console.error('获取用户数据失败:', userError);
+            console.error('Failed to get user data:', userError);
           }
           
-          // 合并Supabase Auth用户信息和数据库用户信息
+          // Merge Supabase Auth user info and database user info
           this.user = {
             ...session.user,
             ...userData,
@@ -208,25 +208,25 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
             }
           };
           
-          console.log('用户信息加载成功:', this.user);
+          console.log('User info loaded successfully:', this.user);
         } catch (dbError) {
-          console.error('数据库查询异常:', dbError);
-          // 如果数据库查询失败，至少使用Auth用户信息
+          console.error('Database query exception:', dbError);
+          // If database query fails, at least use Auth user info
           this.user = session.user;
         }
       }
       
-      console.log('用户加载完成，用户状态:', this.user ? '已登录' : '未登录');
+      console.log('User loading completed, user status:', this.user ? 'logged in' : 'not logged in');
       
     } catch (error) {
-      console.error('加载用户信息时发生错误:', error);
-      this.authError = '加载用户信息失败';
+      console.error('Error occurred while loading user info:', error);
+      this.authError = 'Failed to load user info';
     }
   },
   
-  // 设置认证状态监听器
+  // Setup authentication state listener
   setupAuthListener() {
-    console.log('设置认证状态监听器');
+    console.log('Setting up authentication state listener');
     
     try {
       const supabase = window.supabaseClient;
@@ -234,37 +234,37 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
         console.log('Auth state changed:', event, session?.user ? 'user logged in' : 'no user');
         
         if (event === 'INITIAL_SESSION') {
-          console.log('初始会话');
-          // 初始会话已经在loadUser中处理
+          console.log('Initial session');
+          // Initial session is already handled in loadUser
           return;
         }
         
         if (event === 'SIGNED_IN') {
-          console.log('用户登录');
+          console.log('User signed in');
           this.loadUser();
         } else if (event === 'SIGNED_OUT') {
-          console.log('用户登出');
+          console.log('User signed out');
           this.user = null;
           this.isOpen = false;
         } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token已刷新');
-          // Token刷新时重新加载用户信息
+          console.log('Token refreshed');
+          // Reload user info when token is refreshed
           this.loadUser();
         }
       });
     } catch (error) {
-      console.error('设置认证监听器失败:', error);
+      console.error('Failed to setup auth listener:', error);
     }
   },
   
-  // 处理登出
+  // Handle logout
   async handleLogout() {
     try {
-      console.log('🚪 开始登出流程...');
+      console.log('🚪 Starting logout process...');
       
-      // 调用服务端登出API - 使用正确的端口
+      // Call server-side logout API - use correct port
       const apiUrl = window.location.origin + '/api/auth/logout';
-      console.log('🚪 登出API URL:', apiUrl);
+      console.log('🚪 Logout API URL:', apiUrl);
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -274,28 +274,28 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
         credentials: 'same-origin'
       });
       
-      console.log('🚪 登出API响应状态:', response.status);
+      console.log('🚪 Logout API response status:', response.status);
       
       if (response.ok) {
         const result = await response.json();
-        console.log('🚪 登出API响应:', result);
+        console.log('🚪 Logout API response:', result);
       } else {
-        console.warn('🚪 登出API失败，但继续清除本地状态:', response.status, response.statusText);
+        console.warn('🚪 Logout API failed, but continuing to clear local state:', response.status, response.statusText);
       }
     } catch (error) {
-      console.warn('🚪 登出API调用失败，但继续清除本地状态:', error);
+      console.warn('🚪 Logout API call failed, but continuing to clear local state:', error);
     }
     
-    // 无论API调用是否成功，都要清除本地状态
+    // Clear local state regardless of API call success
     try {
-      console.log('🧹 清除本地存储和cookies...');
+      console.log('🧹 Clearing local storage and cookies...');
       
-      // 清除本地存储
+      // Clear local storage
       if (typeof window !== 'undefined') {
         localStorage.clear();
         sessionStorage.clear();
         
-        // 清除所有相关cookie，使用一致的domain配置
+        // Clear all related cookies with consistent domain configuration
         const cookiesToClear = [
           'sb-access-token',
           'sb-refresh-token', 
@@ -306,7 +306,7 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
           'oauth_state'
         ];
         
-        // 获取当前域名
+        // Get current domain
         const currentUrl = window.location.href;
         const isProduction = currentUrl.startsWith('https') && !currentUrl.includes('localhost');
         let domain = '';
@@ -317,50 +317,50 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
             domain = urlObj.hostname;
             domain = domain.startsWith('www.') ? domain.substring(4) : domain;
           } catch (e) {
-            console.warn('无法解析当前URL，使用默认domain设置:', e);
+            console.warn('Unable to parse current URL, using default domain setting:', e);
           }
         }
         
         cookiesToClear.forEach(cookieName => {
-          // 清除不同域和路径的cookie
+          // Clear cookies with different domains and paths
           if (isProduction && domain) {
-            // 生产环境：使用正确的domain
+            // Production environment: use correct domain
             document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain}`;
             document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain}`;
           } else {
-            // 本地环境：使用localhost
+            // Local environment: use localhost
             document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=localhost`;
             document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.localhost`;
           }
-          // 通用清除（不指定domain）
+          // Generic clear (without specifying domain)
           document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/`;
         });
         
-        console.log('✅ 已清除Cookie，domain配置:', { domain, isProduction });
+        console.log('✅ Cleared cookies, domain configuration:', { domain, isProduction });
         
-        console.log('✅ 已清除本地存储和cookies');
+        console.log('✅ Cleared local storage and cookies');
       }
       
-      // 重置用户状态
+      // Reset user state
       this.user = null;
       
-      console.log('🔄 重定向到首页...');
-      // 强制刷新页面，重定向到首页
+      console.log('🔄 Redirecting to homepage...');
+      // Force page refresh, redirect to homepage
       window.location.href = '/';
     } catch (error) {
-      console.error('❌ 清除本地状态时发生错误:', error);
-      // 即使清除失败，也要尝试重定向
+      console.error('❌ Error occurred while clearing local state:', error);
+      // Even if clearing fails, try to redirect
       window.location.href = '/';
     }
   }
-}" x-cloak x-init="console.log('AuthStatus Alpine 组件已初始化', $data)">
-  <!-- 加载状态 -->
+}" x-cloak x-init="console.log('AuthStatus Alpine component initialized', $data)">
+  <!-- Loading state -->
   <div x-show="loading" class="flex items-center space-x-2">
     <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-    <span class="text-sm text-gray-600">加载中...</span>
+    <span class="text-sm text-gray-600">Loading...</span>
   </div>
   
-  <!-- 默认显示登录按钮 -->
+  <!-- Default login button display -->
   <div x-show="!loading && !user">
     <GoogleSignInButton 
       redirectTo="/admin/backlinks"
@@ -370,17 +370,17 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
     />
   </div>
   
-  <!-- 登录后显示用户头像 -->
+  <!-- Display user avatar after login -->
   <div x-show="!loading && user" class="relative">
-    <!-- 用户头像按钮 -->
+    <!-- User avatar button -->
     <button
       @click="toggleDropdown()"
       @keydown.escape="isOpen = false"
       class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200 focus:outline-none"
       :aria-expanded="isOpen"
-      aria-label="用户菜单"
+      aria-label="User menu"
     >
-      <!-- 头像 -->
+      <!-- Avatar -->
       <template x-if="user?.user_metadata?.avatar_url || user?.user_metadata?.picture">
         <img
           :src="user.user_metadata?.avatar_url || user.user_metadata?.picture"
@@ -396,10 +396,10 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
         </div>
       </template>
       
-      <!-- 用户名 (在大屏幕上显示) -->
+      <!-- Username (display on large screens) -->
       <span class="hidden md:block text-sm font-medium text-gray-700 max-w-24 truncate" x-text="userName"></span>
       
-      <!-- 下拉箭头 -->
+      <!-- Dropdown arrow -->
       <svg
         class="w-4 h-4 text-gray-500 transition-transform duration-200"
         :class="{ 'rotate-180': isOpen }"
@@ -411,7 +411,7 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
       </svg>
     </button>
 
-    <!-- 下拉菜单 -->
+    <!-- Dropdown menu -->
     <div
       x-show="isOpen"
       x-transition:enter="transition ease-out duration-200"
@@ -423,9 +423,9 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
       @click.away="isOpen = false"
       class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]"
       style="transform-origin: top right;"
-      x-init="console.log('下拉菜单元素初始化', { isOpen })"
+      x-init="console.log('Dropdown menu element initialized', { isOpen })"
     >
-      <!-- 用户信息 -->
+      <!-- User information -->
       <div class="px-4 py-3 border-b border-gray-100">
         <div class="flex items-center space-x-3">
           <!-- 头像 -->
@@ -451,7 +451,7 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
         </div>
       </div>
 
-      <!-- 菜单项 -->
+      <!-- Menu items -->
       <div class="py-1">
         <a
           :href="isAdmin ? '/admin/dashboard' : '/dashboard'"
@@ -460,19 +460,19 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
           <svg class="w-4 h-4 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
           </svg>
-          <span x-text="isAdmin ? '管理面板' : '管理员登录'"></span>
+          <span x-text="isAdmin ? 'Admin Panel' : 'User Dashboard'"></span>
         </a>
         
         <hr class="my-1 border-gray-100">
         
         <button
-          @click="console.log('退出登录按钮被点击'); handleLogout()"
+          @click="console.log('Logout button clicked'); handleLogout()"
           class="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150"
         >
           <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
           </svg>
-          退出登录
+          Logout
         </button>
       </div>
     </div>

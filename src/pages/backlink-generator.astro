@@ -5,10 +5,10 @@ import DomainInput from '../components/tools/DomainInput.astro';
 import ActionButtons from '../components/tools/ActionButtons.astro';
 import ProgressBar from '../components/tools/ProgressBar.astro';
 import ResultsTable from '../components/tools/ResultsTable.astro';
-// import FeaturesList from '../components/tools/FeaturesList.astro'; // 未使用的导入
+// import FeaturesList from '../components/tools/FeaturesList.astro'; // Unused import
 
 const tableColumns = [
-  { key: 'id', label: '序号', sortable: false },
+  { key: 'id', label: 'No.', sortable: false },
   { key: 'urlFrom', label: 'URL From', sortable: true },
   { key: 'domainRating', label: 'Domain Rating', sortable: true },
   { key: 'status', label: 'STATUS', sortable: false }
@@ -36,10 +36,10 @@ const features = [
 ];
 ---
 
-<BaseLayout title="Backlink Checker - BacklinksBuilder">
+<BaseLayout title="Backlink Generator - BacklinksBuilder">
   <ToolPageLayout 
-    title="Backlink Checker"
-    description="Analyze backlink profiles and discover link building opportunities. Get comprehensive backlink insights to understand your competition and improve your SEO strategy."
+    title="Backlink Generator"
+    description="Intelligently analyze and generate high-quality backlink opportunities. Smart backlink generation tool to help you quickly find high-quality backlink opportunities."
     features={features}
   >
     <Fragment slot="tool-content">
@@ -47,7 +47,7 @@ const features = [
       <div id="quota-display" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-medium text-blue-900">Backlink Check Quota</h3>
+<h3 class="text-sm font-medium text-blue-900">Generate Backlink Opportunities</h3>
             <p id="quota-info" class="text-sm text-blue-700">Loading quota information...</p>
           </div>
           <div id="quota-upgrade" class="hidden">
@@ -60,13 +60,13 @@ const features = [
       
       <DomainInput 
         id="url"
-        label="Enter Website URL"
-        placeholder="Enter website URL\nExample:\nexample.com"
+        label="Target Keywords"
+        placeholder="Enter target keywords\nExample:\nSEO tools"
         maxDomains={1}
       />
       
       <ActionButtons 
-        checkButtonText="Analyze Backlinks"
+        checkButtonText="Generate Opportunities"
         checkButtonId="check-btn"
         clearButtonId="clear-btn"
         showExportButton={false}

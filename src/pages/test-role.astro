@@ -116,7 +116,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
               <div class="space-y-2">
                 <p><strong>角色:</strong> <span class="font-semibold ${getRoleColor(roleData.role)}">${roleData.role}</span></p>
                 <p><strong>是否管理员:</strong> ${roleData.isAdmin ? '✅ 是' : '❌ 否'}</p>
-                <p><strong>是否高级用户:</strong> ${roleData.isPremium ? '✅ 是' : '❌ 否'}</p>
+                <p><strong>是否Pro用户:</strong> ${roleData.isPro ? '✅ 是' : '❌ 否'}</p>
+        <p><strong>是否超级管理员:</strong> ${roleData.isSuper ? '✅ 是' : '❌ 否'}</p>
                 <p><strong>是否免费用户:</strong> ${roleData.isFree ? '✅ 是' : '❌ 否'}</p>
                 <p><strong>权限数量:</strong> ${roleData.permissions?.length || 0}</p>
                 ${roleData.roleDetails ? `<p><strong>角色详情:</strong> 已分配</p>` : '<p><strong>角色详情:</strong> 未分配到user_roles表</p>'}
@@ -165,7 +166,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   function getRoleColor(role) {
     switch (role) {
       case 'admin': return 'text-red-600';
-      case 'premium': return 'text-purple-600';
+      case 'user': return 'text-green-600';
+        case 'Pro': return 'text-blue-600';
+        case 'super': return 'text-purple-600';
       case 'free': return 'text-green-600';
       default: return 'text-gray-600';
     }

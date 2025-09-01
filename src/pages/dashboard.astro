@@ -15,7 +15,7 @@ if (user) {
 
 // 如果服务端检测到用户未登录，显示加载页面让客户端处理
 let serverSideAuth = false;
-let userRole = 'user';
+let userRole = 'free';
 let userId = null;
 let userEmail = null;
 
@@ -40,9 +40,12 @@ if (session && user) {
     case 'super':
       console.log('⭐ Super user, redirecting to super dashboard');
       return Astro.redirect('/super/dashboard');
-    case 'premium':
-      console.log('💎 Premium user, redirecting to premium dashboard');
+    case 'Pro':
+      console.log('💎 Pro user, redirecting to premium dashboard');
       return Astro.redirect('/premium/dashboard');
+    case 'super':
+      console.log('🚀 Super user, redirecting to admin dashboard');
+      return Astro.redirect('/admin/dashboard');
     case 'user':
     case 'free':
     default:
@@ -53,29 +56,24 @@ if (session && user) {
 }
 ---
 
-<BaseLayout title="Dashboard - 正在加载...">
+<BaseLayout title="Dashboard - Loading...">
   <Navigation />
   
   <main class="min-h-screen bg-gray-50 py-12">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <h1 class="text-2xl font-bold text-gray-900 mb-2">正在加载您的仪表盘...</h1>
-        <p class="text-gray-600">请稍候，我们正在为您准备个性化的仪表盘体验。</p>
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">Loading your dashboard...</h1>
+        <p class="text-gray-600">Please wait while we prepare your personalized dashboard experience.</p>
         
-        <!-- 备用导航链接 -->
-        <div class="mt-8 space-y-2">
-          <p class="text-sm text-gray-500">如果页面没有自动跳转，请手动选择：</p>
-          <div class="flex flex-wrap justify-center gap-4 mt-4">
-            <a href="/user/dashboard" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              用户仪表盘
-            </a>
-            <a href="/premium/dashboard" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              高级仪表盘
-            </a>
-            <a href="/admin/dashboard" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-              管理员仪表盘
-            </a>
+        <!-- Alternative navigation links -->
+        <div class="mt-8 space-y-4">
+          <p class="text-sm text-gray-500">Or visit directly:</p>
+          <div class="flex flex-wrap justify-center gap-4">
+            <a href="/dr-checker" class="text-blue-600 hover:text-blue-800 underline">DR Checker</a>
+            <a href="/traffic-checker" class="text-blue-600 hover:text-blue-800 underline">Traffic Checker</a>
+            <a href="/backlink-generator" class="text-blue-600 hover:text-blue-800 underline">Backlink Generator</a>
+            <a href="/pricing" class="text-blue-600 hover:text-blue-800 underline">Pricing Plans</a>
           </div>
         </div>
       </div>
@@ -130,7 +128,7 @@ if (session && user) {
         const response = await fetch(`/api/auth/get-user-role?userId=${user.id}`);
         if (response.ok) {
           const data = await response.json();
-          const userRole = data.role || 'user';
+          const userRole = data.role || 'free';
           
           console.log('用户角色:', userRole);
           
@@ -145,9 +143,13 @@ if (session && user) {
               console.log('⭐ Super user, redirecting to super dashboard');
               window.location.href = '/super/dashboard';
               break;
-            case 'premium':
-              console.log('💎 Premium user, redirecting to premium dashboard');
-              window.location.href = '/premium/dashboard';
+            case 'Pro':
+        console.log('💎 Pro user, redirecting to premium dashboard');
+        window.location.href = '/premium/dashboard';
+        break;
+      case 'super':
+        console.log('🚀 Super user, redirecting to admin dashboard');
+        window.location.href = '/admin/dashboard';
               break;
             case 'user':
             case 'free':

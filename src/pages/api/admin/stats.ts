@@ -21,11 +21,11 @@ export const GET: APIRoute = async ({ request }) => {
 
     // 获取高级用户数
     const { count: premiumUsers, error: premiumError } = await supabase
-      .from('user_roles')
+      .from('users')
       .select('*', { count: 'exact', head: true })
-      .in('role', ['premium', 'admin', 'super'])
-      .eq('is_active', true);
-    
+      .in('role', ['Pro', 'super', 'admin'])
+      .single();
+
     if (premiumError) {
       console.error('Error fetching premium users:', premiumError);
     }

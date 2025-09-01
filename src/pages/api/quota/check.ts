@@ -79,7 +79,7 @@ export const POST: APIRoute = async ({ request }) => {
     // 映射角色到计划类型
     const planTypeMap: Record<string, string> = {
       'free': 'free',
-      'premium': 'pro',
+      'Pro': 'pro',
       'admin': 'super'
     };
 

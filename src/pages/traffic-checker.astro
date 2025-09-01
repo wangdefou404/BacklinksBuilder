@@ -5,7 +5,7 @@ import DomainInput from '../components/tools/DomainInput.astro';
 import ActionButtons from '../components/tools/ActionButtons.astro';
 import ProgressBar from '../components/tools/ProgressBar.astro';
 import ResultsTable from '../components/tools/ResultsTable.astro';
-// import FeaturesList from '../components/tools/FeaturesList.astro'; // 未使用的导入
+// import FeaturesList from '../components/tools/FeaturesList.astro'; // Unused import
 
 const tableColumns = [
   { key: 'domain', label: 'Domain', sortable: true },
@@ -35,10 +35,10 @@ const features = [
 ];
 ---
 
-<BaseLayout title="Traffic Checker - BacklinksBuilder">
+<BaseLayout title="Traffic Checker Tool - BacklinksBuilder">
   <ToolPageLayout 
-    title="Website Traffic Checker"
-    description="Analyze website traffic and performance metrics instantly. Get comprehensive traffic insights to understand your competition and improve your online presence."
+    title="Traffic Checker Tool"
+    description="Free traffic checker for any website to understand competitor performance"
     features={features}
   >
     <Fragment slot="tool-content">
@@ -59,7 +59,7 @@ const features = [
       
       <DomainInput 
         id="domains"
-        label="Enter Domains (one per line, max 50)"
+        label="Enter Domain or URL"
         placeholder="Enter domains, one per line\nExample:\nexample.com\ngoogle.com\nbaidu.com"
         maxDomains={50}
       />
@@ -76,7 +76,7 @@ const features = [
     
     <Fragment slot="results">
       <ResultsTable 
-        title="Traffic Analysis Results"
+        title="Check Website Traffic"
         columns={tableColumns}
         containerId="results-section"
         tableId="results-table"

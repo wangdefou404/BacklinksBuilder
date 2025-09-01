@@ -1,356 +1,349 @@
 import type { APIRoute } from 'astro';
-import { supabase } from '../../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
-export const GET: APIRoute = async ({ request, locals }) => {
+const supabaseUrl = import.meta.env.SUPABASE_URL;
+const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+export const GET: APIRoute = async ({ request }) => {
   try {
-    // 验证用户是否已登录
-    const session = locals.session;
-    const user = locals.user;
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('userId');
+    const page = parseInt(url.searchParams.get('page') || '1');
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
+    const search = url.searchParams.get('search') || '';
+    const roleFilter = url.searchParams.get('role') || '';
+    const statusFilter = url.searchParams.get('status') || '';
     
-    if (!session || !user) {
-      return new Response(JSON.stringify({ error: '未授权访问' }), {
-        status: 401,
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Missing userId parameter' }), {
+        status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // 获取用户角色
+    // 检查用户角色
     const { data: userRole, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
-    if (roleError || !userRole || !['admin', 'super'].includes(userRole.role)) {
-      return new Response(JSON.stringify({ error: '权限不足' }), {
+    if (roleError || !userRole || userRole.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // 获取URL参数
-    const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '50');
-    const search = url.searchParams.get('search') || '';
-    const roleFilter = url.searchParams.get('role') || '';
-    const statusFilter = url.searchParams.get('status') || '';
-    const sortBy = url.searchParams.get('sortBy') || 'created_at';
-    const sortOrder = url.searchParams.get('sortOrder') || 'desc';
-
     // 构建查询
     let query = supabase
-      .from('auth.users')
+      .from('user_roles')
       .select(`
-        id,
-        email,
+        user_id,
+        role,
         created_at,
-        last_sign_in_at,
-        user_metadata,
-        raw_user_meta_data
+        updated_at,
+        users!inner(
+          id,
+          username,
+          email,
+          created_at
+        )
       `);
 
-    // 添加搜索条件
-    if (search) {
-      query = query.ilike('email', `%${search}%`);
+    // 应用角色筛选
+    if (roleFilter) {
+      query = query.eq('role', roleFilter);
     }
 
-    // 获取用户数据
-    const { data: users, error: usersError } = await query
-      .order(sortBy, { ascending: sortOrder === 'asc' })
-      .range((page - 1) * limit, page * limit - 1);
+    // 应用搜索条件
+    if (search) {
+      query = query.or(`users.username.ilike.%${search}%,users.email.ilike.%${search}%`);
+    }
+
+    // 获取总数
+    const { count: totalCount, error: countError } = await supabase
+      .from('user_roles')
+      .select('*', { count: 'exact', head: true })
+      .eq(roleFilter ? 'role' : 'user_id', roleFilter || userId, { foreignTable: roleFilter ? undefined : 'users' });
+
+    if (countError) {
+      console.error('Error getting user count:', countError);
+    }
+
+    // 应用分页
+    const offset = (page - 1) * pageSize;
+    query = query
+      .order('created_at', { ascending: false })
+      .range(offset, offset + pageSize - 1);
+
+    const { data: users, error: usersError } = await query;
 
     if (usersError) {
-      console.error('获取用户列表失败:', usersError);
-      return new Response(JSON.stringify({ error: '获取用户列表失败' }), {
+      console.error('Error fetching users:', usersError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch users' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // 获取用户角色信息
-    const userIds = users?.map(u => u.id) || [];
-    const { data: roles } = await supabase
-      .from('user_roles')
-      .select('user_id, role')
-      .in('user_id', userIds);
-
-    // 获取订阅信息
-    const { data: subscriptions } = await supabase
-      .from('user_subscriptions')
-      .select('user_id, status, plan_type')
+    // 获取用户最后活动时间
+    const userIds = users?.map(u => u.user_id) || [];
+    const { data: lastActivities, error: activityError } = await supabase
+      .from('user_access_logs')
+      .select('user_id, created_at')
       .in('user_id', userIds)
-      .eq('status', 'active');
+      .order('created_at', { ascending: false });
 
-    // 合并数据
-    const enrichedUsers = users?.map(user => {
-      const userRole = roles?.find(r => r.user_id === user.id);
-      const subscription = subscriptions?.find(s => s.user_id === user.id);
+    // 创建最后活动时间映射
+    const lastActivityMap = {};
+    if (lastActivities) {
+      lastActivities.forEach(activity => {
+        if (!lastActivityMap[activity.user_id]) {
+          lastActivityMap[activity.user_id] = activity.created_at;
+        }
+      });
+    }
+
+    // 格式化用户数据
+    const formattedUsers = users?.map(userRole => {
+      const user = userRole.users;
+      const lastActivity = lastActivityMap[userRole.user_id];
+      
+      // 判断用户状态（7天内有活动为活跃）
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const isActive = lastActivity && new Date(lastActivity) > sevenDaysAgo;
       
       return {
-        ...user,
-        role: userRole?.role || 'user',
-        subscription_status: subscription?.status || 'inactive',
-        plan_type: subscription?.plan_type || null,
-        avatar_url: user.user_metadata?.avatar_url || user.raw_user_meta_data?.avatar_url,
-        full_name: user.user_metadata?.full_name || user.raw_user_meta_data?.full_name,
-        status: user.last_sign_in_at ? 'active' : 'inactive'
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: userRole.role,
+        created_at: user.created_at,
+        role_created_at: userRole.created_at,
+        role_updated_at: userRole.updated_at,
+        last_activity: lastActivity,
+        status: isActive ? 'active' : 'inactive'
       };
     }) || [];
 
-    // 应用角色筛选
-    let filteredUsers = enrichedUsers;
-    if (roleFilter) {
-      filteredUsers = enrichedUsers.filter(user => {
-        switch (roleFilter) {
-          case 'user':
-            return user.role === 'user' && user.subscription_status !== 'active';
-          case 'premium':
-            return user.subscription_status === 'active';
-          case 'admin':
-            return user.role === 'admin';
-          case 'super':
-            return user.role === 'super';
-          default:
-            return true;
-        }
-      });
-    }
-
-    // 应用状态筛选
+    // 应用状态筛选（在内存中筛选，因为状态是计算出来的）
+    let filteredUsers = formattedUsers;
     if (statusFilter) {
-      filteredUsers = filteredUsers.filter(user => {
-        switch (statusFilter) {
-          case 'active':
-            return user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-          case 'inactive':
-            return !user.last_sign_in_at || new Date(user.last_sign_in_at) <= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-          case 'suspended':
-            return user.status === 'suspended';
-          default:
-            return true;
-        }
-      });
+      filteredUsers = formattedUsers.filter(user => user.status === statusFilter);
     }
 
-    // 获取总数
-    const { count: totalCount } = await supabase
-      .from('auth.users')
-      .select('*', { count: 'exact', head: true });
+    const totalPages = Math.ceil((totalCount || 0) / pageSize);
 
     return new Response(JSON.stringify({
       users: filteredUsers,
-      total: totalCount || 0,
-      page,
-      limit,
-      totalPages: Math.ceil((totalCount || 0) / limit)
+      pagination: {
+        page,
+        pageSize,
+        total: totalCount || 0,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1
+      }
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('用户管理API错误:', error);
-    return new Response(JSON.stringify({ error: '服务器内部错误' }), {
+    console.error('Error in users API:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
   }
 };
 
-export const POST: APIRoute = async ({ request, locals }) => {
+export const POST: APIRoute = async ({ request }) => {
   try {
-    // 验证用户是否已登录
-    const session = locals.session;
-    const user = locals.user;
+    const body = await request.json();
+    const { userId, targetUserId, action, data } = body;
     
-    if (!session || !user) {
-      return new Response(JSON.stringify({ error: '未授权访问' }), {
-        status: 401,
+    if (!userId || !targetUserId || !action) {
+      return new Response(JSON.stringify({ error: 'Missing required parameters' }), {
+        status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // 获取用户角色
+    // 检查操作者权限
     const { data: userRole, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .single();
 
-    if (roleError || !userRole || !['admin', 'super'].includes(userRole.role)) {
-      return new Response(JSON.stringify({ error: '权限不足' }), {
+    if (roleError || !userRole || userRole.role !== 'admin') {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const { action, userId, data } = await request.json();
-
     switch (action) {
-      case 'create':
-        // 创建新用户
-        const { email, password, role } = data;
+      case 'updateRole':
+        const { newRole, reason } = data;
         
-        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true
-        });
-
-        if (createError) {
-          return new Response(JSON.stringify({ error: '创建用户失败: ' + createError.message }), {
+        if (!newRole || !reason) {
+          return new Response(JSON.stringify({ error: 'Missing role or reason' }), {
             status: 400,
             headers: { 'Content-Type': 'application/json' }
           });
         }
 
-        // 设置用户角色
-        if (role && role !== 'user') {
-          await supabase
-            .from('user_roles')
-            .insert({ user_id: newUser.user.id, role });
+        // 验证角色有效性
+        const validRoles = ['free', 'user', 'Pro', 'super', 'admin'];
+        if (!validRoles.includes(newRole)) {
+          return new Response(JSON.stringify({ error: 'Invalid role' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json' }
+          });
         }
 
-        return new Response(JSON.stringify({ success: true, user: newUser.user }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
+        // 获取目标用户当前角色
+        const { data: currentRole, error: currentRoleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', targetUserId)
+          .single();
 
-      case 'update':
-        // 更新用户信息
-        const { role: newRole, status } = data;
-        
-        // 更新用户状态
-        if (status !== undefined) {
-          const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
-            ban_duration: status === 'suspended' ? '876000h' : 'none' // 100年 vs 无限制
+        if (currentRoleError) {
+          return new Response(JSON.stringify({ error: 'Target user not found' }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' }
           });
-
-          if (updateError) {
-            return new Response(JSON.stringify({ error: '更新用户状态失败' }), {
-              status: 400,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          }
         }
 
         // 更新用户角色
-        if (newRole) {
-          const { error: roleUpdateError } = await supabase
-            .from('user_roles')
-            .upsert({ user_id: userId, role: newRole });
+        const { error: updateError } = await supabase
+          .from('user_roles')
+          .update({ 
+            role: newRole,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', targetUserId);
 
-          if (roleUpdateError) {
-            return new Response(JSON.stringify({ error: '更新用户角色失败' }), {
-              status: 400,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          }
-        }
-
-        return new Response(JSON.stringify({ success: true }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-      case 'delete':
-        // 删除用户
-        const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
-
-        if (deleteError) {
-          return new Response(JSON.stringify({ error: '删除用户失败' }), {
-            status: 400,
+        if (updateError) {
+          console.error('Error updating user role:', updateError);
+          return new Response(JSON.stringify({ error: 'Failed to update user role' }), {
+            status: 500,
             headers: { 'Content-Type': 'application/json' }
           });
         }
 
-        // 删除相关数据
-        await supabase.from('user_roles').delete().eq('user_id', userId);
-        await supabase.from('user_subscriptions').delete().eq('user_id', userId);
+        // 记录角色变更日志
+        const { error: logError } = await supabase
+          .from('user_access_logs')
+          .insert({
+            user_id: targetUserId,
+            activity_type: 'role_change',
+            description: `Role changed from ${currentRole.role} to ${newRole}`,
+            details: JSON.stringify({
+              oldRole: currentRole.role,
+              newRole: newRole,
+              reason: reason,
+              changedBy: userId
+            }),
+            ip_address: request.headers.get('x-forwarded-for') || 'unknown',
+            user_agent: request.headers.get('user-agent') || 'unknown'
+          });
 
-        return new Response(JSON.stringify({ success: true }), {
+        if (logError) {
+          console.error('Error logging role change:', logError);
+        }
+
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: 'User role updated successfully',
+          oldRole: currentRole.role,
+          newRole: newRole
+        }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' }
         });
 
-      case 'suspend':
-        // 暂停用户
-        const { error: suspendError } = await supabase.auth.admin.updateUserById(userId, {
-          ban_duration: '876000h' // 100年
-        });
+      case 'getUserDetails':
+        // 获取用户详细信息
+        const { data: userDetails, error: detailsError } = await supabase
+          .from('user_roles')
+          .select(`
+            user_id,
+            role,
+            created_at,
+            updated_at,
+            users!inner(
+              id,
+              username,
+              email,
+              created_at
+            )
+          `)
+          .eq('user_id', targetUserId)
+          .single();
 
-        if (suspendError) {
-          return new Response(JSON.stringify({ error: '暂停用户失败' }), {
-            status: 400,
+        if (detailsError) {
+          return new Response(JSON.stringify({ error: 'User not found' }), {
+            status: 404,
             headers: { 'Content-Type': 'application/json' }
           });
         }
 
-        return new Response(JSON.stringify({ success: true }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
+        // 获取用户订阅信息
+        const { data: subscriptions, error: subError } = await supabase
+          .from('user_subscriptions')
+          .select(`
+            *,
+            subscription_plans(*)
+          `)
+          .eq('user_id', targetUserId)
+          .order('created_at', { ascending: false });
 
-      case 'activate':
-        // 激活用户
-        const { error: activateError } = await supabase.auth.admin.updateUserById(userId, {
-          ban_duration: 'none'
-        });
+        // 获取用户配额信息
+        const { data: quotas, error: quotaError } = await supabase
+          .from('user_quotas')
+          .select('*')
+          .eq('user_id', targetUserId);
 
-        if (activateError) {
-          return new Response(JSON.stringify({ error: '激活用户失败' }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
+        // 获取用户最近活动
+        const { data: recentActivities, error: activitiesError } = await supabase
+          .from('user_access_logs')
+          .select('*')
+          .eq('user_id', targetUserId)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-        return new Response(JSON.stringify({ success: true }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-
-      case 'batch':
-        // 批量操作
-        const { userIds, batchAction } = data;
-        const results = [];
-
-        for (const id of userIds) {
-          try {
-            switch (batchAction) {
-              case 'suspend':
-                await supabase.auth.admin.updateUserById(id, { ban_duration: '876000h' });
-                break;
-              case 'activate':
-                await supabase.auth.admin.updateUserById(id, { ban_duration: 'none' });
-                break;
-              case 'delete':
-                await supabase.auth.admin.deleteUser(id);
-                await supabase.from('user_roles').delete().eq('user_id', id);
-                await supabase.from('user_subscriptions').delete().eq('user_id', id);
-                break;
-            }
-            results.push({ userId: id, success: true });
-          } catch (error) {
-            results.push({ userId: id, success: false, error: error.message });
-          }
-        }
-
-        return new Response(JSON.stringify({ success: true, results }), {
+        return new Response(JSON.stringify({
+          user: userDetails,
+          subscriptions: subscriptions || [],
+          quotas: quotas || [],
+          recentActivities: recentActivities || []
+        }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' }
         });
 
       default:
-        return new Response(JSON.stringify({ error: '无效的操作' }), {
+        return new Response(JSON.stringify({ error: 'Invalid action' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' }
         });
     }
 
   } catch (error) {
-    console.error('用户管理操作错误:', error);
-    return new Response(JSON.stringify({ error: '服务器内部错误' }), {
+    console.error('Error in users POST API:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });

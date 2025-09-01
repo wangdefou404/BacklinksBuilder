@@ -60,18 +60,18 @@ try {
 }
 ---
 
-<BaseLayout title="Super Admin Dashboard - BacklinksBuilder">
+<BaseLayout title="Super Admin Panel - BacklinksBuilder">
   
   <RoleGuard requiredRole="super" userId={userId}>
     <main class="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- 页面标题 -->
         <div class="mb-8">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Super Admin Dashboard</h1>
-          <p class="text-gray-600">系统超级管理员控制面板</p>
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Super Admin Panel</h1>
+          <p class="text-gray-600">System Super Administrator Control Panel</p>
         </div>
 
-        <!-- 超级管理员信息卡片 -->
+        <!-- Super admin info card -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
           <div class="flex items-center space-x-4">
             <div class="w-16 h-16 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
@@ -89,7 +89,7 @@ try {
           </div>
         </div>
 
-        <!-- 系统统计概览 -->
+        <!-- System statistics overview -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="flex items-center">
@@ -102,7 +102,7 @@ try {
               </div>
               <div class="ml-5 w-0 flex-1">
                 <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">总用户数</dt>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Total Users</dt>
                   <dd class="text-lg font-medium text-gray-900">{systemStats.totalUsers}</dd>
                 </dl>
               </div>
@@ -120,7 +120,7 @@ try {
               </div>
               <div class="ml-5 w-0 flex-1">
                 <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">活跃用户</dt>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Active Users</dt>
                   <dd class="text-lg font-medium text-gray-900">{systemStats.activeUsers}</dd>
                 </dl>
               </div>
@@ -138,7 +138,7 @@ try {
               </div>
               <div class="ml-5 w-0 flex-1">
                 <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">总外链数</dt>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Total Backlinks</dt>
                   <dd class="text-lg font-medium text-gray-900">{systemStats.totalBacklinks}</dd>
                 </dl>
               </div>
@@ -156,7 +156,7 @@ try {
               </div>
               <div class="ml-5 w-0 flex-1">
                 <dl>
-                  <dt class="text-sm font-medium text-gray-500 truncate">总收入</dt>
+                  <dt class="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
                   <dd class="text-lg font-medium text-gray-900">${systemStats.totalRevenue}</dd>
                 </dl>
               </div>
@@ -164,121 +164,121 @@ try {
           </div>
         </div>
 
-        <!-- 超级管理员功能模块 -->
+        <!-- Super admin function modules -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <!-- 系统管理 -->
+          <!-- System Management -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg class="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
               </svg>
-              系统管理
+              System Management
             </h3>
             <div class="space-y-3">
               <a href="/admin/users" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">用户管理</div>
-                <div class="text-sm text-gray-500">管理所有用户账户和权限</div>
+                <div class="font-medium text-gray-900">User Management</div>
+            <div class="text-sm text-gray-500">Manage all user accounts and permissions</div>
               </a>
               <a href="/admin/roles" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">角色权限</div>
-                <div class="text-sm text-gray-500">配置用户角色和权限设置</div>
+                <div class="font-medium text-gray-900">Role Permissions</div>
+            <div class="text-sm text-gray-500">Configure user roles and permission settings</div>
               </a>
               <a href="/admin/system-config" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">系统配置</div>
-                <div class="text-sm text-gray-500">系统参数和全局设置</div>
+                <div class="font-medium text-gray-900">System Configuration</div>
+                <div class="text-sm text-gray-500">System parameters and global settings</div>
               </a>
             </div>
           </div>
 
-          <!-- 数据统计 -->
+          <!-- Data Statistics -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
               </svg>
-              数据统计
+              Data Statistics
             </h3>
             <div class="space-y-3">
               <a href="/admin/analytics" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">使用分析</div>
-                <div class="text-sm text-gray-500">用户行为和系统使用统计</div>
+                <div class="font-medium text-gray-900">Usage Analytics</div>
+              <div class="text-sm text-gray-500">User behavior and system usage statistics</div>
               </a>
               <a href="/admin/reports" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">数据报告</div>
-                <div class="text-sm text-gray-500">生成和导出各类数据报告</div>
+                <div class="font-medium text-gray-900">Data Reports</div>
+              <div class="text-sm text-gray-500">Generate and export various data reports</div>
               </a>
               <a href="/admin/performance" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">性能监控</div>
-                <div class="text-sm text-gray-500">系统性能和资源使用监控</div>
+                <div class="font-medium text-gray-900">Performance Monitoring</div>
+                <div class="text-sm text-gray-500">System performance and resource usage monitoring</div>
               </a>
             </div>
           </div>
 
-          <!-- 安全管理 -->
+          <!-- Security Management -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
               </svg>
-              安全管理
+              Security Management
             </h3>
             <div class="space-y-3">
               <a href="/admin/security-logs" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">安全日志</div>
-                <div class="text-sm text-gray-500">查看系统安全事件和日志</div>
+                <div class="font-medium text-gray-900">Security Logs</div>
+              <div class="text-sm text-gray-500">View system security events and logs</div>
               </a>
               <a href="/admin/access-control" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">访问控制</div>
-                <div class="text-sm text-gray-500">IP白名单和访问限制设置</div>
+                <div class="font-medium text-gray-900">Access Control</div>
+              <div class="text-sm text-gray-500">IP whitelist and access restriction settings</div>
               </a>
               <a href="/admin/audit-trail" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">审计追踪</div>
-                <div class="text-sm text-gray-500">用户操作和系统变更记录</div>
+                <div class="font-medium text-gray-900">Audit Trail</div>
+                <div class="text-sm text-gray-500">User operations and system change records</div>
               </a>
             </div>
           </div>
 
-          <!-- 系统维护 -->
+          <!-- System Maintenance -->
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <svg class="w-5 h-5 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
               </svg>
-              系统维护
+              System Maintenance
             </h3>
             <div class="space-y-3">
               <a href="/admin/database" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">数据库管理</div>
-                <div class="text-sm text-gray-500">数据库备份、恢复和优化</div>
+                <div class="font-medium text-gray-900">Database Management</div>
+              <div class="text-sm text-gray-500">Database backup, recovery and optimization</div>
               </a>
               <a href="/admin/cache" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">缓存管理</div>
-                <div class="text-sm text-gray-500">清理和管理系统缓存</div>
+                <div class="font-medium text-gray-900">Cache Management</div>
+              <div class="text-sm text-gray-500">Clean and manage system cache</div>
               </a>
               <a href="/admin/maintenance" class="block p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
-                <div class="font-medium text-gray-900">维护模式</div>
-                <div class="text-sm text-gray-500">系统维护和更新管理</div>
+                <div class="font-medium text-gray-900">System Maintenance</div>
+                <div class="text-sm text-gray-500">System updates and maintenance mode</div>
               </a>
             </div>
           </div>
         </div>
 
-        <!-- 系统状态 -->
+        <!-- System Status -->
         <div class="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">系统状态</h3>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">System Status</h3>
           <div class="flex items-center space-x-4">
             <div class="flex items-center">
               <div class="w-3 h-3 bg-green-400 rounded-full mr-2"></div>
-              <span class="text-sm text-gray-600">系统运行正常</span>
+              <span class="text-sm text-gray-600">System running normally</span>
             </div>
             <div class="flex items-center">
               <div class="w-3 h-3 bg-blue-400 rounded-full mr-2"></div>
-              <span class="text-sm text-gray-600">数据库连接正常</span>
+              <span class="text-sm text-gray-600">Database connection normal</span>
             </div>
             <div class="flex items-center">
               <div class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
-              <span class="text-sm text-gray-600">API服务正常</span>
+              <span class="text-sm text-gray-600">API service normal</span>
             </div>
           </div>
         </div>

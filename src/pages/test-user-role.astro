@@ -71,7 +71,8 @@ import Footer from '../components/global/Footer.astro';
             <p><strong>邮箱:</strong> ${user.email}</p>
             <p><strong>角色:</strong> <span class="font-semibold ${data.role === 'admin' ? 'text-red-600' : 'text-blue-600'}">${data.role}</span></p>
             <p><strong>是否管理员:</strong> ${data.isAdmin ? '是' : '否'}</p>
-            <p><strong>是否高级用户:</strong> ${data.isPremium ? '是' : '否'}</p>
+            <p><strong>是否Pro用户:</strong> ${data.isPro ? '是' : '否'}</p>
+        <p><strong>是否超级管理员:</strong> ${data.isSuper ? '是' : '否'}</p>
             <p><strong>权限数量:</strong> ${data.permissions?.length || 0}</p>
           </div>
         `;

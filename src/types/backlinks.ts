@@ -7,7 +7,7 @@ export interface BacklinkResource {
   paymentType: 'Free' | 'Paid';
   followType: 'DoFollow' | 'NoFollow';
   platformType: 'blog' | 'directory' | 'content' | 'comment' | 'social';
-  access: 'guest' | 'premium';
+  access: 'guest' | 'premium' | 'Pro';
   updated: string; // ISO date string
   featured?: boolean;
   tags?: string[];
@@ -38,5 +38,8 @@ export interface BacklinkListResponse {
 
 export interface UserPermissions {
   isPremium: boolean;
+  isPro: boolean;
+  isSuper: boolean;
+  isUser: boolean;
   maxViewableItems: number;
 }

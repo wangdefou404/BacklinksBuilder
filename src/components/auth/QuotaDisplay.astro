@@ -1,12 +1,12 @@
 ---
-// 配额显示组件 - 显示用户配额使用情况
+// Quota display component - shows user quota usage
 export interface Props {
   quotaType: 'dr_checks' | 'backlink_generations' | 'traffic_checks';
   userId?: string;
   showProgress?: boolean;
   showDetails?: boolean;
   compact?: boolean;
-  refreshInterval?: number; // 自动刷新间隔（毫秒）
+  refreshInterval?: number; // Auto refresh interval (milliseconds)
 }
 
 const { 
@@ -18,17 +18,17 @@ const {
   refreshInterval = 0
 } = Astro.props;
 
-// 配额类型显示名称映射
+// Quota type display name mapping
 const quotaTypeNames = {
-  'dr_checks': 'DR检查',
-  'backlink_generations': '外链生成',
-  'traffic_checks': '流量检查'
+  'dr_checks': 'DR Check',
+  'backlink_generations': 'Backlink Generation',
+  'traffic_checks': 'Traffic Check'
 };
 
-// 从会话中获取用户ID（如果未提供）
+// Get user ID from session (if not provided)
 let currentUserId = userId;
 if (!currentUserId) {
-  // 尝试从Astro.locals或cookies中获取用户信息
+  // Try to get user info from Astro.locals or cookies
   const userSession = Astro.locals.user || Astro.cookies.get('user')?.value;
   if (userSession) {
     try {
@@ -40,7 +40,7 @@ if (!currentUserId) {
   }
 }
 
-// 获取配额信息
+// Get quota information
 let quotaData = null;
 let quotaError = null;
 let canUse = false;
@@ -73,16 +73,16 @@ if (currentUserId && quotaType) {
   }
 }
 
-// 计算进度百分比
+// Calculate progress percentage
 const getProgressPercentage = () => {
   if (!quotaData || quotaData.quota_limit === -1) return 0;
   return Math.min((quotaData.used_count / quotaData.quota_limit) * 100, 100);
 };
 
-// 获取状态颜色
+// Get status color
 const getStatusColor = () => {
   if (!quotaData) return 'gray';
-  if (quotaData.quota_limit === -1) return 'green'; // 无限制
+  if (quotaData.quota_limit === -1) return 'green'; // Unlimited
   const percentage = getProgressPercentage();
   if (percentage >= 90) return 'red';
   if (percentage >= 70) return 'yellow';
@@ -99,7 +99,7 @@ const progressPercentage = getProgressPercentage();
       <svg class="w-4 h-4 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
       </svg>
-      <span class="text-sm text-red-700">配额信息加载失败: {quotaError}</span>
+      <span class="text-sm text-red-700">Failed to load quota information: {quotaError}</span>
     </div>
   </div>
 ) : quotaData ? (
@@ -112,7 +112,7 @@ const progressPercentage = getProgressPercentage();
           statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
           'bg-red-100 text-red-800'
         }`}>
-          {canUse ? '可用' : '已用完'}
+          {canUse ? 'Available' : 'Exhausted'}
         </span>
       </div>
     )}
@@ -120,9 +120,9 @@ const progressPercentage = getProgressPercentage();
     {showProgress && (
       <div class="quota-progress mb-2">
         <div class="flex justify-between text-xs text-gray-600 mb-1">
-          <span>已使用: {quotaData.used_count}</span>
+          <span>Used: {quotaData.used_count}</span>
           <span>
-            {quotaData.quota_limit === -1 ? '无限制' : `限制: ${quotaData.quota_limit}`}
+            {quotaData.quota_limit === -1 ? 'Unlimited' : `Limit: ${quotaData.quota_limit}`}
           </span>
         </div>
         {quotaData.quota_limit !== -1 && (
@@ -143,19 +143,19 @@ const progressPercentage = getProgressPercentage();
     {showDetails && (
       <div class="quota-details text-xs text-gray-500">
         <div class="flex justify-between">
-          <span>剩余:</span>
+          <span>Remaining:</span>
           <span class={`font-medium ${
             statusColor === 'green' ? 'text-green-600' :
             statusColor === 'yellow' ? 'text-yellow-600' :
             'text-red-600'
           }`}>
-            {quotaData.quota_limit === -1 ? '无限制' : Math.max(0, quotaData.quota_limit - quotaData.used_count)}
+            {quotaData.quota_limit === -1 ? 'Unlimited' : Math.max(0, quotaData.quota_limit - quotaData.used_count)}
           </span>
         </div>
         {quotaData.reset_date && (
           <div class="flex justify-between mt-1">
-            <span>重置时间:</span>
-            <span>{new Date(quotaData.reset_date).toLocaleDateString('zh-CN')}</span>
+            <span>Reset Time:</span>
+            <span>{new Date(quotaData.reset_date).toLocaleDateString('en-US')}</span>
           </div>
         )}
       </div>
@@ -181,7 +181,7 @@ const progressPercentage = getProgressPercentage();
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
-      <span class="text-sm text-gray-600">加载配额信息...</span>
+      <span class="text-sm text-gray-600">Loading quota information...</span>
     </div>
   </div>
 )}
@@ -223,7 +223,7 @@ const progressPercentage = getProgressPercentage();
 </style>
 
 <script>
-  // 客户端配额管理
+  // Client-side quota management
   class QuotaDisplay {
     static async getQuota(userId: string, quotaType: string) {
       try {
@@ -256,7 +256,7 @@ const progressPercentage = getProgressPercentage();
 
       const quotaData = await this.getQuota(userId, quotaType);
       if (quotaData) {
-        // 触发重新渲染（可以通过自定义事件实现）
+        // Trigger re-render (can be implemented through custom events)
         element.dispatchEvent(new CustomEvent('quota-updated', { detail: quotaData }));
       }
     }
@@ -273,11 +273,11 @@ const progressPercentage = getProgressPercentage();
     }
   }
 
-  // 页面加载完成后设置自动刷新
+  // Setup auto refresh after page load
   document.addEventListener('DOMContentLoaded', () => {
     QuotaDisplay.setupAutoRefresh();
   });
 
-  // 将QuotaDisplay添加到全局作用域
+  // Add QuotaDisplay to global scope
   (window as any).QuotaDisplay = QuotaDisplay;
 </script>

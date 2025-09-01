@@ -3,7 +3,11 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import PricingComponent from '../components/landing/Pricing.astro';
 ---
 
-<BaseLayout title="Pricing - BacklinksBuilder">
+<BaseLayout title="Pricing Plans - BacklinksBuilder">
+  <Fragment slot="head">
+    <title>Pricing Plans - BacklinksBuilder</title>
+    <meta name="description" content="Choose the right BacklinksBuilder pricing plan for you, from free to professional versions">
+  </Fragment>
   <main class="min-h-screen bg-white">
     <!-- Header -->
     <div class="bg-white shadow-sm">
@@ -21,7 +25,7 @@ import PricingComponent from '../components/landing/Pricing.astro';
       </div>
     </div>
 
-    <!-- 使用首页的 Pricing 组件 -->
+    <!-- Use homepage Pricing component -->
     <PricingComponent />
   </main>
 </BaseLayout>

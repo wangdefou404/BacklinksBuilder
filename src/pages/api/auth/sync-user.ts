@@ -231,6 +231,23 @@ export const POST: APIRoute = async ({ request }) => {
         // 不抛出错误，因为用户已创建成功
       }
 
+      // 为新用户创建默认角色
+      const { error: roleError } = await supabaseAdmin
+        .from('user_roles')
+        .insert({
+          user_id: userData.id,
+          role: 'free',
+          is_active: true,
+          granted_at: now,
+          created_at: now,
+          updated_at: now
+        });
+
+      if (roleError) {
+        console.error('创建用户角色失败:', roleError);
+        // 不抛出错误，因为用户已创建成功
+      }
+
       console.log('新用户创建成功:', newUser.email);
       
       return new Response(

@@ -26,10 +26,10 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    // 调用数据库函数获取用户角色
+    // 调用数据库函数获取用户活跃角色
     const { data: role, error: roleError } = await supabase
-      .rpc('get_user_role', {
-        user_id_param: userId
+      .rpc('get_user_active_role', {
+        p_user_id: userId
       });
 
     if (roleError) {
@@ -74,43 +74,32 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    // 获取角色权限列表
-    const { data: permissions, error: permissionsError } = await supabase
-      .from('role_permissions')
-      .select(`
-        permissions!inner(
-          name,
-          display_name,
-          description,
-          module,
-          action
-        )
-      `)
-      .eq('role', role || 'free')
-      .eq('is_granted', true);
+    // 获取角色权限列表（暂时返回空数组，因为权限系统还未实现）
+    const permissions: any[] = [];
 
-    if (permissionsError) {
-      console.error('Get permissions error:', permissionsError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to get role permissions',
-          details: permissionsError.message 
-        }),
-        { 
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
+    // 添加便捷的角色状态
+    const isAdmin = role === 'admin';
+    const isSuper = role === 'super' || role === 'admin';
+    const isPro = role === 'Pro' || role === 'super' || role === 'admin';
+    const isUser = role === 'user' || role === 'Pro' || role === 'super' || role === 'admin';
+    const isFree = role === 'free' || role === 'user' || role === 'Pro' || role === 'super' || role === 'admin';
+
+    // 角色层级
+    const roleHierarchy = ['free', 'user', 'Pro', 'super', 'admin'];
+    const roleLevel = roleHierarchy.indexOf(role) + 1;
 
     const response = {
+      success: true,
       userId,
       role: role || 'free',
       roleDetails: roleDetails || null,
-      permissions: permissions?.map(p => p.permissions) || [],
-      isAdmin: role === 'admin',
-      isPremium: role === 'premium' || role === 'admin',
-      isFree: role === 'free'
+      permissions: permissions,
+      isAdmin,
+      isSuper,
+      isPro,
+      isUser,
+      isFree,
+      roleLevel
     };
 
     return new Response(
@@ -152,10 +141,10 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // 调用数据库函数获取用户角色
+    // 调用数据库函数获取用户活跃角色
     const { data: role, error: roleError } = await supabase
-      .rpc('get_user_role', {
-        user_id_param: userId
+      .rpc('get_user_active_role', {
+        p_user_id: userId
       });
 
     if (roleError) {
@@ -229,14 +218,29 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
+    // 添加便捷的角色状态
+    const isAdmin = role === 'admin';
+    const isSuper = role === 'super' || role === 'admin';
+    const isPro = role === 'Pro' || role === 'super' || role === 'admin';
+    const isUser = role === 'user' || role === 'Pro' || role === 'super' || role === 'admin';
+    const isFree = role === 'free' || role === 'user' || role === 'Pro' || role === 'super' || role === 'admin';
+
+    // 角色层级
+    const roleHierarchy = ['free', 'user', 'Pro', 'super', 'admin'];
+    const roleLevel = roleHierarchy.indexOf(role) + 1;
+
     const response = {
+      success: true,
       userId,
       role: role || 'free',
       roleDetails: roleDetails || null,
       permissions: permissions?.map(p => p.permissions) || [],
-      isAdmin: role === 'admin',
-      isPremium: role === 'premium' || role === 'admin',
-      isFree: role === 'free'
+      isAdmin,
+      isSuper,
+      isPro,
+      isUser,
+      isFree,
+      roleLevel
     };
 
     return new Response(

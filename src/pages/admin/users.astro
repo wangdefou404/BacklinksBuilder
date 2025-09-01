@@ -3,18 +3,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import RoleGuard from '../../components/auth/RoleGuard.astro';
 import Footer from '../../components/global/Footer.astro';
 
-// 获取用户会话信息
+// Get user session information
 const session = Astro.locals.session;
 const user = Astro.locals.user;
 
-// 如果用户未登录，重定向到登录页面
+// If user is not logged in, redirect to login page
 if (!session || !user) {
   return Astro.redirect('/login?redirect=/admin/users');
 }
 
 const userId = user.id;
 
-// 获取用户角色信息
+// Get user role information
 let userRole = null;
 try {
   const response = await fetch(`${Astro.url.origin}/api/auth/get-user-role`, {
@@ -32,7 +32,7 @@ try {
   console.error('Role fetch error:', error);
 }
 
-// 获取用户列表数据
+// Get user list data
 let users = [];
 let totalUsers = 0;
 try {
@@ -53,10 +53,10 @@ try {
 }
 ---
 
-<BaseLayout title="用户管理 - 管理员面板">
+<BaseLayout title="User Management - Admin Panel">
   <main class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- 页面标题和导航 -->
+      <!-- Page title and navigation -->
       <div class="mb-8">
         <div class="flex items-center justify-between">
           <div class="flex items-center">
@@ -69,20 +69,20 @@ try {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
             </svg>
             <div>
-              <h1 class="text-3xl font-bold text-gray-900">用户管理</h1>
-              <p class="mt-2 text-gray-600">管理系统用户账户和权限</p>
+              <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
+            <p class="mt-2 text-gray-600">Manage all registered user accounts and permissions</p>
             </div>
           </div>
           <div class="text-sm text-gray-500">
-            总用户数: <span class="font-semibold text-gray-900">{totalUsers}</span>
+            Total Users: <span class="font-semibold text-gray-900">{totalUsers}</span>
           </div>
         </div>
       </div>
 
-      <!-- 角色守卫 -->
+      <!-- Role Guard -->
       <RoleGuard allowedRoles={['admin', 'super']} userId={userId}>
         
-        <!-- 用户统计卡片 -->
+        <!-- User Statistics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div class="bg-white rounded-lg shadow-lg p-6">
             <div class="flex items-center">
@@ -92,7 +92,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">总用户</p>
+                <p class="text-sm font-medium text-gray-600">Total Users</p>
                 <p class="text-2xl font-semibold text-gray-900">{totalUsers}</p>
               </div>
             </div>
@@ -106,7 +106,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">高级用户</p>
+                <p class="text-sm font-medium text-gray-600">Premium Users</p>
                 <p class="text-2xl font-semibold text-gray-900">{users.filter(u => u.subscription_status === 'active').length}</p>
               </div>
             </div>
@@ -120,7 +120,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">管理员</p>
+                <p class="text-sm font-medium text-gray-600">Administrators</p>
                 <p class="text-2xl font-semibold text-gray-900">{users.filter(u => u.role === 'admin' || u.role === 'super').length}</p>
               </div>
             </div>
@@ -134,7 +134,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">今日活跃</p>
+                <p class="text-sm font-medium text-gray-600">Active Today</p>
                 <p class="text-2xl font-semibold text-gray-900">{users.filter(u => {
                   const lastActive = new Date(u.last_sign_in_at || u.created_at);
                   const today = new Date();
@@ -145,13 +145,13 @@ try {
           </div>
         </div>
 
-        <!-- 用户管理面板 -->
+        <!-- User Management Panel -->
         <div class="bg-white shadow-lg rounded-lg">
           <div class="px-6 py-4 border-b border-gray-200">
             <div class="flex items-center justify-between">
               <div>
-                <h2 class="text-lg font-medium text-gray-900">用户列表</h2>
-                <p class="text-sm text-gray-600">管理所有注册用户的账户和权限</p>
+                <h2 class="text-lg font-medium text-gray-900">User List</h2>
+                <p class="text-sm text-gray-600">Manage all registered user accounts and permissions</p>
               </div>
               <button 
                 class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
@@ -160,68 +160,68 @@ try {
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
-                添加用户
+                Add User
               </button>
             </div>
           </div>
 
-          <!-- 搜索和筛选 -->
+          <!-- Search and Filter -->
           <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">搜索用户</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Search Users</label>
                 <input 
                   type="text" 
                   id="searchInput"
-                  placeholder="邮箱或用户名"
+                  placeholder="Email or username"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   oninput="filterUsers()"
                 >
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">角色筛选</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Role Filter</label>
                 <select 
                   id="roleFilter"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   onchange="filterUsers()"
                 >
-                  <option value="">所有角色</option>
-                  <option value="user">普通用户</option>
-                  <option value="premium">高级用户</option>
-                  <option value="admin">管理员</option>
-                  <option value="super">超级管理员</option>
+                  <option value="">All Roles</option>
+                  <option value="user">Regular User</option>
+                  <option value="Pro">Pro User</option>
+                  <option value="admin">Admin</option>
+                  <option value="super">Super Admin</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">状态筛选</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status Filter</label>
                 <select 
                   id="statusFilter"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   onchange="filterUsers()"
                 >
-                  <option value="">所有状态</option>
-                  <option value="active">活跃</option>
-                  <option value="inactive">非活跃</option>
-                  <option value="suspended">已暂停</option>
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="suspended">Suspended</option>
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">排序方式</label>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Sort By</label>
                 <select 
                   id="sortBy"
                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   onchange="sortUsers()"
                 >
-                  <option value="created_at_desc">注册时间(新到旧)</option>
-                  <option value="created_at_asc">注册时间(旧到新)</option>
-                  <option value="last_sign_in_desc">最后登录(新到旧)</option>
-                  <option value="email_asc">邮箱(A-Z)</option>
+                  <option value="created_at_desc">Registration Date (Newest)</option>
+                  <option value="created_at_asc">Registration Date (Oldest)</option>
+                  <option value="last_sign_in_desc">Last Login (Recent)</option>
+                  <option value="email_asc">Email (A-Z)</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <!-- 用户表格 -->
+          <!-- User Table -->
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
               <thead class="bg-gray-50">
@@ -229,12 +229,12 @@ try {
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户信息</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">角色</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">注册时间</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">最后登录</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Info</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
@@ -261,9 +261,9 @@ try {
                         user.subscription_status === 'active' ? 'bg-green-100 text-green-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {user.role === 'super' ? '超级管理员' :
-                         user.role === 'admin' ? '管理员' :
-                         user.subscription_status === 'active' ? '高级用户' : '普通用户'}
+                        {user.role === 'super' ? 'Super Admin' :
+                         user.role === 'admin' ? 'Admin' :
+                         user.subscription_status === 'active' ? 'Pro User' : 'Regular User'}
                       </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -272,22 +272,22 @@ try {
                         user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 'bg-green-100 text-green-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {user.status === 'suspended' ? '已暂停' :
-                         user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? '活跃' : '非活跃'}
+                        {user.status === 'suspended' ? 'Suspended' :
+                         user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(user.created_at).toLocaleDateString('zh-CN')}
+                      {new Date(user.created_at).toLocaleDateString('en-US')}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('zh-CN') : '从未登录'}
+                      {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('en-US') : 'Never logged in'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div class="flex space-x-2">
                         <button 
                           onclick={`editUser('${user.id}')`}
                           class="text-blue-600 hover:text-blue-900 transition-colors"
-                          title="编辑用户"
+                          title="Edit User"
                         >
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
@@ -296,7 +296,7 @@ try {
                         <button 
                           onclick={`viewUser('${user.id}')`}
                           class="text-green-600 hover:text-green-900 transition-colors"
-                          title="查看详情"
+                          title="View Details"
                         >
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
@@ -307,7 +307,7 @@ try {
                           <button 
                             onclick={`suspendUser('${user.id}')`}
                             class="text-yellow-600 hover:text-yellow-900 transition-colors"
-                            title="暂停用户"
+                            title="Suspend User"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -317,7 +317,7 @@ try {
                           <button 
                             onclick={`activateUser('${user.id}')`}
                             class="text-green-600 hover:text-green-900 transition-colors"
-                            title="激活用户"
+                            title="Activate User"
                           >
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15M9 10V9a4 4 0 118 0v1M9 10H5a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2h-4"></path>
@@ -327,7 +327,7 @@ try {
                         <button 
                           onclick={`deleteUser('${user.id}')`}
                           class="text-red-600 hover:text-red-900 transition-colors"
-                          title="删除用户"
+                          title="Delete User"
                         >
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -341,11 +341,11 @@ try {
             </table>
           </div>
 
-          <!-- 批量操作 -->
+          <!-- Batch Operations -->
           <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-4">
-                <span class="text-sm text-gray-700">已选择 <span id="selectedCount">0</span> 个用户</span>
+                <span class="text-sm text-gray-700">Selected <span id="selectedCount">0</span> users</span>
                 <div class="flex space-x-2">
                   <button 
                     onclick="batchSuspend()"
@@ -353,7 +353,7 @@ try {
                     disabled
                     id="batchSuspendBtn"
                   >
-                    批量暂停
+                    Batch Suspend
                   </button>
                   <button 
                     onclick="batchActivate()"
@@ -361,7 +361,7 @@ try {
                     disabled
                     id="batchActivateBtn"
                   >
-                    批量激活
+                    Batch Activate
                   </button>
                   <button 
                     onclick="batchDelete()"
@@ -369,12 +369,12 @@ try {
                     disabled
                     id="batchDeleteBtn"
                   >
-                    批量删除
+                    Batch Delete
                   </button>
                 </div>
               </div>
               <div class="text-sm text-gray-500">
-                显示 {users.length} 个用户
+                Showing {users.length} users
               </div>
             </div>
           </div>
@@ -383,42 +383,41 @@ try {
       </RoleGuard>
     </div>
   </main>
-
-  <Footer />
 </BaseLayout>
 
-<!-- 添加用户模态框 -->
+<!-- Add User Modal -->
 <div id="addUserModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
   <div class="flex items-center justify-center min-h-screen px-4">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
       <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">添加新用户</h3>
+        <h3 class="text-lg font-medium text-gray-900">Add New User</h3>
       </div>
       <form id="addUserForm" class="px-6 py-4">
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">邮箱地址</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
             <input type="email" id="newUserEmail" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">临时密码</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Temporary Password</label>
             <input type="password" id="newUserPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">用户角色</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1">User Role</label>
             <select id="newUserRole" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="user">普通用户</option>
-              <option value="premium">高级用户</option>
-              <option value="admin">管理员</option>
+              <option value="user">Regular User</option>
+              <option value="Pro">Pro User</option>
+              <option value="super">Super Admin</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
         </div>
         <div class="flex justify-end space-x-3 mt-6">
           <button type="button" onclick="closeAddUserModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
-            取消
+            Cancel
           </button>
           <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-            添加用户
+            Add User
           </button>
         </div>
       </form>
@@ -427,13 +426,13 @@ try {
 </div>
 
 <script>
-  // 用户数据
+  // User data
   let allUsers = [];
   let filteredUsers = [];
 
-  // 初始化
+  // Initialize
   document.addEventListener('DOMContentLoaded', function() {
-    // 从服务器端渲染的数据中获取用户列表
+    // Get user list from server-side rendered data
     allUsers = Array.from(document.querySelectorAll('.user-row')).map(row => {
       const userId = row.dataset.userId;
       const cells = row.querySelectorAll('td');
@@ -450,7 +449,7 @@ try {
     updateSelectedCount();
   });
 
-  // 搜索和筛选功能
+  // Search and filter functionality
   function filterUsers() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const roleFilter = document.getElementById('roleFilter').value;
@@ -466,14 +465,16 @@ try {
 
       const matchesSearch = email.includes(searchTerm);
       const matchesRole = !roleFilter || role.includes(roleFilter) || 
-                         (roleFilter === 'user' && role === '普通用户') ||
-                         (roleFilter === 'premium' && role === '高级用户') ||
-                         (roleFilter === 'admin' && role === '管理员') ||
-                         (roleFilter === 'super' && role === '超级管理员');
+                         (roleFilter === 'free' && role === 'Regular User') ||
+                         (roleFilter === 'user' && role === 'Regular User') ||
+              (roleFilter === 'Pro' && role === 'Pro User') ||
+              (roleFilter === 'super' && role === 'Super Admin') ||
+                         (roleFilter === 'admin' && role === 'Admin') ||
+                         (roleFilter === 'super' && role === 'Super Admin');
       const matchesStatus = !statusFilter || status.includes(statusFilter) ||
-                           (statusFilter === 'active' && status === '活跃') ||
-                           (statusFilter === 'inactive' && status === '非活跃') ||
-                           (statusFilter === 'suspended' && status === '已暂停');
+                           (statusFilter === 'active' && status === 'Active') ||
+                           (statusFilter === 'inactive' && status === 'Inactive') ||
+                           (statusFilter === 'suspended' && status === 'Suspended');
 
       if (matchesSearch && matchesRole && matchesStatus) {
         row.style.display = '';
@@ -484,7 +485,7 @@ try {
     });
   }
 
-  // 排序功能
+  // Sort functionality
   function sortUsers() {
     const sortBy = document.getElementById('sortBy').value;
     const tbody = document.getElementById('usersTableBody');
@@ -505,9 +506,9 @@ try {
         case 'last_sign_in_desc':
           aValue = a.querySelector('td:nth-child(6)').textContent.trim();
           bValue = b.querySelector('td:nth-child(6)').textContent.trim();
-          if (aValue === '从未登录') aValue = new Date(0);
+          if (aValue === 'Never logged in') aValue = new Date(0);
           else aValue = new Date(aValue);
-          if (bValue === '从未登录') bValue = new Date(0);
+          if (bValue === 'Never logged in') bValue = new Date(0);
           else bValue = new Date(bValue);
           return bValue - aValue;
         case 'email_asc':
@@ -519,11 +520,11 @@ try {
       }
     });
 
-    // 重新排列DOM元素
+    // Rearrange DOM elements
     rows.forEach(row => tbody.appendChild(row));
   }
 
-  // 全选功能
+  // Select all functionality
   function toggleSelectAll() {
     const selectAll = document.getElementById('selectAll');
     const checkboxes = document.querySelectorAll('.user-checkbox');
@@ -538,13 +539,13 @@ try {
     updateSelectedCount();
   }
 
-  // 更新选中数量
+  // Update selected count
   function updateSelectedCount() {
     const selectedCheckboxes = document.querySelectorAll('.user-checkbox:checked');
     const count = selectedCheckboxes.length;
     document.getElementById('selectedCount').textContent = count;
     
-    // 启用/禁用批量操作按钮
+    // Enable/disable batch operation buttons
     const batchButtons = ['batchSuspendBtn', 'batchActivateBtn', 'batchDeleteBtn'];
     batchButtons.forEach(btnId => {
       const btn = document.getElementById(btnId);
@@ -557,64 +558,76 @@ try {
     });
   }
 
-  // 监听复选框变化
+  // Listen for checkbox changes
   document.addEventListener('change', function(e) {
     if (e.target.classList.contains('user-checkbox')) {
       updateSelectedCount();
     }
   });
 
-  // 用户操作函数
+  // User operation functions
   function editUser(userId) {
-    // 实现编辑用户功能
-    alert(`编辑用户: ${userId}`);
+    // Implement edit user functionality
+    alert(`Edit user: ${userId}`);
   }
 
   function viewUser(userId) {
-    // 实现查看用户详情功能
-    alert(`查看用户详情: ${userId}`);
+    // Implement view user details functionality
+    alert(`View user details: ${userId}`);
   }
 
   function suspendUser(userId) {
-    if (confirm('确定要暂停这个用户吗？')) {
-      // 实现暂停用户功能
-      alert(`暂停用户: ${userId}`);
+    if (confirm('Are you sure you want to suspend this user?')) {
+      // Implement suspend user functionality
+      alert(`Suspend user: ${userId}`);
     }
   }
 
   function activateUser(userId) {
-    if (confirm('确定要激活这个用户吗？')) {
-      // 实现激活用户功能
-      alert(`激活用户: ${userId}`);
+    if (confirm('Are you sure you want to activate this user?')) {
+      // Implement activate user functionality
+      alert(`Activate user: ${userId}`);
     }
   }
 
   function deleteUser(userId) {
-    if (confirm('确定要删除这个用户吗？此操作不可撤销！')) {
-      // 实现删除用户功能
-      alert(`删除用户: ${userId}`);
+    if (confirm('Are you sure you want to delete this user? This action cannot be undone!')) {
+      // Implement delete user functionality
+      alert(`Delete user: ${userId}`);
     }
   }
 
-  // 批量操作函数
+  // Batch operation functions
   function batchSuspend() {
     const selectedUsers = getSelectedUsers();
-    if (selectedUsers.length > 0 && confirm(`确定要暂停选中的 ${selectedUsers.length} 个用户吗？`)) {
-      alert(`批量暂停用户: ${selectedUsers.join(', ')}`);
+    if (selectedUsers.length === 0) {
+      alert('Please select users to suspend first');
+      return;
+    }
+    if (confirm(`Are you sure you want to suspend the selected ${selectedUsers.length} users?`)) {
+      console.log('Batch suspend:', selectedUsers);
     }
   }
 
   function batchActivate() {
     const selectedUsers = getSelectedUsers();
-    if (selectedUsers.length > 0 && confirm(`确定要激活选中的 ${selectedUsers.length} 个用户吗？`)) {
-      alert(`批量激活用户: ${selectedUsers.join(', ')}`);
+    if (selectedUsers.length === 0) {
+      alert('Please select users to activate first');
+      return;
+    }
+    if (confirm(`Are you sure you want to activate the selected ${selectedUsers.length} users?`)) {
+      console.log('Batch activate:', selectedUsers);
     }
   }
 
   function batchDelete() {
     const selectedUsers = getSelectedUsers();
-    if (selectedUsers.length > 0 && confirm(`确定要删除选中的 ${selectedUsers.length} 个用户吗？此操作不可撤销！`)) {
-      alert(`批量删除用户: ${selectedUsers.join(', ')}`);
+    if (selectedUsers.length === 0) {
+      alert('Please select users to delete first');
+      return;
+    }
+    if (confirm(`Are you sure you want to delete the selected ${selectedUsers.length} users? This action cannot be undone!`)) {
+      console.log('Batch delete:', selectedUsers);
     }
   }
 
@@ -623,7 +636,7 @@ try {
     return Array.from(selectedCheckboxes).map(checkbox => checkbox.value);
   }
 
-  // 添加用户模态框
+  // Add user modal
   function openAddUserModal() {
     document.getElementById('addUserModal').classList.remove('hidden');
   }
@@ -633,7 +646,7 @@ try {
     document.getElementById('addUserForm').reset();
   }
 
-  // 添加用户表单提交
+  // Add user form submission
   document.getElementById('addUserForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -641,12 +654,14 @@ try {
     const password = document.getElementById('newUserPassword').value;
     const role = document.getElementById('newUserRole').value;
     
-    // 实现添加用户功能
-    alert(`添加新用户: ${email}, 角色: ${role}`);
+    // This should send a request to the server
+    console.log('Add user:', { email, password, role });
+    
+    alert('User added successfully!');
     closeAddUserModal();
   });
 
-  // 点击模态框外部关闭
+  // Click outside modal to close
   document.getElementById('addUserModal').addEventListener('click', function(e) {
     if (e.target === this) {
       closeAddUserModal();

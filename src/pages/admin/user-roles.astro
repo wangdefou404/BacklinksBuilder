@@ -1,0 +1,605 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import RoleGuard from '../../components/auth/RoleGuard.astro';
+
+// Check user session
+const session = Astro.cookies.get('session')?.value;
+if (!session) {
+  return Astro.redirect('/login');
+}
+
+let user;
+try {
+  // First decode URL-encoded string, then parse JSON
+  const decodedSession = decodeURIComponent(session);
+  user = JSON.parse(decodedSession);
+} catch (error) {
+  return Astro.redirect('/login');
+}
+---
+
+<BaseLayout title="User Role Management - Admin Panel">
+  <RoleGuard allowedRoles={['admin']} showError={true}>
+    <div class="min-h-screen bg-gray-50 py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Title -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between">
+            <div>
+              <h1 class="text-3xl font-bold text-gray-900">User Role Management</h1>
+              <p class="mt-2 text-gray-600">Manage roles and permissions for all users in the system</p>
+            </div>
+            <div class="flex space-x-3">
+              <button 
+                id="refreshBtn"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Refresh Data
+              </button>
+              <button 
+                id="exportBtn"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export Data
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Free Users</p>
+                <p class="text-2xl font-semibold text-gray-900" id="freeCount">-</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Regular Users</p>
+                <p class="text-2xl font-semibold text-gray-900" id="userCount">-</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Pro Users</p>
+                <p class="text-2xl font-semibold text-gray-900" id="proCount">-</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Super Users</p>
+                <p class="text-2xl font-semibold text-gray-900" id="superCount">-</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div class="flex items-center">
+              <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5-4v.01M19 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h7m5 4v6m1.5-1.5l2.5-2.5m0 0l2.5-2.5M15 3h6v6"></path>
+                </svg>
+              </div>
+              <div class="ml-4">
+                <p class="text-sm font-medium text-gray-600">Administrators</p>
+                <p class="text-2xl font-semibold text-gray-900" id="adminCount">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search and Filter -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
+              <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Enter username or email"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+            </div>
+            <div>
+              <label for="roleFilter" class="block text-sm font-medium text-gray-700 mb-2">Role Filter</label>
+              <select 
+                id="roleFilter"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Roles</option>
+                <option value="free">Free Users</option>
+                <option value="user">Regular Users</option>
+                <option value="Pro">Pro Users</option>
+                <option value="super">Super Users</option>
+                <option value="admin">Administrators</option>
+              </select>
+            </div>
+            <div>
+              <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-2">Status Filter</label>
+              <select 
+                id="statusFilter"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button 
+                id="searchBtn"
+                class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Search
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- User List -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">User List</h2>
+            <p class="text-sm text-gray-600">Manage roles and permissions for all users</p>
+          </div>
+          
+          <!-- Loading State -->
+          <div id="loadingState" class="px-6 py-8 text-center">
+            <svg class="animate-spin w-8 h-8 text-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="text-gray-600">Loading user data...</p>
+          </div>
+
+          <!-- User Table -->
+          <div id="userTable" class="hidden">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Info</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Role</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Activity</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="userTableBody" class="bg-white divide-y divide-gray-200">
+                  <!-- User data will be dynamically loaded via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="px-6 py-4 border-t border-gray-200">
+              <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                  Showing <span id="pageStart">1</span> to <span id="pageEnd">10</span> of <span id="totalUsers">0</span> entries
+                </div>
+                <div class="flex space-x-2">
+                  <button 
+                    id="prevPageBtn"
+                    class="px-3 py-1 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    id="nextPageBtn"
+                    class="px-3 py-1 border border-gray-300 text-sm rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error State -->
+          <div id="errorState" class="hidden px-6 py-8 text-center">
+            <svg class="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+            <p class="text-red-600 font-medium">Failed to load user data</p>
+            <p class="text-sm text-gray-500 mt-1">Please check your network connection or try again later</p>
+            <button 
+              id="retryBtn"
+              class="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Role Edit Modal -->
+    <div id="roleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+      <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">Edit User Role</h3>
+          </div>
+          <div class="px-6 py-4">
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">User Information</label>
+              <div id="modalUserInfo" class="text-sm text-gray-600">
+                <!-- User information will be dynamically populated -->
+              </div>
+            </div>
+            <div class="mb-4">
+              <label for="newRole" class="block text-sm font-medium text-gray-700 mb-2">New Role</label>
+              <select 
+                id="newRole"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="free">Free User</option>
+                <option value="user">Regular User</option>
+                <option value="Pro">Pro User</option>
+                <option value="super">Super User</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <div class="mb-4">
+              <label for="roleReason" class="block text-sm font-medium text-gray-700 mb-2">Change Reason</label>
+              <textarea 
+                id="roleReason"
+                rows="3"
+                placeholder="Please enter the reason for role change..."
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              ></textarea>
+            </div>
+          </div>
+          <div class="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+            <button 
+              id="cancelRoleBtn"
+              class="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              id="saveRoleBtn"
+              class="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </RoleGuard>
+</BaseLayout>
+
+<script is:inline>
+  let currentPage = 1;
+  let pageSize = 10;
+  let totalPages = 1;
+  let currentUserId = null;
+  
+  // Initialize when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    loadUserStats();
+    loadUsers();
+    
+    // Bind event listeners
+    document.getElementById('refreshBtn').addEventListener('click', () => {
+      loadUserStats();
+      loadUsers();
+    });
+    
+    document.getElementById('searchBtn').addEventListener('click', loadUsers);
+    document.getElementById('searchInput').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') loadUsers();
+    });
+    
+    document.getElementById('prevPageBtn').addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadUsers();
+      }
+    });
+    
+    document.getElementById('nextPageBtn').addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        loadUsers();
+      }
+    });
+    
+    document.getElementById('retryBtn').addEventListener('click', loadUsers);
+    
+    // Modal events
+    document.getElementById('cancelRoleBtn').addEventListener('click', closeRoleModal);
+    document.getElementById('saveRoleBtn').addEventListener('click', saveUserRole);
+    
+    // Close modal when clicking outside
+    document.getElementById('roleModal').addEventListener('click', (e) => {
+      if (e.target.id === 'roleModal') {
+        closeRoleModal();
+      }
+    });
+  });
+  
+  // Load user statistics
+  async function loadUserStats() {
+    try {
+      const response = await fetch('/api/admin/user-stats');
+      if (response.ok) {
+        const stats = await response.json();
+        document.getElementById('freeCount').textContent = stats.free || 0;
+        document.getElementById('userCount').textContent = stats.user || 0;
+        document.getElementById('proCount').textContent = stats.Pro || 0;
+        document.getElementById('superCount').textContent = stats.super || 0;
+        document.getElementById('adminCount').textContent = stats.admin || 0;
+      }
+    } catch (error) {
+      console.error('Failed to load user stats:', error);
+    }
+  }
+  
+  // Load user list
+  async function loadUsers() {
+    showLoadingState();
+    
+    try {
+      const searchTerm = document.getElementById('searchInput').value;
+      const roleFilter = document.getElementById('roleFilter').value;
+      const statusFilter = document.getElementById('statusFilter').value;
+      
+      const params = new URLSearchParams({
+        page: currentPage,
+        pageSize: pageSize,
+        search: searchTerm,
+        role: roleFilter,
+        status: statusFilter
+      });
+      
+      const response = await fetch(`/api/admin/users?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        displayUsers(data.users);
+        updatePagination(data.pagination);
+        showUserTable();
+      } else {
+        showErrorState();
+      }
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      showErrorState();
+    }
+  }
+  
+  // Display user list
+  function displayUsers(users) {
+    const tbody = document.getElementById('userTableBody');
+    tbody.innerHTML = '';
+    
+    users.forEach(user => {
+      const row = createUserRow(user);
+      tbody.appendChild(row);
+    });
+  }
+  
+  // Create user row
+  function createUserRow(user) {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-gray-50';
+    
+    const roleColors = {
+      free: 'bg-gray-100 text-gray-800',
+      user: 'bg-blue-100 text-blue-800',
+      Pro: 'bg-green-100 text-green-800',
+      super: 'bg-purple-100 text-purple-800',
+      admin: 'bg-red-100 text-red-800'
+    };
+    
+    const statusColors = {
+      active: 'bg-green-100 text-green-800',
+      inactive: 'bg-gray-100 text-gray-800'
+    };
+    
+    tr.innerHTML = `
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="flex items-center">
+          <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+            <span class="text-sm font-medium text-gray-700">${user.username ? user.username.charAt(0).toUpperCase() : 'U'}</span>
+          </div>
+          <div class="ml-4">
+            <div class="text-sm font-medium text-gray-900">${user.username || 'Unknown User'}</div>
+            <div class="text-sm text-gray-500">${user.email || 'No Email'}</div>
+          </div>
+        </div>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${roleColors[user.role] || 'bg-gray-100 text-gray-800'}">
+          ${getRoleDisplayName(user.role)}
+        </span>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        ${formatDate(user.created_at)}
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+        ${user.last_activity ? formatDate(user.last_activity) : 'Never Active'}
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusColors[user.status] || 'bg-gray-100 text-gray-800'}">
+          ${user.status === 'active' ? 'Active' : 'Inactive'}
+        </span>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <button 
+          onclick="editUserRole('${user.id}', '${user.username || 'Unknown User'}', '${user.email || ''}', '${user.role}')"
+          class="text-blue-600 hover:text-blue-900 mr-3"
+        >
+          Edit Role
+        </button>
+        <button 
+          onclick="viewUserDetails('${user.id}')"
+          class="text-green-600 hover:text-green-900"
+        >
+          View Details
+        </button>
+      </td>
+    `;
+    
+    return tr;
+  }
+  
+  // Get role display name
+  function getRoleDisplayName(role) {
+    const roleNames = {
+      free: 'Free User',
+      user: 'Regular User',
+      Pro: 'Pro User',
+      super: 'Super User',
+      admin: 'Administrator'
+    };
+    return roleNames[role] || role;
+  }
+  
+  // Format date
+  function formatDate(dateString) {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US') + ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  }
+  
+  // Update pagination information
+  function updatePagination(pagination) {
+    totalPages = pagination.totalPages;
+    document.getElementById('pageStart').textContent = (currentPage - 1) * pageSize + 1;
+    document.getElementById('pageEnd').textContent = Math.min(currentPage * pageSize, pagination.total);
+    document.getElementById('totalUsers').textContent = pagination.total;
+    
+    document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+    document.getElementById('nextPageBtn').disabled = currentPage >= totalPages;
+  }
+  
+  // Display state management
+  function showLoadingState() {
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('userTable').classList.add('hidden');
+    document.getElementById('errorState').classList.add('hidden');
+  }
+  
+  function showUserTable() {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('userTable').classList.remove('hidden');
+    document.getElementById('errorState').classList.add('hidden');
+  }
+  
+  function showErrorState() {
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('userTable').classList.add('hidden');
+    document.getElementById('errorState').classList.remove('hidden');
+  }
+  
+  // Edit user role
+  function editUserRole(userId, username, email, currentRole) {
+    currentUserId = userId;
+    document.getElementById('modalUserInfo').innerHTML = `
+      <div><strong>Username:</strong> ${username}</div>
+      <div><strong>Email:</strong> ${email}</div>
+      <div><strong>Current Role:</strong> ${getRoleDisplayName(currentRole)}</div>
+    `;
+    document.getElementById('newRole').value = currentRole;
+    document.getElementById('roleReason').value = '';
+    document.getElementById('roleModal').classList.remove('hidden');
+  }
+  
+  // Close role edit modal
+  function closeRoleModal() {
+    document.getElementById('roleModal').classList.add('hidden');
+    currentUserId = null;
+  }
+  
+  // Save user role
+  async function saveUserRole() {
+    if (!currentUserId) return;
+    
+    const newRole = document.getElementById('newRole').value;
+    const reason = document.getElementById('roleReason').value;
+    
+    if (!reason.trim()) {
+      alert('Please enter the reason for role change');
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/update-user-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          userId: currentUserId,
+          newRole: newRole,
+          reason: reason
+        })
+      });
+      
+      if (response.ok) {
+        closeRoleModal();
+        loadUserStats();
+        loadUsers();
+        alert('User role updated successfully');
+      } else {
+        const error = await response.json();
+        alert('Update failed: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to update user role:', error);
+      alert('Update failed: Network error');
+    }
+  }
+  
+  // View user details
+  function viewUserDetails(userId) {
+    window.open(`/admin/user-details?userId=${userId}`, '_blank');
+  }
+</script>
+
+<style>
+  .transition-colors {
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  }
+</style>

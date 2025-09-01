@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import type { BacklinkResource, BacklinkFilters, BacklinkListResponse } from '../../../types/backlinks';
 
-// Mock data - 在实际应用中，这些数据应该来自数据库
+// Mock data - In real applications, this data should come from database
 const mockBacklinks: BacklinkResource[] = [
   {
     id: '1',
@@ -95,7 +95,7 @@ const mockBacklinks: BacklinkResource[] = [
   }
 ];
 
-// 生成更多模拟数据以满足50+条记录的需求
+// Generate more mock data to meet the requirement of 50+ records
 for (let i = 6; i <= 60; i++) {
   mockBacklinks.push({
     id: i.toString(),
@@ -177,24 +177,24 @@ export const GET: APIRoute = async ({ url }) => {
       maxTraffic: searchParams.get('maxTraffic') ? parseInt(searchParams.get('maxTraffic')!) : undefined,
     };
 
-    // 应用筛选
+    // Apply filters
     let filteredBacklinks = applyFilters(mockBacklinks, filters);
     
-    // 按DR排序（降序）
+    // Sort by DR (descending)
     filteredBacklinks.sort((a, b) => b.dr - a.dr);
     
-    // 用户权限控制 - 基于access字段过滤
+    // User permission control - filter based on access field
     let availableItems: BacklinkResource[];
     if (isPremium) {
-      // 付费用户可以看到所有数据
+      // Premium users can see all data
       availableItems = filteredBacklinks;
     } else {
-      // 免费用户只能看到access为guest的前50条数据
+      // Free users can only see first 50 records with guest access
       const guestBacklinks = filteredBacklinks.filter(item => item.access === 'guest');
       availableItems = guestBacklinks.slice(0, 50);
     }
     
-    // 分页
+    // Pagination
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
     const paginatedItems = availableItems.slice(startIndex, endIndex);
@@ -228,7 +228,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const newBacklink: Omit<BacklinkResource, 'id'> = await request.json();
     
-    // 生成新ID
+    // Generate new ID
     const id = (mockBacklinks.length + 1).toString();
     const backlinkWithId: BacklinkResource = {
       ...newBacklink,
@@ -236,7 +236,7 @@ export const POST: APIRoute = async ({ request }) => {
       updated: new Date().toISOString().split('T')[0]
     };
     
-    // 添加到模拟数据（在实际应用中应该保存到数据库）
+    // Add to mock data (should be saved to database in real applications)
     mockBacklinks.push(backlinkWithId);
     
     return new Response(JSON.stringify(backlinkWithId), {

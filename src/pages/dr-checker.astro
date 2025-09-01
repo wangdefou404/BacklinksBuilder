@@ -5,7 +5,7 @@ import DomainInput from '../components/tools/DomainInput.astro';
 import ActionButtons from '../components/tools/ActionButtons.astro';
 import ProgressBar from '../components/tools/ProgressBar.astro';
 import ResultsTable from '../components/tools/ResultsTable.astro';
-// import FeaturesList from '../components/tools/FeaturesList.astro'; // 未使用的导入
+// import FeaturesList from '../components/tools/FeaturesList.astro'; // Unused import
 
 const tableColumns = [
   { key: 'domain', label: 'Domain', sortable: true },
@@ -35,10 +35,10 @@ const features = [
 ];
 ---
 
-<BaseLayout title="DR Checker - BacklinksBuilder">
+<BaseLayout title="Domain Rating Checker - BacklinksBuilder">
   <ToolPageLayout 
     title="Domain Rating Checker"
-    description="Check the domain rating and authority of multiple websites instantly. Get comprehensive SEO metrics to analyze your competition and improve your rankings."
+    description="Check any website's domain rating score to understand its SEO authority. Free domain rating (DR) checker for any website to understand site authority. Check the domain rating and authority of multiple websites instantly. Get comprehensive SEO metrics to analyze your competition and improve your rankings."
     features={features}
   >
     <Fragment slot="tool-content">
@@ -59,13 +59,13 @@ const features = [
       
       <DomainInput 
         id="domains"
-        label="Enter Domains (one per line, max 100)"
-        placeholder="Enter domains, one per line\nExample:\nexample.com\ngoogle.com\nbaidu.com"
+        label="Enter Domain"
+        placeholder="e.g. example.com"
         maxDomains={100}
       />
       
       <ActionButtons 
-        checkButtonText="Check Domain Ratings"
+        checkButtonText="Check Domain Rating"
         checkButtonId="check-btn"
         clearButtonId="clear-btn"
         showExportButton={false}
@@ -76,7 +76,7 @@ const features = [
     
     <Fragment slot="results">
       <ResultsTable 
-        title="Domain Rating Results"
+        title="Check Domain Rating"
         columns={tableColumns}
       />
     </Fragment>

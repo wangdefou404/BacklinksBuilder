@@ -27,7 +27,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // 验证角色是否有效
-    const validRoles = ['admin', 'premium', 'free', 'user'];
+    const validRoles = ['admin', 'super', 'Pro', 'user', 'free'];
     if (!validRoles.includes(role)) {
       return new Response(
         JSON.stringify({ 
@@ -63,7 +63,7 @@ export const POST: APIRoute = async ({ request }) => {
     // 更新users表中的role字段
     const { error: updateUserError } = await supabase
       .from('users')
-      .update({ role: role === 'free' ? 'user' : role })
+      .update({ role: role })
       .eq('id', user.id);
 
     if (updateUserError) {

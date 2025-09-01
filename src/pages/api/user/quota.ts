@@ -10,33 +10,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// 根据价格页面定义的配额限制
-const PLAN_QUOTAS = {
-  free: {
-    dr_checks: 10,
-    traffic_checks: 10,
-    backlink_checks: 10,
-    backlink_views: 50
-  },
-  pro: {
-    dr_checks: 1000,
-    traffic_checks: 1000,
-    backlink_checks: 1000,
-    backlink_views: -1 // 无限制
-  },
-  super: {
-    dr_checks: 5000,
-    traffic_checks: 5000,
-    backlink_checks: 5000,
-    backlink_views: -1 // 无限制
-  }
-};
 
-const PLAN_DISPLAY_NAMES = {
-  free: 'Free',
-  pro: 'Pro',
-  super: 'Super'
-};
 
 export const GET: APIRoute = async ({ url }) => {
   try {
@@ -54,10 +28,10 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    // 获取用户角色
+    // Get user role
     const { data: userRole, error: roleError } = await supabase
-      .rpc('get_user_role', {
-        user_id_param: userId
+      .rpc('get_user_active_role', {
+        p_user_id: userId
       });
 
     if (roleError) {
@@ -74,18 +48,17 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    // 获取用户配额详情
-    const { data: quotaDetails, error: quotaError } = await supabase
-      .from('user_quotas')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
+    // Get user quota statistics
+    const { data: quotaStats, error: quotaError } = await supabase
+      .rpc('get_user_quota_stats', {
+        p_user_id: userId
+      });
 
-    if (quotaError && quotaError.code !== 'PGRST116') {
-      console.error('Get quota details error:', quotaError);
+    if (quotaError) {
+      console.error('Get quota stats error:', quotaError);
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to get quota details',
+          error: 'Failed to get quota statistics',
           details: quotaError.message 
         }),
         { 
@@ -95,54 +68,51 @@ export const GET: APIRoute = async ({ url }) => {
       );
     }
 
-    // 确定用户计划类型
-    const planType = userRole === 'admin' ? 'super' : (userRole === 'premium' ? 'pro' : 'free');
-    const planLimits = PLAN_QUOTAS[planType as keyof typeof PLAN_QUOTAS];
+    // Determine user plan type and display name
+    const planType = userRole || 'free';
+    const planDisplayName = {
+      'free': 'Free',
+      'user': 'User', 
+      'pro': 'Pro',
+      'super': 'Super',
+      'admin': 'Admin'
+    }[planType] || 'Free';
 
-    // 构建配额信息
+    // Build quota information
+    const quotas: Record<string, any> = {};
+    const resetTimes: Record<string, string | null> = {};
+    
+    if (quotaStats && Array.isArray(quotaStats)) {
+      quotaStats.forEach((stat: any) => {
+        const productType = stat.product_type;
+        quotas[productType] = {
+          name: {
+            'dr_check': 'DR Check',
+            'traffic_check': 'Traffic Check', 
+            'backlink_check': 'Backlink Check',
+            'backlink_view': 'Backlink View'
+          }[productType] || productType,
+          limit: stat.total_quota,
+          used: stat.used_quota,
+          remaining: stat.remaining_quota,
+          unlimited: stat.is_unlimited,
+          percentage: stat.usage_percentage
+        };
+        
+        // Collect reset time information
+        if (stat.next_reset_at && stat.reset_cycle) {
+          resetTimes[stat.reset_cycle] = stat.next_reset_at;
+        }
+      });
+    }
+
     const quotaInfo = {
       userId,
       planType,
-      planDisplayName: PLAN_DISPLAY_NAMES[planType as keyof typeof PLAN_DISPLAY_NAMES],
-      quotas: {
-        dr_checks: {
-          name: 'DR检查',
-          limit: planLimits.dr_checks,
-          used: quotaDetails?.dr_checks_used || 0,
-          remaining: planLimits.dr_checks === -1 ? -1 : Math.max(0, planLimits.dr_checks - (quotaDetails?.dr_checks_used || 0)),
-          unlimited: planLimits.dr_checks === -1,
-          percentage: planLimits.dr_checks === -1 ? 0 : Math.min(((quotaDetails?.dr_checks_used || 0) / planLimits.dr_checks) * 100, 100)
-        },
-        traffic_checks: {
-          name: '流量检查',
-          limit: planLimits.traffic_checks,
-          used: quotaDetails?.traffic_checks_used || 0,
-          remaining: planLimits.traffic_checks === -1 ? -1 : Math.max(0, planLimits.traffic_checks - (quotaDetails?.traffic_checks_used || 0)),
-          unlimited: planLimits.traffic_checks === -1,
-          percentage: planLimits.traffic_checks === -1 ? 0 : Math.min(((quotaDetails?.traffic_checks_used || 0) / planLimits.traffic_checks) * 100, 100)
-        },
-        backlink_checks: {
-          name: '外链检查',
-          limit: planLimits.backlink_checks,
-          used: quotaDetails?.backlink_checks_used || 0,
-          remaining: planLimits.backlink_checks === -1 ? -1 : Math.max(0, planLimits.backlink_checks - (quotaDetails?.backlink_checks_used || 0)),
-          unlimited: planLimits.backlink_checks === -1,
-          percentage: planLimits.backlink_checks === -1 ? 0 : Math.min(((quotaDetails?.backlink_checks_used || 0) / planLimits.backlink_checks) * 100, 100)
-        },
-        backlink_views: {
-          name: '外链查看',
-          limit: planLimits.backlink_views,
-          used: quotaDetails?.backlink_views_used || 0,
-          remaining: planLimits.backlink_views === -1 ? -1 : Math.max(0, planLimits.backlink_views - (quotaDetails?.backlink_views_used || 0)),
-          unlimited: planLimits.backlink_views === -1,
-          percentage: planLimits.backlink_views === -1 ? 0 : Math.min(((quotaDetails?.backlink_views_used || 0) / planLimits.backlink_views) * 100, 100)
-        }
-      },
-      resetTimes: {
-        daily: quotaDetails?.reset_daily_at || null,
-        monthly: quotaDetails?.reset_monthly_at || null
-      },
-      lastUpdated: quotaDetails?.updated_at || null
+      planDisplayName,
+      quotas,
+      resetTimes,
+      lastUpdated: new Date().toISOString()
     };
 
     return new Response(
@@ -170,12 +140,12 @@ export const GET: APIRoute = async ({ url }) => {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const { userId } = await request.json();
+    const { userId, quotaType, amount } = await request.json();
 
-    if (!userId) {
+    if (!userId || !quotaType || !amount) {
       return new Response(
         JSON.stringify({ 
-          error: 'Missing required field: userId' 
+          error: 'Missing required fields: userId, quotaType, amount' 
         }),
         { 
           status: 400,
@@ -184,18 +154,20 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // 获取用户角色
-    const { data: userRole, error: roleError } = await supabase
-      .rpc('get_user_role', {
-        user_id_param: userId
+    // Update quota usage
+    const { data: updateResult, error: updateError } = await supabase
+      .rpc('update_user_quota_usage', {
+        p_user_id: userId,
+        p_product_type: quotaType,
+        p_usage_amount: amount
       });
 
-    if (roleError) {
-      console.error('Get user role error:', roleError);
+    if (updateError) {
+      console.error('Update quota usage error:', updateError);
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to get user role',
-          details: roleError.message 
+          error: 'Failed to update quota usage',
+          details: updateError.message 
         }),
         { 
           status: 500,
@@ -203,80 +175,13 @@ export const POST: APIRoute = async ({ request }) => {
         }
       );
     }
-
-    // 获取用户配额详情
-    const { data: quotaDetails, error: quotaError } = await supabase
-      .from('user_quotas')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (quotaError && quotaError.code !== 'PGRST116') {
-      console.error('Get quota details error:', quotaError);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to get quota details',
-          details: quotaError.message 
-        }),
-        { 
-          status: 500,
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // 确定用户计划类型
-    const planType = userRole === 'admin' ? 'super' : (userRole === 'premium' ? 'pro' : 'free');
-    const planLimits = PLAN_QUOTAS[planType as keyof typeof PLAN_QUOTAS];
-
-    // 构建配额信息
-    const quotaInfo = {
-      userId,
-      planType,
-      planDisplayName: PLAN_DISPLAY_NAMES[planType as keyof typeof PLAN_DISPLAY_NAMES],
-      quotas: {
-        dr_checks: {
-          name: 'DR检查',
-          limit: planLimits.dr_checks,
-          used: quotaDetails?.dr_checks_used || 0,
-          remaining: planLimits.dr_checks === -1 ? -1 : Math.max(0, planLimits.dr_checks - (quotaDetails?.dr_checks_used || 0)),
-          unlimited: planLimits.dr_checks === -1,
-          percentage: planLimits.dr_checks === -1 ? 0 : Math.min(((quotaDetails?.dr_checks_used || 0) / planLimits.dr_checks) * 100, 100)
-        },
-        traffic_checks: {
-          name: '流量检查',
-          limit: planLimits.traffic_checks,
-          used: quotaDetails?.traffic_checks_used || 0,
-          remaining: planLimits.traffic_checks === -1 ? -1 : Math.max(0, planLimits.traffic_checks - (quotaDetails?.traffic_checks_used || 0)),
-          unlimited: planLimits.traffic_checks === -1,
-          percentage: planLimits.traffic_checks === -1 ? 0 : Math.min(((quotaDetails?.traffic_checks_used || 0) / planLimits.traffic_checks) * 100, 100)
-        },
-        backlink_checks: {
-          name: '外链检查',
-          limit: planLimits.backlink_checks,
-          used: quotaDetails?.backlink_checks_used || 0,
-          remaining: planLimits.backlink_checks === -1 ? -1 : Math.max(0, planLimits.backlink_checks - (quotaDetails?.backlink_checks_used || 0)),
-          unlimited: planLimits.backlink_checks === -1,
-          percentage: planLimits.backlink_checks === -1 ? 0 : Math.min(((quotaDetails?.backlink_checks_used || 0) / planLimits.backlink_checks) * 100, 100)
-        },
-        backlink_views: {
-          name: '外链查看',
-          limit: planLimits.backlink_views,
-          used: quotaDetails?.backlink_views_used || 0,
-          remaining: planLimits.backlink_views === -1 ? -1 : Math.max(0, planLimits.backlink_views - (quotaDetails?.backlink_views_used || 0)),
-          unlimited: planLimits.backlink_views === -1,
-          percentage: planLimits.backlink_views === -1 ? 0 : Math.min(((quotaDetails?.backlink_views_used || 0) / planLimits.backlink_views) * 100, 100)
-        }
-      },
-      resetTimes: {
-        daily: quotaDetails?.reset_daily_at || null,
-        monthly: quotaDetails?.reset_monthly_at || null
-      },
-      lastUpdated: quotaDetails?.updated_at || null
-    };
 
     return new Response(
-      JSON.stringify(quotaInfo),
+      JSON.stringify({ 
+        success: true,
+        message: 'Quota usage updated successfully',
+        result: updateResult
+      }),
       { 
         status: 200,
         headers: { 'Content-Type': 'application/json' }

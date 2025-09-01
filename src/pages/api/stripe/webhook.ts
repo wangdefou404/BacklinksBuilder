@@ -82,7 +82,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const { error } = await supabase
     .from('users')
     .update({
-      role: planType === 'pro' ? 'premium' : planType === 'super' ? 'admin' : 'free',
+      role: planType === 'pro' ? 'Pro' : planType === 'super' ? 'super' : 'free',
       stripe_subscription_id: session.subscription as string,
       subscription_status: 'active',
       subscription_plan: planType,
@@ -117,7 +117,7 @@ async function handleSubscriptionChange(subscription: Stripe.Subscription) {
   const { error } = await supabase
     .from('users')
     .update({
-      role: isActive && planType ? (planType === 'pro' ? 'premium' : planType === 'super' ? 'admin' : 'free') : 'free',
+      role: isActive && planType ? (planType === 'pro' ? 'Pro' : planType === 'super' ? 'super' : 'free') : 'free',
       stripe_subscription_id: subscription.id,
       subscription_status: status,
       subscription_plan: isActive ? planType : null,

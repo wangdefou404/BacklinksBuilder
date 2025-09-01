@@ -1,0 +1,293 @@
+---
+// 用户活动记录组件
+export interface Props {
+  userId: string;
+  limit?: number;
+}
+
+const { userId, limit = 10 } = Astro.props;
+
+// 获取用户活动记录
+let activityData = null;
+let activityError = null;
+
+if (userId) {
+  try {
+    const response = await fetch(`${Astro.url.origin}/api/user/activity?userId=${userId}&limit=${limit}`);
+
+    if (response.ok) {
+      activityData = await response.json();
+    } else {
+      const error = await response.json();
+      activityError = error.error || 'Failed to load activity data';
+      console.error('Activity fetch failed:', error);
+    }
+  } catch (error) {
+    activityError = 'Network error during activity fetch';
+    console.error('Activity fetch error:', error);
+  }
+}
+
+// 格式化时间
+const formatTime = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffMinutes < 1) return '刚刚';
+  if (diffMinutes < 60) return `${diffMinutes}分钟前`;
+  if (diffHours < 24) return `${diffHours}小时前`;
+  if (diffDays < 7) return `${diffDays}天前`;
+  return date.toLocaleDateString('zh-CN');
+};
+
+// 获取活动图标
+const getActivityIcon = (activityType: string) => {
+  switch (activityType) {
+    case 'dr_check':
+      return {
+        icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+        color: 'text-blue-600',
+        bg: 'bg-blue-100'
+      };
+    case 'backlink_generation':
+      return {
+        icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
+        color: 'text-green-600',
+        bg: 'bg-green-100'
+      };
+    case 'traffic_check':
+      return {
+        icon: 'M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z',
+        color: 'text-purple-600',
+        bg: 'bg-purple-100'
+      };
+    case 'subscription':
+      return {
+        icon: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z',
+        color: 'text-yellow-600',
+        bg: 'bg-yellow-100'
+      };
+    case 'login':
+      return {
+        icon: 'M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1',
+        color: 'text-gray-600',
+        bg: 'bg-gray-100'
+      };
+    default:
+      return {
+        icon: 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+        color: 'text-gray-600',
+        bg: 'bg-gray-100'
+      };
+  }
+};
+
+// 获取活动描述
+const getActivityDescription = (activity: any) => {
+  switch (activity.activity_type) {
+    case 'dr_check':
+      return `Checked DR value for ${activity.details?.domain || 'unknown domain'}`;
+    case 'backlink_generation':
+      return `Generated ${activity.details?.count || 1} backlink resources`;
+    case 'traffic_check':
+      return `Checked traffic data for ${activity.details?.domain || 'unknown domain'}`;
+    case 'subscription':
+      return `${activity.details?.action === 'created' ? 'Created' : activity.details?.action === 'renewed' ? 'Renewed' : 'Updated'} subscription plan`;
+    case 'login':
+      return 'Logged into system';
+    default:
+      return activity.description || 'Performed an action';
+  }
+};
+---
+
+{activityError ? (
+  <div class="activity-error bg-red-50 border border-red-200 rounded-lg p-4">
+    <div class="flex items-center">
+      <svg class="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+      </svg>
+      <div>
+        <h3 class="text-sm font-medium text-red-800">Failed to load activity log</h3>
+        <p class="text-xs text-red-600 mt-1">{activityError}</p>
+      </div>
+    </div>
+  </div>
+) : activityData && activityData.activities && activityData.activities.length > 0 ? (
+  <div class="activity-log">
+    <div class="space-y-4">
+      {activityData.activities.map((activity: any) => {
+        const iconInfo = getActivityIcon(activity.activity_type);
+        return (
+          <div class="activity-item flex items-start space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+            <!-- 活动图标 -->
+            <div class={`flex-shrink-0 w-8 h-8 ${iconInfo.bg} rounded-full flex items-center justify-center`}>
+              <svg class={`w-4 h-4 ${iconInfo.color}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d={iconInfo.icon}></path>
+              </svg>
+            </div>
+            
+            <!-- 活动内容 -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-medium text-gray-900">
+                  {getActivityDescription(activity)}
+                </p>
+                <span class="text-xs text-gray-500">
+                  {formatTime(activity.created_at)}
+                </span>
+              </div>
+              
+              {activity.details && Object.keys(activity.details).length > 0 && (
+                <div class="mt-1">
+                  {activity.details.result && (
+                    <p class="text-xs text-gray-600">
+                      Result: {activity.details.result}
+                    </p>
+                  )}
+                  {activity.details.ip_address && (
+                    <p class="text-xs text-gray-500">
+                      IP: {activity.details.ip_address}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    
+    {activityData.hasMore && (
+      <div class="mt-4 text-center">
+        <button 
+          class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+          onclick="loadMoreActivities()"
+        >
+          Load More
+        </button>
+      </div>
+    )}
+  </div>
+) : activityData ? (
+  <!-- 无活动记录 -->
+  <div class="no-activity text-center py-8">
+    <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+    </svg>
+    <p class="text-gray-500 font-medium">No activity records</p>
+    <p class="text-sm text-gray-400 mt-1">Start using our tools to see activity history</p>
+    <div class="mt-4">
+      <a href="/dr-checker" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+        Start Using Tools
+      </a>
+    </div>
+  </div>
+) : (
+  <!-- 加载中 -->
+  <div class="activity-loading bg-gray-50 border border-gray-200 rounded-lg p-6">
+    <div class="flex items-center justify-center">
+      <svg class="animate-spin w-6 h-6 text-gray-600 mr-3" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <div class="text-center">
+        <h3 class="text-sm font-medium text-gray-900">Loading Activity Log</h3>
+        <p class="text-xs text-gray-600 mt-1">Fetching your usage history...</p>
+      </div>
+    </div>
+  </div>
+)}
+
+<script is:inline>
+  let currentOffset = 0;
+  const limit = 10;
+  
+  async function loadMoreActivities() {
+    const userId = document.querySelector('[data-user-id]')?.getAttribute('data-user-id');
+    if (!userId) return;
+    
+    currentOffset += limit;
+    
+    try {
+      const response = await fetch(`/api/user/activity?userId=${userId}&limit=${limit}&offset=${currentOffset}`);
+      if (response.ok) {
+        const data = await response.json();
+        appendActivities(data.activities);
+        
+        if (!data.hasMore) {
+          const loadMoreBtn = document.querySelector('button[onclick="loadMoreActivities()"]');
+          if (loadMoreBtn) {
+            loadMoreBtn.style.display = 'none';
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load more activities:', error);
+    }
+  }
+  
+  function appendActivities(activities) {
+    const container = document.querySelector('.activity-log .space-y-4');
+    if (!container) return;
+    
+    activities.forEach(activity => {
+      const activityElement = createActivityElement(activity);
+      container.appendChild(activityElement);
+    });
+  }
+  
+  function createActivityElement(activity) {
+    // 这里可以根据需要动态创建活动元素
+    // 为了简化，这里返回一个基本的元素
+    const div = document.createElement('div');
+    div.className = 'activity-item flex items-start space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors';
+    div.innerHTML = `
+        <div class="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+          <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-gray-900">${activity.description || 'Performed an action'}</p>
+            <span class="text-xs text-gray-500">${formatTimeJS(activity.created_at)}</span>
+          </div>
+        </div>
+      `;
+    return div;
+  }
+  
+  function formatTimeJS(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString('en-US');
+  }
+</script>
+
+<style>
+  .activity-log {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .activity-item {
+    transition: background-color 0.2s ease-in-out;
+  }
+  
+  .transition-colors {
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  }
+</style>

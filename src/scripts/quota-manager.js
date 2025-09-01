@@ -1,5 +1,5 @@
 /**
- * 配额管理器 - 通用的配额检查和管理模块
+ * Quota Manager - Universal quota checking and management module
  */
 class QuotaManager {
   constructor() {
@@ -7,11 +7,11 @@ class QuotaManager {
   }
 
   /**
-   * 检查用户配额
-   * @param {string} quotaType - 配额类型 (dr_check, traffic_check, backlink_check, backlink_view)
-   * @param {string} userId - 用户ID
-   * @returns {Promise<Object>} 配额信息
-   */
+     * Check user quota
+     * @param {string} quotaType - Quota type (dr_check, traffic_check, backlink_check, backlink_view)
+     * @param {string} userId - User ID
+     * @returns {Promise<Object>} Quota information
+     */
   async checkQuota(quotaType, userId) {
     try {
       const response = await fetch(`${this.baseUrl}/api/quota/check`, {
@@ -35,12 +35,12 @@ class QuotaManager {
   }
 
   /**
-   * 消费配额
-   * @param {string} quotaType - 配额类型
-   * @param {string} userId - 用户ID
-   * @param {number} amount - 消费数量，默认为1
-   * @returns {Promise<Object>} 消费结果
-   */
+     * Consume quota
+     * @param {string} quotaType - Quota type
+     * @param {string} userId - User ID
+     * @param {number} amount - Consumption amount, default is 1
+     * @returns {Promise<Object>} Consumption result
+     */
   async consumeQuota(quotaType, userId, amount = 1) {
     try {
       const response = await fetch(`${this.baseUrl}/api/quota/consume`, {
@@ -65,10 +65,10 @@ class QuotaManager {
   }
 
   /**
-   * 显示配额信息到指定元素
-   * @param {string} elementId - 目标元素ID
-   * @param {Object} quotaInfo - 配额信息
-   */
+     * Display quota information to specified element
+     * @param {string} elementId - Target element ID
+     * @param {Object} quotaInfo - Quota information
+     */
   displayQuotaInfo(elementId, quotaInfo) {
     const element = document.getElementById(elementId);
     if (!element) {
@@ -87,26 +87,26 @@ class QuotaManager {
     };
 
     let statusClass = 'text-green-600';
-    let statusText = '可用';
+    let statusText = 'Available';
     
     if (!canUse) {
       statusClass = 'text-red-600';
-      statusText = '配额已用完';
+      statusText = 'Quota Exhausted';
     } else if (remainingMonthly <= 5 || (remainingDaily !== null && remainingDaily <= 2)) {
       statusClass = 'text-yellow-600';
-      statusText = '配额即将用完';
+      statusText = 'Quota Nearly Exhausted';
     }
 
-    // 处理访客用户的显示
+    // Handle guest user display
     const isGuest = quotaInfo.isGuest || false;
-    const planDisplayName = isGuest ? '访客' : (planNames[planType] || planType);
+    const planDisplayName = isGuest ? 'Guest' : (planNames[planType] || planType);
     const planColorClass = isGuest ? 'bg-blue-100 text-blue-800' : 
       (canUse ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800');
 
     element.innerHTML = `
       <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-medium text-gray-900">配额使用情况</h3>
+          <h3 class="text-sm font-medium text-gray-900">Quota Usage</h3>
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${planColorClass}">
             ${planDisplayName}
           </span>
@@ -114,42 +114,42 @@ class QuotaManager {
         
         <div class="space-y-2">
           <div class="flex justify-between items-center">
-            <span class="text-sm text-gray-600">月度配额:</span>
+            <span class="text-sm text-gray-600">Monthly Quota:</span>
             <span class="text-sm font-medium ${statusClass}">
-              ${monthlyUsed}/${monthlyLimit} (剩余 ${remainingMonthly})
+              ${monthlyUsed}/${monthlyLimit} (Remaining ${remainingMonthly})
             </span>
           </div>
           
           ${dailyLimit > 0 ? `
             <div class="flex justify-between items-center">
-              <span class="text-sm text-gray-600">日度配额:</span>
+              <span class="text-sm text-gray-600">Daily Quota:</span>
               <span class="text-sm font-medium ${statusClass}">
-                ${dailyUsed}/${dailyLimit} (剩余 ${remainingDaily})
+                ${dailyUsed}/${dailyLimit} (Remaining ${remainingDaily})
               </span>
             </div>
           ` : ''}
           
           <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-            <span class="text-sm text-gray-600">状态:</span>
+            <span class="text-sm text-gray-600">Status:</span>
             <span class="text-sm font-medium ${statusClass}">${statusText}</span>
           </div>
         </div>
         
         ${!canUse ? `
           <div class="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p class="text-sm text-red-700 mb-2">${isGuest ? '访客配额已用完，请登录或注册以获得更多配额。' : '配额已用完，请升级您的计划以继续使用。'}</p>
+            <p class="text-sm text-red-700 mb-2">${isGuest ? 'Guest quota exhausted. Please login or register for more quota.' : 'Quota exhausted. Please upgrade your plan to continue.'}</p>
             ${isGuest ? `
               <div class="flex space-x-2">
                 <a href="/auth/login" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  登录
+                  Login
                 </a>
                 <a href="/auth/register" class="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-medium rounded text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  注册
+                  Register
                 </a>
               </div>
             ` : `
               <a href="/pricing" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                升级计划
+                Upgrade Plan
               </a>
             `}
           </div>
@@ -159,10 +159,10 @@ class QuotaManager {
   }
 
   /**
-   * 显示配额不足提示
-   * @param {string} elementId - 目标元素ID
-   * @param {string} quotaType - 配额类型
-   */
+     * Display quota insufficient warning
+     * @param {string} elementId - Target element ID
+     * @param {string} quotaType - Quota type
+     */
   showQuotaExceededMessage(elementId, quotaType) {
     const element = document.getElementById(elementId);
     if (!element) {
@@ -171,10 +171,10 @@ class QuotaManager {
     }
 
     const quotaTypeNames = {
-      'dr_check': 'DR检查',
-      'traffic_check': '流量检查',
-      'backlink_check': '外链检查',
-      'backlink_view': '外链查看'
+      'dr_check': 'DR Check',
+      'traffic_check': 'Traffic Check',
+      'backlink_check': 'Backlink Check',
+      'backlink_view': 'Backlink View'
     };
 
     element.innerHTML = `
@@ -187,14 +187,14 @@ class QuotaManager {
           </div>
           <div class="ml-3">
             <h3 class="text-sm font-medium text-red-800">
-              ${quotaTypeNames[quotaType] || quotaType}配额已用完
+              ${quotaTypeNames[quotaType] || quotaType} Quota Exhausted
             </h3>
             <div class="mt-2 text-sm text-red-700">
-              <p>您的${quotaTypeNames[quotaType] || quotaType}配额已用完，请升级您的计划以继续使用。</p>
+              <p>Your ${quotaTypeNames[quotaType] || quotaType} quota has been exhausted. Please upgrade your plan to continue.</p>
             </div>
             <div class="mt-3">
               <a href="/pricing" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                查看升级计划
+                View Upgrade Plans
               </a>
             </div>
           </div>
@@ -204,9 +204,9 @@ class QuotaManager {
   }
 
   /**
-   * 显示加载状态
-   * @param {string} elementId - 目标元素ID
-   */
+     * Display loading state
+     * @param {string} elementId - Target element ID
+     */
   showLoading(elementId) {
     const element = document.getElementById(elementId);
     if (!element) return;
@@ -228,18 +228,18 @@ class QuotaManager {
   }
 
   /**
-   * 获取当前用户ID（从localStorage或sessionStorage中获取）
-   * @returns {Promise<string|null>} 用户ID
-   */
+     * Get current user ID (from localStorage or sessionStorage)
+     * @returns {Promise<string|null>} User ID
+     */
   async getCurrentUserId() {
     try {
-      // 尝试从多个存储位置获取用户信息
+      // Try to get user information from multiple storage locations
       const sources = [
         () => localStorage.getItem('supabase.auth.token'),
         () => sessionStorage.getItem('supabase.auth.token'),
         () => localStorage.getItem('sb-' + window.location.hostname.replace(/\./g, '-') + '-auth-token'),
         () => {
-          // 尝试从全局Supabase客户端获取
+          // Try to get from global Supabase client
           if (window.supabase && typeof window.supabase.auth?.getSession === 'function') {
             return window.supabase.auth.getSession().then(({ data }) => data?.session?.user?.id);
           }
@@ -251,7 +251,7 @@ class QuotaManager {
         try {
           const result = await getSource();
           if (result) {
-            // 如果是字符串，尝试解析JSON
+            // If it's a string, try to parse JSON
             if (typeof result === 'string') {
               try {
                 const parsed = JSON.parse(result);
@@ -259,39 +259,39 @@ class QuotaManager {
                   return parsed.user.id;
                 }
                 if (parsed?.access_token) {
-                  // 从JWT token中解析用户ID
+                  // Parse user ID from JWT token
                   const payload = JSON.parse(atob(parsed.access_token.split('.')[1]));
                   if (payload?.sub) {
                     return payload.sub;
                   }
                 }
               } catch (e) {
-                // 忽略JSON解析错误，继续尝试下一个源
+                // Ignore JSON parsing errors, continue to next source
               }
             } else if (typeof result === 'string' && result.length > 0) {
               return result;
             }
           }
         } catch (error) {
-          // 忽略单个源的错误，继续尝试下一个
-          console.debug('尝试获取用户ID失败:', error.message);
+          // Ignore individual source errors, continue to next
+          console.debug('Failed to get user ID:', error.message);
         }
       }
       
       return null;
     } catch (error) {
-      console.warn('获取用户ID失败:', error.message);
+      console.error('Failed to get user ID:', error);
       return null;
     }
   }
 
   /**
-   * 获取访客用户的默认配额信息
-   * @param {string} quotaType - 配额类型
-   * @returns {Object} 默认配额信息
+   * Get default quota information for guest users
+   * @param {string} quotaType - Quota type
+   * @returns {Object} Default quota information
    */
   getGuestQuotaInfo(quotaType) {
-    // 为访客用户提供基础配额
+    // Provide basic quota for guest users
     const guestQuotas = {
       'dr_check': { monthlyLimit: 5, dailyLimit: 2 },
       'traffic_check': { monthlyLimit: 5, dailyLimit: 2 },
@@ -301,7 +301,7 @@ class QuotaManager {
 
     const quota = guestQuotas[quotaType] || { monthlyLimit: 3, dailyLimit: 1 };
     
-    // 从localStorage获取访客使用记录
+    // Get guest usage records from localStorage
     const guestUsage = JSON.parse(localStorage.getItem('guestQuotaUsage') || '{}');
     const today = new Date().toDateString();
     const currentMonth = new Date().getFullYear() + '-' + (new Date().getMonth() + 1);
@@ -321,8 +321,8 @@ class QuotaManager {
   }
 
   /**
-   * 更新访客用户的配额使用记录
-   * @param {string} quotaType - 配额类型
+   * Update quota usage records for guest users
+   * @param {string} quotaType - Quota type
    */
   updateGuestQuotaUsage(quotaType) {
     const guestUsage = JSON.parse(localStorage.getItem('guestQuotaUsage') || '{}');
@@ -340,9 +340,9 @@ class QuotaManager {
   }
 
   /**
-   * 初始化页面配额显示
-   * @param {string} quotaType - 配额类型
-   * @param {string} displayElementId - 显示元素ID
+   * Initialize page quota display
+   * @param {string} quotaType - Quota type
+   * @param {string} displayElementId - Display element ID
    */
   async initPageQuota(quotaType, displayElementId) {
     this.showLoading(displayElementId);
@@ -352,22 +352,22 @@ class QuotaManager {
       let quotaInfo;
       
       if (!userId) {
-        // 未登录用户使用访客配额
+        // Use guest quota for non-logged-in users
         quotaInfo = this.getGuestQuotaInfo(quotaType);
       } else {
-        // 已登录用户使用API检查配额
+        // Use API to check quota for logged-in users
         quotaInfo = await this.checkQuota(quotaType, userId);
       }
       
       this.displayQuotaInfo(displayElementId, quotaInfo);
       return quotaInfo;
     } catch (error) {
-      console.error('Failed to load quota info:', error);
+      console.error('Failed to load quota information, please refresh and try again:', error);
       const element = document.getElementById(displayElementId);
       if (element) {
         element.innerHTML = `
           <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p class="text-sm text-red-700">加载配额信息失败，请刷新页面重试。</p>
+            <p class="text-sm text-red-700">Failed to load quota information, please refresh and try again.</p>
           </div>
         `;
       }
@@ -375,11 +375,11 @@ class QuotaManager {
   }
 
   /**
-   * 执行带配额检查的操作
-   * @param {string} quotaType - 配额类型
-   * @param {Function} operation - 要执行的操作函数
-   * @param {string} displayElementId - 显示元素ID（可选）
-   * @returns {Promise<any>} 操作结果
+   * Execute operation with quota check
+   * @param {string} quotaType - Quota type
+   * @param {Function} operation - Operation function to execute
+   * @param {string} displayElementId - Display element ID (optional)
+   * @returns {Promise<any>} Operation result
    */
   async executeWithQuotaCheck(quotaType, operation, displayElementId = null) {
     try {
@@ -387,10 +387,10 @@ class QuotaManager {
       let quotaInfo;
       
       if (!userId) {
-        // 未登录用户使用访客配额
+        // Use guest quota for non-logged-in users
         quotaInfo = this.getGuestQuotaInfo(quotaType);
       } else {
-        // 已登录用户使用API检查配额
+        // Use API to check quota for logged-in users
         quotaInfo = await this.checkQuota(quotaType, userId);
       }
       
@@ -401,19 +401,19 @@ class QuotaManager {
         throw new Error('Quota exceeded');
       }
 
-      // 执行操作
+      // Execute operation
       const result = await operation();
 
-      // 消费配额
+      // Consume quota
       if (!userId) {
-        // 访客用户更新本地存储
+        // Update local storage for guest users
         this.updateGuestQuotaUsage(quotaType);
       } else {
-        // 已登录用户调用API
+        // Call API for logged-in users
         await this.consumeQuota(quotaType, userId);
       }
 
-      // 更新显示
+      // Update display
       if (displayElementId) {
         let updatedQuotaInfo;
         if (!userId) {
@@ -434,10 +434,10 @@ class QuotaManager {
   }
 }
 
-// 创建全局实例
+// Create global instance
 window.quotaManager = new QuotaManager();
 
-// 导出类（如果使用模块系统）
+// Export class (if using module system)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = QuotaManager;
 }

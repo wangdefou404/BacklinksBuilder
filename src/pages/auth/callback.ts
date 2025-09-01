@@ -345,7 +345,7 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
           name: userData.name,
           full_name: userData.name,
           avatar_url: userData.picture,
-          role: 'user',
+          role: 'free',
           provider: 'google',
           google_id: userData.id,
           created_at: new Date().toISOString(),
@@ -361,9 +361,23 @@ export const GET: APIRoute = async ({ url, redirect, cookies }) => {
       }
       user = newUser;
 
+      // 为新用户创建角色记录
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: user.id,
+          role: 'free',
+          is_active: true,
+          granted_at: new Date().toISOString()
+        });
+
+      if (roleError) {
+        console.error('Failed to create user role:', roleError);
+      }
+
       // 为新用户初始化配额
       const { error: quotaError } = await supabase
-        .rpc('initialize_user_quotas', { user_id: user.id, plan_type: 'free' });
+        .rpc('initialize_user_quotas', { p_user_id: user.id });
 
       if (quotaError) {
         console.error('Failed to initialize user quotas:', quotaError);

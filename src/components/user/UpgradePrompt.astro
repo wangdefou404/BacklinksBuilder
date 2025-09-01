@@ -1,5 +1,5 @@
 ---
-// 升级提示组件
+// Upgrade prompt component
 export interface Props {
   quotaType?: string;
   showModal?: boolean;
@@ -17,16 +17,16 @@ if (quotaType) {
     // 这里应该从API获取真实的升级推荐数据
     // 暂时使用模拟数据
     upgradeRecommendation = {
-      targetPlanName: "专业版",
-      price: "¥99/月",
-      savings: "相比按次付费节省60%",
+      targetPlanName: "Pro Plan",
+      price: "$49/month",
+      savings: "Save 60% compared to pay-per-use",
       benefits: [
-        "无限制DR检查",
-        "无限制流量分析",
-        "高级外链分析",
-        "批量域名检查",
-        "优先客户支持",
-        "API访问权限"
+        "Unlimited DR checks",
+        "Unlimited traffic analysis",
+        "Advanced backlink analysis",
+        "Bulk domain checking",
+        "Priority customer support",
+        "API access"
       ]
     };
     
@@ -52,13 +52,13 @@ if (quotaType) {
   }
 }
 
-// 获取配额类型的中文名称
+// Get quota type display name
 const getQuotaTypeName = (type: string) => {
   const names = {
-    'dr_checks': 'DR 检查',
-    'traffic_checks': '流量检查',
-    'backlink_checks': '外链检查',
-    'backlink_views': '外链查看'
+    'dr_checks': 'DR Checks',
+    'traffic_checks': 'Traffic Checks',
+    'backlink_checks': 'Backlink Checks',
+    'backlink_views': 'Backlink Views'
   };
   return names[type] || type;
 };
@@ -71,7 +71,7 @@ const getQuotaTypeName = (type: string) => {
         <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <!-- 模态框头部 -->
           <div class="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 class="text-2xl font-bold text-gray-900">升级您的计划</h2>
+            <h2 class="text-2xl font-bold text-gray-900">Upgrade Your Plan</h2>
             <button 
               type="button" 
               class="close-modal text-gray-400 hover:text-gray-600 transition-colors"
@@ -97,8 +97,8 @@ const getQuotaTypeName = (type: string) => {
                       </svg>
                     </div>
                     <div>
-                      <h3 class="text-lg font-semibold text-gray-900">{getQuotaTypeName(quotaType)} 配额不足</h3>
-                      <p class="text-sm text-gray-600">您当前的 {quotaData?.planDisplayName || '免费'} 计划配额已用完</p>
+                      <h3 class="text-lg font-semibold text-gray-900">{getQuotaTypeName(quotaType)} Quota Insufficient</h3>
+                      <p class="text-sm text-gray-600">Your current {quotaData?.planDisplayName || 'Free'} plan quota has been exhausted</p>
                     </div>
                   </div>
                 </div>
@@ -106,8 +106,8 @@ const getQuotaTypeName = (type: string) => {
               
               <!-- 升级推荐 -->
               <div class="mb-6">
-                <h3 class="text-xl font-bold text-gray-900 mb-4">升级到 {upgradeRecommendation.targetPlanName}</h3>
-                <p class="text-gray-600 mb-6">解锁更多功能，提升您的工作效率</p>
+                <h3 class="text-xl font-bold text-gray-900 mb-4">Upgrade to {upgradeRecommendation.targetPlanName}</h3>
+                <p class="text-gray-600 mb-6">Unlock more features and boost your productivity</p>
                 
                 <!-- 价格信息 -->
                 <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
@@ -135,13 +135,13 @@ const getQuotaTypeName = (type: string) => {
                     href="/pricing" 
                     class="flex-1 bg-blue-600 text-white text-center py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
                   >
-                    立即升级
+                    Upgrade Now
                   </a>
                   <a 
                     href="/pricing" 
                     class="flex-1 border border-gray-300 text-gray-700 text-center py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
                   >
-                    查看所有计划
+                    View All Plans
                   </a>
                 </div>
               </div>
@@ -149,7 +149,7 @@ const getQuotaTypeName = (type: string) => {
               <!-- 当前使用情况 -->
               {quotaData && (
                 <div class="bg-gray-50 rounded-lg p-4">
-                  <h4 class="font-medium text-gray-900 mb-3">当前使用情况</h4>
+                  <h4 class="font-medium text-gray-900 mb-3">Current Usage</h4>
                   <div class="grid grid-cols-2 gap-4 text-sm">
                     {Object.entries(quotaData.quotas).map(([_, quota]: [string, any]) => (
                       <div class="flex justify-between">
@@ -183,8 +183,8 @@ const getQuotaTypeName = (type: string) => {
                   </svg>
                 </div>
                 <div>
-                  <h3 class="text-lg font-semibold text-gray-900">{getQuotaTypeName(quotaType)} 配额不足</h3>
-                  <p class="text-sm text-gray-600">您当前的 {quotaData?.planDisplayName || '免费'} 计划配额已用完</p>
+                  <h3 class="text-lg font-semibold text-gray-900">{getQuotaTypeName(quotaType)} Quota Insufficient</h3>
+                  <p class="text-sm text-gray-600">Your current {quotaData?.planDisplayName || 'Free'} plan quota has been exhausted</p>
                 </div>
               </div>
             </div>
@@ -192,8 +192,8 @@ const getQuotaTypeName = (type: string) => {
           
           <!-- 升级推荐 -->
           <div class="mb-6">
-            <h3 class="text-xl font-bold text-gray-900 mb-4">升级到 {upgradeRecommendation.targetPlanName}</h3>
-            <p class="text-gray-600 mb-6">解锁更多功能，提升您的工作效率</p>
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Upgrade to {upgradeRecommendation.targetPlanName}</h3>
+            <p class="text-gray-600 mb-6">Unlock more features and boost your productivity</p>
             
             <!-- 价格信息 -->
             <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
@@ -221,13 +221,13 @@ const getQuotaTypeName = (type: string) => {
                 href="/pricing" 
                 class="flex-1 bg-blue-600 text-white text-center py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
-                立即升级
+                Upgrade Now
               </a>
               <a 
                 href="/pricing" 
                 class="flex-1 border border-gray-300 text-gray-700 text-center py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
               >
-                查看所有计划
+                View All Plans
               </a>
             </div>
           </div>
@@ -235,7 +235,7 @@ const getQuotaTypeName = (type: string) => {
           <!-- 当前使用情况 -->
           {quotaData && (
             <div class="bg-gray-50 rounded-lg p-4">
-              <h4 class="font-medium text-gray-900 mb-3">当前使用情况</h4>
+              <h4 class="font-medium text-gray-900 mb-3">Current Usage</h4>
               <div class="grid grid-cols-2 gap-4 text-sm">
                 {Object.entries(quotaData.quotas).map(([_, quota]: [string, any]) => (
                   <div class="flex justify-between">

@@ -94,7 +94,7 @@ try {
 }
 ---
 
-<BaseLayout title="数据统计 - 管理员面板">
+<BaseLayout title="Analytics - Admin Panel">
   <main class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- 页面标题和导航 -->
@@ -110,8 +110,8 @@ try {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
             </svg>
             <div>
-              <h1 class="text-3xl font-bold text-gray-900">数据统计</h1>
-              <p class="mt-2 text-gray-600">系统数据分析和报表</p>
+              <h1 class="text-3xl font-bold text-gray-900">Analytics</h1>
+              <p class="mt-2 text-gray-600">System data analysis and reports</p>
             </div>
           </div>
           <div class="flex space-x-3">
@@ -122,7 +122,7 @@ try {
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>
-              刷新数据
+              Refresh Data
             </button>
             <button 
               onclick="exportReport()"
@@ -131,7 +131,7 @@ try {
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
               </svg>
-              导出报表
+              Export Report
             </button>
           </div>
         </div>
@@ -144,18 +144,18 @@ try {
         <div class="mb-6">
           <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
-              <h3 class="text-lg font-medium text-gray-900">时间范围</h3>
+              <h3 class="text-lg font-medium text-gray-900">Time Range</h3>
               <div class="flex space-x-4">
                 <select 
                   id="timeRange"
                   onchange="updateTimeRange()"
                   class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="7d">最近7天</option>
-                  <option value="30d" selected>最近30天</option>
-                  <option value="90d">最近90天</option>
-                  <option value="1y">最近1年</option>
-                  <option value="custom">自定义</option>
+                  <option value="7d">Last 7 days</option>
+                  <option value="30d" selected>Last 30 days</option>
+                  <option value="90d">Last 90 days</option>
+                  <option value="1y">Last 1 year</option>
+                  <option value="custom">Custom</option>
                 </select>
                 <div id="customDateRange" class="hidden flex space-x-2">
                   <input 
@@ -163,7 +163,7 @@ try {
                     id="startDate"
                     class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                  <span class="self-center text-gray-500">至</span>
+                  <span class="self-center text-gray-500">to</span>
                   <input 
                     type="date" 
                     id="endDate"
@@ -173,7 +173,7 @@ try {
                     onclick="applyCustomRange()"
                     class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                   >
-                    应用
+                    Apply
                   </button>
                 </div>
               </div>
@@ -191,7 +191,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">总用户数</p>
+                <p class="text-sm font-medium text-gray-600">Total Users</p>
                 <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.totalUsers.toLocaleString()}</p>
               </div>
             </div>
@@ -205,7 +205,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">活跃用户</p>
+                <p class="text-sm font-medium text-gray-600">Active Users</p>
                 <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.activeUsers.toLocaleString()}</p>
               </div>
             </div>
@@ -219,7 +219,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">总检查数</p>
+                <p class="text-sm font-medium text-gray-600">Total Checks</p>
                 <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.totalChecks.toLocaleString()}</p>
               </div>
             </div>
@@ -233,7 +233,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">成功率</p>
+                <p class="text-sm font-medium text-gray-600">Success Rate</p>
                 <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.successRate}%</p>
               </div>
             </div>
@@ -247,7 +247,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">平均响应时间</p>
+                <p class="text-sm font-medium text-gray-600">Avg Response Time</p>
                 <p class="text-2xl font-bold text-gray-900">{analyticsData.overview.avgResponseTime}s</p>
               </div>
             </div>
@@ -259,15 +259,15 @@ try {
           <!-- 用户增长图表 -->
           <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-medium text-gray-900">用户增长趋势</h3>
+              <h3 class="text-lg font-medium text-gray-900">User Growth Trend</h3>
               <div class="flex space-x-2">
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                   <span class="w-2 h-2 bg-blue-600 rounded-full mr-1"></span>
-                  总用户
+                  Total Users
                 </span>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   <span class="w-2 h-2 bg-green-600 rounded-full mr-1"></span>
-                  高级用户
+                  Premium Users
                 </span>
               </div>
             </div>
@@ -279,19 +279,19 @@ try {
           <!-- 检查统计图表 -->
           <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center justify-between mb-4">
-              <h3 class="text-lg font-medium text-gray-900">检查统计</h3>
+              <h3 class="text-lg font-medium text-gray-900">Check Statistics</h3>
               <div class="flex space-x-2">
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                   <span class="w-2 h-2 bg-purple-600 rounded-full mr-1"></span>
-                  总检查
+                  Total Checks
                 </span>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   <span class="w-2 h-2 bg-green-600 rounded-full mr-1"></span>
-                  成功
+                  Success
                 </span>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                   <span class="w-2 h-2 bg-red-600 rounded-full mr-1"></span>
-                  失败
+                  Failed
                 </span>
               </div>
             </div>
@@ -304,15 +304,15 @@ try {
         <!-- 收入趋势图表 -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
           <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-medium text-gray-900">收入趋势</h3>
+            <h3 class="text-lg font-medium text-gray-900">Revenue Trend</h3>
             <div class="flex space-x-2">
               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 <span class="w-2 h-2 bg-green-600 rounded-full mr-1"></span>
-                收入
+                Revenue
               </span>
               <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 <span class="w-2 h-2 bg-blue-600 rounded-full mr-1"></span>
-                订阅数
+                Subscriptions
               </span>
             </div>
           </div>
@@ -326,15 +326,15 @@ try {
           <!-- 热门域名 -->
           <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-lg font-medium text-gray-900">热门检查域名</h3>
+              <h3 class="text-lg font-medium text-gray-900">Top Checked Domains</h3>
             </div>
             <div class="overflow-hidden">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">域名</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">检查次数</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">成功率</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Check Count</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Success Rate</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -369,7 +369,7 @@ try {
           <!-- 实时活动 -->
           <div class="bg-white rounded-lg shadow">
             <div class="px-6 py-4 border-b border-gray-200">
-              <h3 class="text-lg font-medium text-gray-900">实时活动</h3>
+              <h3 class="text-lg font-medium text-gray-900">Real-time Activity</h3>
             </div>
             <div class="p-6">
               <div class="space-y-4" id="realTimeActivity">
@@ -378,8 +378,8 @@ try {
                     <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm text-gray-900">用户 user@example.com 完成了外链检查</p>
-                    <p class="text-xs text-gray-500">2分钟前</p>
+                    <p class="text-sm text-gray-900">User user@example.com completed backlink check</p>
+                    <p class="text-xs text-gray-500">2 minutes ago</p>
                   </div>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -387,8 +387,8 @@ try {
                     <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm text-gray-900">新用户注册: newuser@test.com</p>
-                    <p class="text-xs text-gray-500">5分钟前</p>
+                    <p class="text-sm text-gray-900">New user registered: newuser@test.com</p>
+                    <p class="text-xs text-gray-500">5 minutes ago</p>
                   </div>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -396,8 +396,8 @@ try {
                     <div class="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm text-gray-900">premium@user.com 升级到高级版</p>
-                    <p class="text-xs text-gray-500">8分钟前</p>
+                    <p class="text-sm text-gray-900">premium@user.com upgraded to premium</p>
+                    <p class="text-xs text-gray-500">8 minutes ago</p>
                   </div>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -405,8 +405,8 @@ try {
                     <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm text-gray-900">检查失败: timeout.com</p>
-                    <p class="text-xs text-gray-500">12分钟前</p>
+                    <p class="text-sm text-gray-900">Check failed: timeout.com</p>
+                    <p class="text-xs text-gray-500">12 minutes ago</p>
                   </div>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -414,8 +414,8 @@ try {
                     <div class="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p class="text-sm text-gray-900">系统备份完成</p>
-                    <p class="text-xs text-gray-500">15分钟前</p>
+                    <p class="text-sm text-gray-900">System backup completed</p>
+                    <p class="text-xs text-gray-500">15 minutes ago</p>
                   </div>
                 </div>
               </div>
@@ -434,27 +434,27 @@ try {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script define:vars={{ analyticsData }}>
-  // 初始化图表
+  // Initialize charts
   document.addEventListener('DOMContentLoaded', function() {
     initializeCharts();
     startRealTimeUpdates();
   });
 
   function initializeCharts() {
-    // 用户增长图表
+    // User growth chart
     const userGrowthCtx = document.getElementById('userGrowthChart').getContext('2d');
     new Chart(userGrowthCtx, {
       type: 'line',
       data: {
         labels: analyticsData.userGrowth.map(item => new Date(item.date).toLocaleDateString()),
         datasets: [{
-          label: '总用户',
+          label: 'Total Users',
           data: analyticsData.userGrowth.map(item => item.users),
           borderColor: 'rgb(59, 130, 246)',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
           tension: 0.4
         }, {
-          label: '高级用户',
+          label: 'Premium Users',
           data: analyticsData.userGrowth.map(item => item.premium),
           borderColor: 'rgb(34, 197, 94)',
           backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -472,22 +472,22 @@ try {
       }
     });
 
-    // 检查统计图表
+    // Check statistics chart
     const checksCtx = document.getElementById('checksChart').getContext('2d');
     new Chart(checksCtx, {
       type: 'bar',
       data: {
         labels: analyticsData.checksData.map(item => new Date(item.date).toLocaleDateString()),
         datasets: [{
-          label: '总检查',
+          label: 'Total Checks',
           data: analyticsData.checksData.map(item => item.checks),
           backgroundColor: 'rgba(147, 51, 234, 0.8)'
         }, {
-          label: '成功',
+          label: 'Success',
           data: analyticsData.checksData.map(item => item.success),
           backgroundColor: 'rgba(34, 197, 94, 0.8)'
         }, {
-          label: '失败',
+          label: 'Failed',
           data: analyticsData.checksData.map(item => item.failed),
           backgroundColor: 'rgba(239, 68, 68, 0.8)'
         }]
@@ -506,21 +506,21 @@ try {
       }
     });
 
-    // 收入趋势图表
+    // Revenue trend chart
     const revenueCtx = document.getElementById('revenueChart').getContext('2d');
     new Chart(revenueCtx, {
       type: 'line',
       data: {
         labels: analyticsData.revenueData.map(item => item.month),
         datasets: [{
-          label: '收入 ($)',
+          label: 'Revenue ($)',
           data: analyticsData.revenueData.map(item => item.revenue),
           borderColor: 'rgb(34, 197, 94)',
           backgroundColor: 'rgba(34, 197, 94, 0.1)',
           tension: 0.4,
           yAxisID: 'y'
         }, {
-          label: '订阅数',
+          label: 'Subscriptions',
           data: analyticsData.revenueData.map(item => item.subscriptions),
           borderColor: 'rgb(59, 130, 246)',
           backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -540,7 +540,7 @@ try {
             display: true,
             title: {
               display: true,
-              text: '月份'
+              text: 'Month'
             }
           },
           y: {
@@ -549,7 +549,7 @@ try {
             position: 'left',
             title: {
               display: true,
-              text: '收入 ($)'
+              text: 'Revenue ($)'
             }
           },
           y1: {
@@ -558,7 +558,7 @@ try {
             position: 'right',
             title: {
               display: true,
-              text: '订阅数'
+              text: 'Subscriptions'
             },
             grid: {
               drawOnChartArea: false,
@@ -569,7 +569,7 @@ try {
     });
   }
 
-  // 时间范围更新
+  // Time range update
   function updateTimeRange() {
     const timeRange = document.getElementById('timeRange').value;
     const customDateRange = document.getElementById('customDateRange');
@@ -578,31 +578,31 @@ try {
       customDateRange.classList.remove('hidden');
     } else {
       customDateRange.classList.add('hidden');
-      // 这里可以根据选择的时间范围重新加载数据
+      // Reload data based on selected time range
       refreshData();
     }
   }
 
-  // 应用自定义时间范围
+  // Apply custom time range
   function applyCustomRange() {
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
     if (!startDate || !endDate) {
-      alert('请选择开始和结束日期');
+      alert('Please select start and end dates');
       return;
     }
     
     if (new Date(startDate) > new Date(endDate)) {
-      alert('开始日期不能晚于结束日期');
+      alert('Start date cannot be later than end date');
       return;
     }
     
-    // 这里可以根据自定义时间范围重新加载数据
+    // Reload data based on custom time range
     refreshData();
   }
 
-  // 刷新数据
+  // Refresh data
   async function refreshData() {
     try {
       const response = await fetch('/api/admin/analytics', {
@@ -614,18 +614,18 @@ try {
 
       if (response.ok) {
         const result = await response.json();
-        // 更新页面数据
+        // Update page data
         location.reload();
       } else {
-        alert('刷新数据失败，请重试。');
+        alert('Failed to refresh data, please try again.');
       }
     } catch (error) {
-      console.error('刷新数据错误:', error);
-      alert('刷新失败，请检查网络连接。');
+      console.error('Refresh data error:', error);
+      alert('Refresh failed, please check network connection.');
     }
   }
 
-  // 导出报表
+  // Export report
   async function exportReport() {
     try {
       const response = await fetch('/api/admin/analytics', {
@@ -647,21 +647,21 @@ try {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert('导出报表失败，请重试。');
+        alert('Failed to export report, please try again.');
       }
     } catch (error) {
-      console.error('导出报表错误:', error);
-      alert('导出失败，请检查网络连接。');
+      console.error('Export report error:', error);
+      alert('Export failed, please check network connection.');
     }
   }
 
-  // 启动实时更新
+  // Start real-time updates
   function startRealTimeUpdates() {
-    // 每30秒更新一次实时活动
+    // Update real-time activity every 30 seconds
     setInterval(updateRealTimeActivity, 30000);
   }
 
-  // 更新实时活动
+  // Update real-time activity
   async function updateRealTimeActivity() {
     try {
       const response = await fetch('/api/admin/analytics?type=realtime', {
@@ -675,7 +675,7 @@ try {
         const result = await response.json();
         const activityContainer = document.getElementById('realTimeActivity');
         
-        // 更新实时活动显示
+        // Update real-time activity display
         if (result.activities && result.activities.length > 0) {
           activityContainer.innerHTML = result.activities.map(activity => `
             <div class="flex items-center space-x-3">
@@ -691,7 +691,7 @@ try {
         }
       }
     } catch (error) {
-      console.error('更新实时活动错误:', error);
+      console.error('Update real-time activity error:', error);
     }
   }
 </script>

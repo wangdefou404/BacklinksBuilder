@@ -2,7 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import GoogleSignInButton from "../../components/auth/GoogleSignInButton.astro";
 
-// 获取重定向参数
+// Get redirect parameter
 const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
 ---
 
@@ -16,10 +16,10 @@ const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
           </svg>
         </div>
         <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">
-          管理员登录
+          Admin Login
         </h2>
         <p class="mt-2 text-center text-sm text-gray-600">
-          请输入您的管理员凭据以访问后台管理系统
+          Please enter your admin credentials to access the management system
         </p>
       </div>
       
@@ -27,7 +27,7 @@ const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
         <div class="rounded-md shadow-sm space-y-4">
           <div>
             <label for="username" class="block text-sm font-medium text-gray-700 mb-1">
-              用户名
+              Username
             </label>
             <input
               id="username"
@@ -35,12 +35,12 @@ const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
               type="text"
               required
               class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="请输入用户名"
+              placeholder="Enter username"
             />
           </div>
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-              密码
+              Password
             </label>
             <input
               id="password"
@@ -48,13 +48,13 @@ const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
               type="password"
               required
               class="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="请输入密码"
+              placeholder="Enter password"
             />
           </div>
         </div>
 
         <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-          <span class="block sm:inline">用户名或密码错误，请重试。</span>
+          <span class="block sm:inline">Invalid username or password, please try again.</span>
         </div>
 
         <div>
@@ -67,22 +67,22 @@ const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path>
               </svg>
             </span>
-            管理员登录
+            Admin Login
           </button>
         </div>
       </form>
       
-      <!-- 分隔线 -->
+      <!-- Divider -->
       <div class="relative">
         <div class="absolute inset-0 flex items-center">
           <div class="w-full border-t border-gray-300"></div>
         </div>
         <div class="relative flex justify-center text-sm">
-          <span class="px-2 bg-gray-100 text-gray-500">或</span>
+          <span class="px-2 bg-gray-100 text-gray-500">or</span>
         </div>
       </div>
       
-      <!-- Google登录选项 -->
+      <!-- Google Login Option -->
       <div class="space-y-4">
         <GoogleSignInButton 
           redirectTo={redirectTo}
@@ -91,20 +91,20 @@ const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
           variant="primary"
         />
         <p class="text-xs text-center text-gray-500">
-          使用Google账号登录可访问用户功能，管理员请使用上方表单登录
+          Login with Google account to access user features, admins please use the form above
         </p>
       </div>
       
       <div class="text-center">
         <a href="/" class="text-sm text-blue-600 hover:text-blue-500">
-          返回首页
+          Back to Home
         </a>
       </div>
     </div>
   </main>
 
   <script>
-    // 检查是否已经登录
+    // Check if already logged in
     if (localStorage.getItem('adminLoggedIn') === 'true') {
       window.location.href = '/admin/backlinks';
     }
@@ -121,7 +121,7 @@ const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
       const password = passwordInput.value.trim();
       
       try {
-        // 调用后端API进行验证
+        // Call backend API for verification
         const response = await fetch('/api/admin/login', {
           method: 'POST',
           headers: {
@@ -133,40 +133,40 @@ const redirectTo = Astro.url.searchParams.get('redirect_to') || '/dashboard';
         const result = await response.json();
         
         if (response.ok && result.success) {
-          // 登录成功，设置登录状态
+          // Login successful, set login status
           localStorage.setItem('adminLoggedIn', 'true');
           localStorage.setItem('adminUsername', username);
           localStorage.setItem('adminLoginTime', new Date().toISOString());
           
-          // 重定向到管理后台
+          // Redirect to admin dashboard
           window.location.href = '/admin/backlinks';
         } else {
-          // 登录失败
-          errorMessage.querySelector('span').textContent = result.message || '用户名或密码错误';
+          // Login failed
+          errorMessage.querySelector('span').textContent = result.message || 'Invalid username or password';
           errorMessage.classList.remove('hidden');
           passwordInput.value = '';
           passwordInput.focus();
           
-          // 3秒后隐藏错误消息
+          // Hide error message after 3 seconds
           setTimeout(() => {
             errorMessage.classList.add('hidden');
           }, 3000);
         }
       } catch (error) {
         console.error('Login error:', error);
-        errorMessage.querySelector('span').textContent = '登录失败，请稍后重试';
+        errorMessage.querySelector('span').textContent = 'Login failed, please try again later';
         errorMessage.classList.remove('hidden');
         passwordInput.value = '';
         passwordInput.focus();
         
-        // 3秒后隐藏错误消息
+        // Hide error message after 3 seconds
         setTimeout(() => {
           errorMessage.classList.add('hidden');
         }, 3000);
       }
     });
 
-    // 回车键提交表单
+    // Submit form on Enter key
     usernameInput.addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         passwordInput.focus();

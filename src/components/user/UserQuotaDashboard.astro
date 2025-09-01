@@ -1,29 +1,28 @@
 ---
-// 用户配额仪表板组件
+// User quota dashboard component
 export interface Props {
   userId: string;
   showUpgradePrompt?: boolean;
-  refreshInterval?: number; // 自动刷新间隔（毫秒）
+  refreshInterval?: number; // Auto refresh interval (milliseconds)
 }
 
 const { 
   userId, 
   showUpgradePrompt = true,
-  refreshInterval = 30000 // 默认30秒刷新
+  refreshInterval = 30000 // Default 30 seconds refresh
 } = Astro.props;
 
-// 获取配额信息
+// Get quota information
 let quotaData = null;
 let quotaError = null;
 
 if (userId) {
   try {
-    const response = await fetch(`${Astro.url.origin}/api/user/quota`, {
-      method: 'POST',
+    const response = await fetch(`${Astro.url.origin}/api/user/quota?userId=${encodeURIComponent(userId)}`, {
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userId })
+      }
     });
 
     if (response.ok) {
@@ -39,25 +38,25 @@ if (userId) {
   }
 }
 
-// 获取状态颜色
+// Get status color
 const getStatusColor = (percentage: number) => {
   if (percentage >= 90) return 'red';
   if (percentage >= 70) return 'yellow';
   return 'green';
 };
 
-// 格式化重置时间
+// Format reset time
 const formatResetTime = (dateString: string | null) => {
-  if (!dateString) return '未设置';
+  if (!dateString) return 'Not set';
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = date.getTime() - now.getTime();
   const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
   
-  if (diffHours <= 0) return '即将重置';
-  if (diffHours < 24) return `${diffHours}小时后`;
+  if (diffHours <= 0) return 'Resetting soon';
+  if (diffHours < 24) return `In ${diffHours} hours`;
   const diffDays = Math.ceil(diffHours / 24);
-  return `${diffDays}天后`;
+  return `In ${diffDays} days`;
 };
 ---
 
@@ -68,14 +67,14 @@ const formatResetTime = (dateString: string | null) => {
         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
       </svg>
       <div>
-        <h3 class="text-lg font-medium text-red-800">配额信息加载失败</h3>
+        <h3 class="text-lg font-medium text-red-800">Failed to load quota information</h3>
         <p class="text-sm text-red-600 mt-1">{quotaError}</p>
       </div>
     </div>
   </div>
 ) : quotaData ? (
   <div class="quota-dashboard" data-user-id={userId} data-refresh-interval={refreshInterval}>
-    <!-- 用户计划信息 -->
+    <!-- User plan information -->
     <div class="plan-info bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center">
@@ -89,25 +88,25 @@ const formatResetTime = (dateString: string | null) => {
             </svg>
           </div>
           <div>
-            <h2 class="text-xl font-bold text-gray-900">{quotaData.planDisplayName} 计划</h2>
-            <p class="text-sm text-gray-600">当前订阅计划</p>
+            <h2 class="text-xl font-bold text-gray-900">{quotaData.planDisplayName} Plan</h2>
+            <p class="text-sm text-gray-600">Current subscription plan</p>
           </div>
         </div>
         {showUpgradePrompt && quotaData.planType === 'free' && (
           <a href="/pricing" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-            升级计划
+            Upgrade Plan
           </a>
         )}
       </div>
     </div>
 
-    <!-- 配额使用情况网格 -->
+    <!-- Quota usage grid -->
     <div class="quota-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
       {Object.entries(quotaData.quotas).map(([_, quota]: [string, any]) => {
         const statusColor = quota.unlimited ? 'green' : getStatusColor(quota.percentage);
         return (
           <div class="quota-card bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-            <!-- 配额标题 -->
+            <!-- Quota title -->
             <div class="flex items-center justify-between mb-4">
               <h3 class="text-sm font-medium text-gray-900">{quota.name}</h3>
               <span class={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -115,23 +114,23 @@ const formatResetTime = (dateString: string | null) => {
                 statusColor === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
                 'bg-red-100 text-red-800'
               }`}>
-                {quota.unlimited ? '无限制' : 
-                 quota.remaining > 0 ? '可用' : '已用完'}
+                {quota.unlimited ? 'Unlimited' : 
+                 quota.remaining > 0 ? 'Available' : 'Used up'}
               </span>
             </div>
 
-            <!-- 使用统计 -->
+            <!-- Usage statistics -->
             <div class="mb-4">
               <div class="flex justify-between text-sm text-gray-600 mb-2">
-                <span>已使用</span>
+                <span>Used</span>
                 <span class="font-medium">{quota.used}</span>
               </div>
               <div class="flex justify-between text-sm text-gray-600 mb-2">
-                <span>总限制</span>
+                <span>Total Limit</span>
                 <span class="font-medium">{quota.unlimited ? '∞' : quota.limit}</span>
               </div>
               <div class="flex justify-between text-sm text-gray-600">
-                <span>剩余</span>
+                <span>Remaining</span>
                 <span class={`font-medium ${
                   statusColor === 'green' ? 'text-green-600' :
                   statusColor === 'yellow' ? 'text-yellow-600' :
@@ -142,7 +141,7 @@ const formatResetTime = (dateString: string | null) => {
               </div>
             </div>
 
-            <!-- 进度条 -->
+            <!-- Progress bar -->
             {!quota.unlimited && (
               <div class="progress-bar">
                 <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
@@ -156,14 +155,14 @@ const formatResetTime = (dateString: string | null) => {
                   ></div>
                 </div>
                 <div class="text-xs text-gray-500 text-center">
-                  {quota.percentage.toFixed(1)}% 已使用
+                  {quota.percentage.toFixed(1)}% used
                 </div>
               </div>
             )}
 
             {quota.unlimited && (
               <div class="text-center py-2">
-                <span class="text-sm text-green-600 font-medium">无限制使用</span>
+                <span class="text-sm text-green-600 font-medium">Unlimited usage</span>
               </div>
             )}
           </div>
@@ -171,18 +170,18 @@ const formatResetTime = (dateString: string | null) => {
       })}
     </div>
 
-    <!-- 配额重置信息 -->
+    <!-- Quota reset information -->
     <div class="reset-info bg-gray-50 border border-gray-200 rounded-lg p-4">
-      <h3 class="text-sm font-medium text-gray-900 mb-3">配额重置时间</h3>
+      <h3 class="text-sm font-medium text-gray-900 mb-3">Quota Reset Time</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
         <div class="flex justify-between">
-          <span class="text-gray-600">每日重置:</span>
+          <span class="text-gray-600">Daily Reset:</span>
           <span class="font-medium text-gray-900">
             {formatResetTime(quotaData.resetTimes.daily)}
           </span>
         </div>
         <div class="flex justify-between">
-          <span class="text-gray-600">每月重置:</span>
+          <span class="text-gray-600">Monthly Reset:</span>
           <span class="font-medium text-gray-900">
             {formatResetTime(quotaData.resetTimes.monthly)}
           </span>
@@ -191,8 +190,8 @@ const formatResetTime = (dateString: string | null) => {
       {quotaData.lastUpdated && (
         <div class="mt-3 pt-3 border-t border-gray-200">
           <div class="flex justify-between text-xs text-gray-500">
-            <span>最后更新:</span>
-            <span>{new Date(quotaData.lastUpdated).toLocaleString('zh-CN')}</span>
+            <span>Last Updated:</span>
+            <span>{new Date(quotaData.lastUpdated).toLocaleString('en-US')}</span>
           </div>
         </div>
       )}
@@ -206,15 +205,15 @@ const formatResetTime = (dateString: string | null) => {
         <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
       <div class="text-center">
-        <h3 class="text-lg font-medium text-gray-900">加载配额信息</h3>
-        <p class="text-sm text-gray-600 mt-1">正在获取您的使用情况...</p>
+        <h3 class="text-lg font-medium text-gray-900">Loading Quota Information</h3>
+        <p class="text-sm text-gray-600 mt-1">Fetching your usage data...</p>
       </div>
     </div>
   </div>
 )}
 
 <script is:inline>
-  // 自动刷新功能
+  // Auto refresh functionality
   document.addEventListener('DOMContentLoaded', function() {
     const dashboard = document.querySelector('.quota-dashboard');
     if (!dashboard) return;
@@ -225,12 +224,11 @@ const formatResetTime = (dateString: string | null) => {
     if (refreshInterval > 0) {
       setInterval(async () => {
         try {
-          const response = await fetch('/api/user/quota', {
-            method: 'POST',
+          const response = await fetch(`/api/user/quota?userId=${encodeURIComponent(userId)}`, {
+            method: 'GET',
             headers: {
               'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId })
+            }
           });
           
           if (response.ok) {
@@ -244,28 +242,28 @@ const formatResetTime = (dateString: string | null) => {
     }
   });
   
-  // 更新配额显示
+  // Update quota display
   function updateQuotaDisplay(quotaData) {
     // 更新各个配额卡片的数据
     Object.entries(quotaData.quotas).forEach(([key, quota]) => {
       const card = document.querySelector(`[data-quota-type="${key}"]`);
       if (card) {
-        // 更新使用数量
+        // Update used count
         const usedElement = card.querySelector('.quota-used');
         if (usedElement) usedElement.textContent = quota.used;
         
-        // 更新剩余数量
+        // Update remaining count
         const remainingElement = card.querySelector('.quota-remaining');
         if (remainingElement) {
           remainingElement.textContent = quota.unlimited ? '∞' : quota.remaining;
         }
         
-        // 更新进度条
+        // Update progress bar
         const progressBar = card.querySelector('.progress-bar div');
         if (progressBar && !quota.unlimited) {
           progressBar.style.width = `${Math.min(quota.percentage, 100)}%`;
           
-          // 更新进度条颜色
+          // Update progress bar color
           const statusColor = quota.percentage >= 90 ? 'red' : 
                              quota.percentage >= 70 ? 'yellow' : 'green';
           progressBar.className = progressBar.className.replace(

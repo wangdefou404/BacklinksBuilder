@@ -1,891 +1,577 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RoleGuard from '../../components/auth/RoleGuard.astro';
-import Footer from '../../components/global/Footer.astro';
-
-// 获取用户会话信息
-const session = Astro.locals.session;
-const user = Astro.locals.user;
-
-// 如果用户未登录，重定向到登录页面
-if (!session || !user) {
-  return Astro.redirect('/login?redirect=/admin/settings');
-}
-
-const userId = user.id;
-
-// 获取用户角色信息
-let userRole = null;
-try {
-  const response = await fetch(`${Astro.url.origin}/api/auth/get-user-role`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ userId })
-  });
-
-  if (response.ok) {
-    userRole = await response.json();
-  }
-} catch (error) {
-  console.error('Role fetch error:', error);
-}
-
-// 获取系统设置
-let systemSettings = {
-  site_name: 'BacklinksBuilder',
-  site_description: '专业的外链建设工具',
-  site_url: 'https://backlinksbuilder.com',
-  admin_email: 'admin@backlinksbuilder.com',
-  support_email: 'support@backlinksbuilder.com',
-  max_users: 10000,
-  max_checks_per_day: 100,
-  enable_registration: true,
-  enable_email_verification: true,
-  enable_two_factor: false,
-  session_timeout: 24,
-  password_min_length: 8,
-  max_login_attempts: 5,
-  lockout_duration: 30,
-  smtp_host: '',
-  smtp_port: 587,
-  smtp_username: '',
-  smtp_password: '',
-  smtp_encryption: 'tls',
-  backup_enabled: true,
-  backup_frequency: 'daily',
-  backup_retention: 30,
-  maintenance_mode: false,
-  debug_mode: false,
-  analytics_enabled: true,
-  cache_enabled: true,
-  cdn_enabled: false
-};
-
-try {
-  const settingsResponse = await fetch(`${Astro.url.origin}/api/admin/settings`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    }
-  });
-
-  if (settingsResponse.ok) {
-    const result = await settingsResponse.json();
-    systemSettings = { ...systemSettings, ...result.settings };
-  }
-} catch (error) {
-  console.error('Settings fetch error:', error);
-}
 ---
 
-<BaseLayout title="系统设置 - 管理员面板">
-  <main class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- 页面标题和导航 -->
-      <div class="mb-8">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <a href="/admin/dashboard" class="text-purple-600 hover:text-purple-800 mr-4">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-              </svg>
-            </a>
-            <svg class="w-8 h-8 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-            <div>
-              <h1 class="text-3xl font-bold text-gray-900">系统设置</h1>
-              <p class="mt-2 text-gray-600">配置网站参数和系统功能</p>
+<BaseLayout title="System Settings - Admin Panel">
+  <RoleGuard allowedRoles={['admin']} currentRole="admin">
+    <div class="min-h-screen bg-gray-50 py-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Title -->
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-gray-900">System Settings</h1>
+          <p class="mt-2 text-gray-600">Manage system configuration and global settings</p>
+        </div>
+
+        <!-- Settings Card Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <!-- System Configuration -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+              <h2 class="text-xl font-semibold text-gray-900">System Configuration</h2>
+              <p class="text-sm text-gray-600 mt-1">Basic system settings and configuration</p>
+            </div>
+            <div class="p-6 space-y-6">
+              <!-- Site Name -->
+              <div>
+                <label for="siteName" class="block text-sm font-medium text-gray-700 mb-2">
+                  Site Name
+                </label>
+                <input
+                  type="text"
+                  id="siteName"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter site name"
+                />
+              </div>
+
+              <!-- Site Description -->
+              <div>
+                <label for="siteDescription" class="block text-sm font-medium text-gray-700 mb-2">
+                  Site Description
+                </label>
+                <textarea
+                  id="siteDescription"
+                  rows="3"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter site description"
+                ></textarea>
+              </div>
+
+              <!-- Maintenance Mode -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Maintenance Mode</label>
+                  <p class="text-sm text-gray-500">When enabled, regular users will not be able to access the system</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="maintenanceMode" class="sr-only peer" />
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <!-- New User Registration -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Allow New User Registration</label>
+                  <p class="text-sm text-gray-500">Control whether new users can register accounts</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="allowRegistration" class="sr-only peer" checked />
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <button
+                id="saveSystemConfig"
+                class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                Save System Configuration
+              </button>
             </div>
           </div>
-          <div class="flex space-x-3">
-            <button 
-              onclick="resetToDefaults()"
-              class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-              重置默认
-            </button>
-            <button 
-              onclick="saveAllSettings()"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-            >
-              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12"></path>
-              </svg>
-              保存设置
-            </button>
+
+          <!-- Email Settings -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">Email Settings</h2>
+                <p class="text-sm text-gray-600 mt-1">Configure email sending service</p>
+              </div>
+            <div class="p-6 space-y-6">
+              <!-- SMTP Server -->
+              <div>
+                  <label for="smtpServer" class="block text-sm font-medium text-gray-700 mb-2">
+                    SMTP Server
+                  </label>
+                <input
+                  type="text"
+                  id="smtpHost"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="smtp.example.com"
+                />
+              </div>
+
+              <!-- SMTP Port -->
+              <div>
+                  <label for="smtpPort" class="block text-sm font-medium text-gray-700 mb-2">
+                    SMTP Port
+                  </label>
+                <input
+                  type="number"
+                  id="smtpPort"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="587"
+                />
+              </div>
+
+              <!-- From Email -->
+              <div>
+                  <label for="emailFrom" class="block text-sm font-medium text-gray-700 mb-2">
+                    From Email
+                  </label>
+                <input
+                  type="email"
+                  id="fromEmail"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="noreply@example.com"
+                />
+              </div>
+
+              <!-- Email Username -->
+              <div>
+                  <label for="emailUsername" class="block text-sm font-medium text-gray-700 mb-2">
+                    Email Username
+                  </label>
+                <input
+                  type="text"
+                  id="emailUsername"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Username"
+                />
+              </div>
+
+              <!-- Email Password -->
+              <div>
+                <label for="emailPassword" class="block text-sm font-medium text-gray-700 mb-2">
+                  Email Password
+                </label>
+                <input
+                  type="password"
+                  id="emailPassword"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Password"
+                />
+              </div>
+
+              <!-- Test Email -->
+              <div class="flex gap-3">
+                <button
+                  id="testEmail"
+                  class="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                >
+                  Send Test Email
+                </button>
+                <button
+                  id="saveEmailConfig"
+                  class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                >
+                  Save Email Settings
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Settings -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div class="p-6 border-b border-gray-200">
+                <h2 class="text-xl font-semibold text-gray-900">Security Settings</h2>
+                <p class="text-sm text-gray-600 mt-1">System security related configuration</p>
+              </div>
+            <div class="p-6 space-y-6">
+              <!-- Minimum Password Length -->
+              <div>
+                  <label for="minPasswordLength" class="block text-sm font-medium text-gray-700 mb-2">
+                    Minimum Password Length
+                  </label>
+                <input
+                  type="number"
+                  id="minPasswordLength"
+                  min="6"
+                  max="20"
+                  value="8"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <!-- Session Timeout -->
+              <div>
+                  <label for="sessionTimeout" class="block text-sm font-medium text-gray-700 mb-2">
+                    Session Timeout (Hours)
+                  </label>
+                <input
+                  type="number"
+                  id="sessionTimeout"
+                  min="1"
+                  max="168"
+                  value="24"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <!-- Login Failure Limit -->
+              <div>
+                  <label for="maxLoginAttempts" class="block text-sm font-medium text-gray-700 mb-2">
+                    Maximum Login Attempts
+                  </label>
+                <input
+                  type="number"
+                  id="maxLoginAttempts"
+                  min="3"
+                  max="10"
+                  value="5"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <!-- Force Two-Factor Authentication -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Require Two-Factor Authentication</label>
+                  <p class="text-sm text-gray-500">Require all users to enable two-factor authentication</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="force2FA" class="sr-only peer" />
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <button
+                id="saveSecurityConfig"
+                class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              >
+                Save Security Settings
+              </button>
+            </div>
+          </div>
+
+          <!-- Backup & Recovery -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+              <h2 class="text-xl font-semibold text-gray-900">Backup & Recovery</h2>
+              <p class="text-sm text-gray-600 mt-1">Data backup and recovery settings</p>
+            </div>
+            <div class="p-6 space-y-6">
+              <!-- Auto Backup -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Auto Backup</label>
+                  <p class="text-sm text-gray-500">Enable regular automatic backups</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" id="autoBackup" class="sr-only peer" checked />
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+
+              <!-- Backup Frequency -->
+              <div>
+                <label for="backupFrequency" class="block text-sm font-medium text-gray-700 mb-2">
+                  Backup Frequency
+                </label>
+                <select
+                  id="backupFrequency"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+
+              <!-- Backup Retention Days -->
+              <div>
+                <label for="backupRetention" class="block text-sm font-medium text-gray-700 mb-2">
+                  Backup Retention Days
+                </label>
+                <input
+                  type="number"
+                  id="backupRetention"
+                  min="7"
+                  max="365"
+                  value="30"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <!-- Last Backup Time -->
+              <div class="bg-gray-50 p-4 rounded-md">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-medium text-gray-700">Last Backup Time</span>
+                  <span id="lastBackupTime" class="text-sm text-gray-600">--</span>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-3">
+                <button
+                  id="createBackup"
+                  class="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+                >
+                  Backup Now
+                </button>
+                <button
+                  id="saveBackupConfig"
+                  class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Information -->
+        <div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">System Information</h2>
+            <p class="text-sm text-gray-600 mt-1">Current system status and information</p>
+          </div>
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-blue-600" id="systemVersion">v1.0.0</div>
+                <div class="text-sm text-gray-600">System Version</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-green-600" id="systemUptime">--</div>
+                <div class="text-sm text-gray-600">Uptime</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-purple-600" id="databaseSize">--</div>
+                <div class="text-sm text-gray-600">Database Size</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-orange-600" id="storageUsed">--</div>
+                <div class="text-sm text-gray-600">Storage Usage</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <!-- 角色守卫 -->
-      <RoleGuard allowedRoles={['admin', 'super']} userId={userId}>
-        
-        <!-- 设置导航标签 -->
-        <div class="mb-8">
-          <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8">
-              <button 
-                onclick="showTab('general')"
-                class="tab-button active py-2 px-1 border-b-2 border-blue-500 font-medium text-sm text-blue-600"
-                data-tab="general"
-              >
-                基本设置
-              </button>
-              <button 
-                onclick="showTab('email')"
-                class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                data-tab="email"
-              >
-                邮件配置
-              </button>
-              <button 
-                onclick="showTab('security')"
-                class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                data-tab="security"
-              >
-                安全设置
-              </button>
-              <button 
-                onclick="showTab('system')"
-                class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                data-tab="system"
-              >
-                系统配置
-              </button>
-              <button 
-                onclick="showTab('advanced')"
-                class="tab-button py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                data-tab="advanced"
-              >
-                高级选项
-              </button>
-            </nav>
-          </div>
-        </div>
-
-        <!-- 基本设置 -->
-        <div id="general-tab" class="tab-content">
-          <div class="bg-white shadow-lg rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-medium text-gray-900">基本设置</h2>
-              <p class="text-sm text-gray-600">配置网站的基本信息和显示设置</p>
-            </div>
-            <div class="px-6 py-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">网站名称</label>
-                  <input 
-                    type="text" 
-                    id="site_name"
-                    value={systemSettings.site_name}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">网站URL</label>
-                  <input 
-                    type="url" 
-                    id="site_url"
-                    value={systemSettings.site_url}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div class="md:col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">网站描述</label>
-                  <textarea 
-                    id="site_description"
-                    rows="3"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >{systemSettings.site_description}</textarea>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">管理员邮箱</label>
-                  <input 
-                    type="email" 
-                    id="admin_email"
-                    value={systemSettings.admin_email}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">客服邮箱</label>
-                  <input 
-                    type="email" 
-                    id="support_email"
-                    value={systemSettings.support_email}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">最大用户数</label>
-                  <input 
-                    type="number" 
-                    id="max_users"
-                    value={systemSettings.max_users}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">每日最大检查次数</label>
-                  <input 
-                    type="number" 
-                    id="max_checks_per_day"
-                    value={systemSettings.max_checks_per_day}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div class="md:col-span-2">
-                  <div class="flex items-center space-x-6">
-                    <label class="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="enable_registration"
-                        checked={systemSettings.enable_registration}
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      >
-                      <span class="ml-2 text-sm text-gray-700">允许用户注册</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="enable_email_verification"
-                        checked={systemSettings.enable_email_verification}
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      >
-                      <span class="ml-2 text-sm text-gray-700">启用邮箱验证</span>
-                    </label>
-                    <label class="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="maintenance_mode"
-                        checked={systemSettings.maintenance_mode}
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      >
-                      <span class="ml-2 text-sm text-gray-700">维护模式</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 邮件配置 -->
-        <div id="email-tab" class="tab-content hidden">
-          <div class="bg-white shadow-lg rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-medium text-gray-900">邮件配置</h2>
-              <p class="text-sm text-gray-600">配置SMTP服务器用于发送系统邮件</p>
-            </div>
-            <div class="px-6 py-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">SMTP服务器</label>
-                  <input 
-                    type="text" 
-                    id="smtp_host"
-                    value={systemSettings.smtp_host}
-                    placeholder="smtp.gmail.com"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">端口</label>
-                  <input 
-                    type="number" 
-                    id="smtp_port"
-                    value={systemSettings.smtp_port}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">用户名</label>
-                  <input 
-                    type="text" 
-                    id="smtp_username"
-                    value={systemSettings.smtp_username}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">密码</label>
-                  <input 
-                    type="password" 
-                    id="smtp_password"
-                    value={systemSettings.smtp_password}
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">加密方式</label>
-                  <select 
-                    id="smtp_encryption"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="none" selected={systemSettings.smtp_encryption === 'none'}>无加密</option>
-                    <option value="tls" selected={systemSettings.smtp_encryption === 'tls'}>TLS</option>
-                    <option value="ssl" selected={systemSettings.smtp_encryption === 'ssl'}>SSL</option>
-                  </select>
-                </div>
-                <div class="flex items-end">
-                  <button 
-                    onclick="testEmailConnection()"
-                    class="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                  >
-                    测试连接
-                  </button>
-                </div>
-              </div>
-              <div class="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-                <div class="flex">
-                  <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                  </svg>
-                  <div>
-                    <h3 class="text-sm font-medium text-yellow-800">邮件配置提示</h3>
-                    <p class="text-sm text-yellow-700 mt-1">请确保SMTP服务器设置正确，否则系统无法发送邮件通知。建议使用Gmail、SendGrid或阿里云邮件服务。</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 安全设置 -->
-        <div id="security-tab" class="tab-content hidden">
-          <div class="bg-white shadow-lg rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-medium text-gray-900">安全设置</h2>
-              <p class="text-sm text-gray-600">配置用户认证和安全策略</p>
-            </div>
-            <div class="px-6 py-6">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">会话超时时间（小时）</label>
-                  <input 
-                    type="number" 
-                    id="session_timeout"
-                    value={systemSettings.session_timeout}
-                    min="1"
-                    max="168"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">密码最小长度</label>
-                  <input 
-                    type="number" 
-                    id="password_min_length"
-                    value={systemSettings.password_min_length}
-                    min="6"
-                    max="32"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">最大登录尝试次数</label>
-                  <input 
-                    type="number" 
-                    id="max_login_attempts"
-                    value={systemSettings.max_login_attempts}
-                    min="3"
-                    max="10"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">锁定时长（分钟）</label>
-                  <input 
-                    type="number" 
-                    id="lockout_duration"
-                    value={systemSettings.lockout_duration}
-                    min="5"
-                    max="1440"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                </div>
-                <div class="md:col-span-2">
-                  <label class="flex items-center">
-                    <input 
-                      type="checkbox" 
-                      id="enable_two_factor"
-                      checked={systemSettings.enable_two_factor}
-                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    >
-                    <span class="ml-2 text-sm text-gray-700">启用双因素认证</span>
-                  </label>
-                  <p class="text-xs text-gray-500 mt-1">要求用户使用手机应用程序进行二次验证</p>
-                </div>
-              </div>
-              <div class="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-                <div class="flex">
-                  <svg class="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"></path>
-                  </svg>
-                  <div>
-                    <h3 class="text-sm font-medium text-red-800">安全提醒</h3>
-                    <p class="text-sm text-red-700 mt-1">修改安全设置可能影响所有用户的登录体验，请谨慎操作。建议在非高峰时段进行调整。</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 系统配置 -->
-        <div id="system-tab" class="tab-content hidden">
-          <div class="bg-white shadow-lg rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-medium text-gray-900">系统配置</h2>
-              <p class="text-sm text-gray-600">配置备份、缓存和性能相关设置</p>
-            </div>
-            <div class="px-6 py-6">
-              <div class="space-y-6">
-                <!-- 备份设置 -->
-                <div class="border-b border-gray-200 pb-6">
-                  <h3 class="text-lg font-medium text-gray-900 mb-4">备份设置</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="backup_enabled"
-                          checked={systemSettings.backup_enabled}
-                          class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        >
-                        <span class="ml-2 text-sm text-gray-700">启用自动备份</span>
-                      </label>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">备份频率</label>
-                      <select 
-                        id="backup_frequency"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="hourly" selected={systemSettings.backup_frequency === 'hourly'}>每小时</option>
-                        <option value="daily" selected={systemSettings.backup_frequency === 'daily'}>每天</option>
-                        <option value="weekly" selected={systemSettings.backup_frequency === 'weekly'}>每周</option>
-                        <option value="monthly" selected={systemSettings.backup_frequency === 'monthly'}>每月</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">保留天数</label>
-                      <input 
-                        type="number" 
-                        id="backup_retention"
-                        value={systemSettings.backup_retention}
-                        min="1"
-                        max="365"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 性能设置 -->
-                <div class="border-b border-gray-200 pb-6">
-                  <h3 class="text-lg font-medium text-gray-900 mb-4">性能设置</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label class="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="cache_enabled"
-                          checked={systemSettings.cache_enabled}
-                          class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        >
-                        <span class="ml-2 text-sm text-gray-700">启用缓存</span>
-                      </label>
-                    </div>
-                    <div>
-                      <label class="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="cdn_enabled"
-                          checked={systemSettings.cdn_enabled}
-                          class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        >
-                        <span class="ml-2 text-sm text-gray-700">启用CDN</span>
-                      </label>
-                    </div>
-                    <div>
-                      <label class="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="analytics_enabled"
-                          checked={systemSettings.analytics_enabled}
-                          class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        >
-                        <span class="ml-2 text-sm text-gray-700">启用分析</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- 系统状态 -->
-                <div>
-                  <h3 class="text-lg font-medium text-gray-900 mb-4">系统状态</h3>
-                  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-green-50 p-4 rounded-lg">
-                      <div class="flex items-center">
-                        <div class="p-2 bg-green-100 rounded-full">
-                          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                          </svg>
-                        </div>
-                        <div class="ml-3">
-                          <p class="text-sm font-medium text-green-800">数据库</p>
-                          <p class="text-xs text-green-600">正常运行</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="bg-green-50 p-4 rounded-lg">
-                      <div class="flex items-center">
-                        <div class="p-2 bg-green-100 rounded-full">
-                          <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                          </svg>
-                        </div>
-                        <div class="ml-3">
-                          <p class="text-sm font-medium text-green-800">缓存</p>
-                          <p class="text-xs text-green-600">正常运行</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="bg-yellow-50 p-4 rounded-lg">
-                      <div class="flex items-center">
-                        <div class="p-2 bg-yellow-100 rounded-full">
-                          <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                          </svg>
-                        </div>
-                        <div class="ml-3">
-                          <p class="text-sm font-medium text-yellow-800">邮件服务</p>
-                          <p class="text-xs text-yellow-600">需要配置</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                      <div class="flex items-center">
-                        <div class="p-2 bg-blue-100 rounded-full">
-                          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                          </svg>
-                        </div>
-                        <div class="ml-3">
-                          <p class="text-sm font-medium text-blue-800">API服务</p>
-                          <p class="text-xs text-blue-600">正常运行</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 高级选项 -->
-        <div id="advanced-tab" class="tab-content hidden">
-          <div class="bg-white shadow-lg rounded-lg">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-medium text-gray-900">高级选项</h2>
-              <p class="text-sm text-gray-600">开发者和高级用户专用设置</p>
-            </div>
-            <div class="px-6 py-6">
-              <div class="space-y-6">
-                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <h3 class="text-sm font-medium text-gray-900">调试模式</h3>
-                    <p class="text-sm text-gray-600">启用详细的错误日志和调试信息</p>
-                  </div>
-                  <label class="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      id="debug_mode"
-                      checked={systemSettings.debug_mode}
-                      class="sr-only peer"
-                    >
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                  </label>
-                </div>
-
-                <div class="border border-red-200 rounded-lg p-4">
-                  <h3 class="text-sm font-medium text-red-800 mb-3">危险操作</h3>
-                  <div class="space-y-3">
-                    <button 
-                      onclick="clearCache()"
-                      class="w-full px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
-                    >
-                      清除所有缓存
-                    </button>
-                    <button 
-                      onclick="resetDatabase()"
-                      class="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                    >
-                      重置数据库（危险）
-                    </button>
-                    <button 
-                      onclick="exportData()"
-                      class="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      导出系统数据
-                    </button>
-                  </div>
-                </div>
-
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 class="text-sm font-medium text-blue-800 mb-2">系统信息</h3>
-                  <div class="text-sm text-blue-700 space-y-1">
-                    <p>版本: BacklinksBuilder v2.1.0</p>
-                    <p>Node.js: v20.18.0</p>
-                    <p>数据库: Supabase PostgreSQL</p>
-                    <p>运行时间: 15天 3小时 42分钟</p>
-                    <p>内存使用: 256MB / 1GB</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </RoleGuard>
     </div>
-  </main>
 
-  <Footer />
-</BaseLayout>
+    <!-- Loading State -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+      <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
+        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <span class="text-gray-700">Processing...</span>
+      </div>
+    </div>
 
-<script>
-  // 标签切换功能
-  function showTab(tabName) {
-    // 隐藏所有标签内容
-    document.querySelectorAll('.tab-content').forEach(tab => {
-      tab.classList.add('hidden');
-    });
-    
-    // 显示选中的标签内容
-    document.getElementById(tabName + '-tab').classList.remove('hidden');
-    
-    // 更新标签按钮样式
-    document.querySelectorAll('.tab-button').forEach(button => {
-      button.classList.remove('active', 'border-blue-500', 'text-blue-600');
-      button.classList.add('border-transparent', 'text-gray-500');
-    });
-    
-    // 激活当前标签按钮
-    const activeButton = document.querySelector(`[data-tab="${tabName}"]`);
-    activeButton.classList.add('active', 'border-blue-500', 'text-blue-600');
-    activeButton.classList.remove('border-transparent', 'text-gray-500');
-  }
-
-  // 保存所有设置
-  async function saveAllSettings() {
-    const settings = {
-      site_name: document.getElementById('site_name').value,
-      site_description: document.getElementById('site_description').value,
-      site_url: document.getElementById('site_url').value,
-      admin_email: document.getElementById('admin_email').value,
-      support_email: document.getElementById('support_email').value,
-      max_users: parseInt(document.getElementById('max_users').value),
-      max_checks_per_day: parseInt(document.getElementById('max_checks_per_day').value),
-      enable_registration: document.getElementById('enable_registration').checked,
-      enable_email_verification: document.getElementById('enable_email_verification').checked,
-      maintenance_mode: document.getElementById('maintenance_mode').checked,
-      smtp_host: document.getElementById('smtp_host').value,
-      smtp_port: parseInt(document.getElementById('smtp_port').value),
-      smtp_username: document.getElementById('smtp_username').value,
-      smtp_password: document.getElementById('smtp_password').value,
-      smtp_encryption: document.getElementById('smtp_encryption').value,
-      session_timeout: parseInt(document.getElementById('session_timeout').value),
-      password_min_length: parseInt(document.getElementById('password_min_length').value),
-      max_login_attempts: parseInt(document.getElementById('max_login_attempts').value),
-      lockout_duration: parseInt(document.getElementById('lockout_duration').value),
-      enable_two_factor: document.getElementById('enable_two_factor').checked,
-      backup_enabled: document.getElementById('backup_enabled').checked,
-      backup_frequency: document.getElementById('backup_frequency').value,
-      backup_retention: parseInt(document.getElementById('backup_retention').value),
-      cache_enabled: document.getElementById('cache_enabled').checked,
-      cdn_enabled: document.getElementById('cdn_enabled').checked,
-      analytics_enabled: document.getElementById('analytics_enabled').checked,
-      debug_mode: document.getElementById('debug_mode').checked
-    };
-
-    try {
-      const response = await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'update', settings })
+    <script>
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', function() {
+        loadSystemSettings();
+        loadSystemInfo();
       });
 
-      if (response.ok) {
-        alert('设置保存成功！');
-      } else {
-        alert('保存失败，请重试。');
-      }
-    } catch (error) {
-      console.error('保存设置错误:', error);
-      alert('保存失败，请检查网络连接。');
-    }
-  }
-
-  // 重置为默认值
-  function resetToDefaults() {
-    if (confirm('确定要重置所有设置为默认值吗？此操作不可撤销！')) {
-      // 重置基本设置
-      document.getElementById('site_name').value = 'BacklinksBuilder';
-      document.getElementById('site_description').value = '专业的外链建设工具';
-      document.getElementById('site_url').value = 'https://backlinksbuilder.com';
-      document.getElementById('admin_email').value = 'admin@backlinksbuilder.com';
-      document.getElementById('support_email').value = 'support@backlinksbuilder.com';
-      document.getElementById('max_users').value = '10000';
-      document.getElementById('max_checks_per_day').value = '100';
-      document.getElementById('enable_registration').checked = true;
-      document.getElementById('enable_email_verification').checked = true;
-      document.getElementById('maintenance_mode').checked = false;
-      
-      // 重置邮件设置
-      document.getElementById('smtp_host').value = '';
-      document.getElementById('smtp_port').value = '587';
-      document.getElementById('smtp_username').value = '';
-      document.getElementById('smtp_password').value = '';
-      document.getElementById('smtp_encryption').value = 'tls';
-      
-      // 重置安全设置
-      document.getElementById('session_timeout').value = '24';
-      document.getElementById('password_min_length').value = '8';
-      document.getElementById('max_login_attempts').value = '5';
-      document.getElementById('lockout_duration').value = '30';
-      document.getElementById('enable_two_factor').checked = false;
-      
-      // 重置系统设置
-      document.getElementById('backup_enabled').checked = true;
-      document.getElementById('backup_frequency').value = 'daily';
-      document.getElementById('backup_retention').value = '30';
-      document.getElementById('cache_enabled').checked = true;
-      document.getElementById('cdn_enabled').checked = false;
-      document.getElementById('analytics_enabled').checked = true;
-      document.getElementById('debug_mode').checked = false;
-      
-      alert('设置已重置为默认值，请点击保存按钮应用更改。');
-    }
-  }
-
-  // 测试邮件连接
-  async function testEmailConnection() {
-    const settings = {
-      smtp_host: document.getElementById('smtp_host').value,
-      smtp_port: parseInt(document.getElementById('smtp_port').value),
-      smtp_username: document.getElementById('smtp_username').value,
-      smtp_password: document.getElementById('smtp_password').value,
-      smtp_encryption: document.getElementById('smtp_encryption').value
-    };
-
-    try {
-      const response = await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'test_email', settings })
-      });
-
-      const result = await response.json();
-      if (result.success) {
-        alert('邮件连接测试成功！');
-      } else {
-        alert('邮件连接测试失败: ' + result.error);
-      }
-    } catch (error) {
-      console.error('测试邮件连接错误:', error);
-      alert('测试失败，请检查网络连接。');
-    }
-  }
-
-  // 清除缓存
-  async function clearCache() {
-    if (confirm('确定要清除所有缓存吗？这可能会暂时影响网站性能。')) {
-      try {
-        const response = await fetch('/api/admin/settings', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ action: 'clear_cache' })
-        });
-
-        if (response.ok) {
-          alert('缓存清除成功！');
-        } else {
-          alert('缓存清除失败，请重试。');
+      // Load system settings
+      async function loadSystemSettings() {
+        try {
+          const response = await fetch('/api/admin/system-settings');
+          if (response.ok) {
+            const settings = await response.json();
+            populateSettings(settings);
+          }
+        } catch (error) {
+          console.error('Error loading system settings:', error);
         }
-      } catch (error) {
-        console.error('清除缓存错误:', error);
-        alert('操作失败，请检查网络连接。');
       }
-    }
-  }
 
-  // 重置数据库
-  function resetDatabase() {
-    const confirmation = prompt('这是一个危险操作！请输入 "RESET DATABASE" 来确认：');
-    if (confirmation === 'RESET DATABASE') {
-      alert('数据库重置功能暂未实现，请联系技术支持。');
-    }
-  }
+      // Populate settings form
+      function populateSettings(settings) {
+        if (settings.siteName) {
+          document.getElementById('siteName').value = settings.siteName;
+        }
+        if (settings.siteDescription) {
+          document.getElementById('siteDescription').value = settings.siteDescription;
+        }
+        if (settings.maintenanceMode !== undefined) {
+          document.getElementById('maintenanceMode').checked = settings.maintenanceMode;
+        }
+        if (settings.allowRegistration !== undefined) {
+          document.getElementById('allowRegistration').checked = settings.allowRegistration;
+        }
+        // Populate other settings...
+      }
 
-  // 导出数据
-  async function exportData() {
-    try {
-      const response = await fetch('/api/admin/settings', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ action: 'export_data' })
+      // Load system information
+      async function loadSystemInfo() {
+        try {
+          const response = await fetch('/api/admin/system-info');
+          if (response.ok) {
+            const info = await response.json();
+            document.getElementById('systemUptime').textContent = info.uptime || '--';
+            document.getElementById('databaseSize').textContent = info.databaseSize || '--';
+            document.getElementById('storageUsed').textContent = info.storageUsed || '--';
+            document.getElementById('lastBackupTime').textContent = info.lastBackupTime || '--';
+          }
+        } catch (error) {
+          console.error('Error loading system info:', error);
+        }
+      }
+
+      // Save system configuration
+      document.getElementById('saveSystemConfig').addEventListener('click', async function() {
+        const settings = {
+          siteName: document.getElementById('siteName').value,
+          siteDescription: document.getElementById('siteDescription').value,
+          maintenanceMode: document.getElementById('maintenanceMode').checked,
+          allowRegistration: document.getElementById('allowRegistration').checked
+        };
+
+        await saveSettings('system', settings);
       });
 
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `system-data-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        alert('数据导出失败，请重试。');
-      }
-    } catch (error) {
-      console.error('导出数据错误:', error);
-      alert('操作失败，请检查网络连接。');
-    }
-  }
-</script>
+      // Save email settings
+      document.getElementById('saveEmailConfig').addEventListener('click', async function() {
+        const settings = {
+          smtpHost: document.getElementById('smtpHost').value,
+          smtpPort: parseInt(document.getElementById('smtpPort').value),
+          fromEmail: document.getElementById('fromEmail').value,
+          emailUsername: document.getElementById('emailUsername').value,
+          emailPassword: document.getElementById('emailPassword').value
+        };
 
-<style>
-  .transition-colors {
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
-  }
-  
-  .tab-button:hover {
-    color: #374151;
-    border-color: #d1d5db;
-  }
-  
-  .tab-button.active {
-    color: #2563eb;
-    border-color: #2563eb;
-  }
-</style>
+        await saveSettings('email', settings);
+      });
+
+      // Save security settings
+      document.getElementById('saveSecurityConfig').addEventListener('click', async function() {
+        const settings = {
+          minPasswordLength: parseInt(document.getElementById('minPasswordLength').value),
+          sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+          maxLoginAttempts: parseInt(document.getElementById('maxLoginAttempts').value),
+          force2FA: document.getElementById('force2FA').checked
+        };
+
+        await saveSettings('security', settings);
+      });
+
+      // Save backup settings
+      document.getElementById('saveBackupConfig').addEventListener('click', async function() {
+        const settings = {
+          autoBackup: document.getElementById('autoBackup').checked,
+          backupFrequency: document.getElementById('backupFrequency').value,
+          backupRetention: parseInt(document.getElementById('backupRetention').value)
+        };
+
+        await saveSettings('backup', settings);
+      });
+
+      // Generic save settings function
+      async function saveSettings(category, settings) {
+        showLoading(true);
+        try {
+          const response = await fetch('/api/admin/system-settings', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ category, settings })
+          });
+
+          if (response.ok) {
+            showNotification('Settings saved successfully', 'success');
+          } else {
+            const error = await response.json();
+            showNotification(error.error || 'Save failed', 'error');
+          }
+        } catch (error) {
+          console.error('Error saving settings:', error);
+          showNotification('Save failed', 'error');
+        } finally {
+          showLoading(false);
+        }
+      }
+
+      // Send test email
+      document.getElementById('testEmail').addEventListener('click', async function() {
+        showLoading(true);
+        try {
+          const response = await fetch('/api/admin/test-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              smtpHost: document.getElementById('smtpHost').value,
+              smtpPort: parseInt(document.getElementById('smtpPort').value),
+              fromEmail: document.getElementById('fromEmail').value,
+              emailUsername: document.getElementById('emailUsername').value,
+              emailPassword: document.getElementById('emailPassword').value
+            })
+          });
+
+          if (response.ok) {
+            showNotification('Test email sent successfully', 'success');
+          } else {
+            const error = await response.json();
+            showNotification(error.error || 'Test email sending failed', 'error');
+          }
+        } catch (error) {
+          console.error('Error sending test email:', error);
+          showNotification('Test email sending failed', 'error');
+        } finally {
+          showLoading(false);
+        }
+      });
+
+      // Create backup now
+      document.getElementById('createBackup').addEventListener('click', async function() {
+        if (!confirm('Are you sure you want to create a backup now?')) {
+          return;
+        }
+
+        showLoading(true);
+        try {
+          const response = await fetch('/api/admin/backup', {
+            method: 'POST'
+          });
+
+          if (response.ok) {
+            showNotification('Backup created successfully', 'success');
+            loadSystemInfo(); // Refresh system information
+          } else {
+            const error = await response.json();
+            showNotification(error.error || 'Backup creation failed', 'error');
+          }
+        } catch (error) {
+          console.error('Error creating backup:', error);
+          showNotification('Backup creation failed', 'error');
+        } finally {
+          showLoading(false);
+        }
+      });
+
+      // Show loading state
+      function showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (show) {
+          overlay.classList.remove('hidden');
+        } else {
+          overlay.classList.add('hidden');
+        }
+      }
+
+      // Show notification
+      function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 z-50 px-6 py-3 rounded-md shadow-lg text-white ${
+          type === 'success' ? 'bg-green-500' : 
+          type === 'error' ? 'bg-red-500' : 
+          'bg-blue-500'
+        }`;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+          notification.remove();
+        }, 3000);
+      }
+    </script>
+  </RoleGuard>
+</BaseLayout>

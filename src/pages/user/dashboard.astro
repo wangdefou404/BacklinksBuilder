@@ -2,14 +2,16 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import RoleGuard from '../../components/auth/RoleGuard.astro';
 import UserQuotaDashboard from '../../components/user/UserQuotaDashboard.astro';
+import UserSubscriptionStatus from '../../components/user/UserSubscriptionStatus.astro';
+import UserActivityLog from '../../components/user/UserActivityLog.astro';
 import Footer from '../../components/global/Footer.astro';
-// import AuthStatus from '../../components/auth/AuthStatus.astro'; // 暂时注释掉未使用的导入
+// import AuthStatus from '../../components/auth/AuthStatus.astro'; // Temporarily commented out unused import
 
-// 获取用户会话信息
+// Get user session information
 const session = Astro.locals.session;
 const user = Astro.locals.user;
 
-// 如果用户未登录，重定向到登录页面
+// If user is not logged in, redirect to login page
 if (!session || !user) {
   return Astro.redirect('/login?redirect=/user/dashboard');
 }
@@ -17,7 +19,7 @@ if (!session || !user) {
 const userId = user.id;
 const userEmail = user.email;
 
-// 获取用户角色信息
+// Get user role information
 let userRole = null;
 let roleError = null;
 
@@ -43,160 +45,153 @@ try {
 }
 ---
 
-<BaseLayout title="用户面板 - BacklinksBuilder">
+<BaseLayout title="User Dashboard - BacklinksBuilder">
   
   <main class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- 页面标题 -->
+      <!-- Page Title -->
       <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">用户面板</h1>
-        <p class="mt-2 text-gray-600">欢迎回来，管理您的账户和使用情况</p>
+        <h1 class="text-3xl font-bold text-gray-900">User Dashboard</h1>
+        <p class="mt-2 text-gray-600">Welcome back, manage your account and usage</p>
       </div>
 
-      <!-- 角色守卫：确保只有普通用户或以上可以访问 -->
-      <RoleGuard allowedRoles={['user', 'premium', 'admin']} userId={userId}>
-        
-        <!-- 用户信息卡片 -->
+      <!-- User Information Card -->
         <div class="bg-white shadow rounded-lg mb-6">
           <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-900">账户信息</h2>
+            <h2 class="text-lg font-medium text-gray-900">Account Information</h2>
           </div>
           <div class="px-6 py-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700">邮箱地址</label>
+                <label class="block text-sm font-medium text-gray-700">Email Address</label>
                 <p class="mt-1 text-sm text-gray-900">{userEmail}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700">用户角色</label>
+                <label class="block text-sm font-medium text-gray-700">User Role</label>
                 <p class="mt-1">
                   {userRole ? (
                     <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       userRole.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                      userRole.role === 'premium' ? 'bg-blue-100 text-blue-800' :
+                      userRole.role === 'Pro' ? 'bg-blue-100 text-blue-800' :
+                userRole.role === 'user' ? 'bg-green-100 text-green-800' :
+                userRole.role === 'super' ? 'bg-purple-100 text-purple-800' :
                       'bg-green-100 text-green-800'
                     }`}>
                       {userRole.roleDetails?.display_name || userRole.role}
                     </span>
                   ) : (
-                    <span class="text-sm text-gray-500">加载中...</span>
+                    <span class="text-sm text-gray-500">Loading...</span>
                   )}
                 </p>
               </div>
             </div>
             {roleError && (
               <div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p class="text-sm text-red-600">角色信息加载失败: {roleError}</p>
+                <p class="text-sm text-red-600">Failed to load role information: {roleError}</p>
               </div>
             )}
           </div>
         </div>
 
-        <!-- 配额使用情况 -->
+        <!-- Quota Usage -->
         <div class="bg-white shadow rounded-lg mb-6">
           <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-900">使用配额</h2>
-            <p class="text-sm text-gray-600">查看您的服务使用情况和剩余配额</p>
+            <h2 class="text-lg font-medium text-gray-900">Usage Quota</h2>
+            <p class="text-sm text-gray-600">View your service usage and remaining quota</p>
           </div>
           <div class="px-6 py-4">
             <UserQuotaDashboard userId={userId} showUpgradePrompt={true} refreshInterval={30000} />
           </div>
         </div>
 
-        <!-- 可用功能 -->
+        <!-- Subscription Status -->
         <div class="bg-white shadow rounded-lg mb-6">
           <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-900">可用功能</h2>
-            <p class="text-sm text-gray-600">根据您的角色权限，以下功能可供使用</p>
+            <h2 class="text-lg font-medium text-gray-900">Subscription Status</h2>
+            <p class="text-sm text-gray-600">View your subscription information and status</p>
+          </div>
+          <div class="px-6 py-4">
+            <UserSubscriptionStatus userId={userId} />
+          </div>
+        </div>
+
+        <!-- Available Features -->
+        <div class="bg-white shadow rounded-lg mb-6">
+          <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">Available Features</h2>
+            <p class="text-sm text-gray-600">Based on your role permissions, the following features are available</p>
           </div>
           <div class="px-6 py-4">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               
-              <!-- DR检查工具 -->
+              <!-- DR Check Tool -->
               <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div class="flex items-center mb-3">
                   <svg class="w-6 h-6 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                   </svg>
-                  <h3 class="text-sm font-medium text-gray-900">DR检查</h3>
+                  <h3 class="text-sm font-medium text-gray-900">DR Check</h3>
                 </div>
-                <p class="text-sm text-gray-600 mb-3">检查域名的DR评分和权威性</p>
+                <p class="text-sm text-gray-600 mb-3">Check domain DR rating and authority</p>
                 <a href="/dr-checker" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                  使用工具
+                  Use Tool
                 </a>
               </div>
 
-              <!-- 外链生成工具 -->
+              <!-- Backlink Generation Tool -->
               <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div class="flex items-center mb-3">
                   <svg class="w-6 h-6 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                   </svg>
-                  <h3 class="text-sm font-medium text-gray-900">外链生成</h3>
+                  <h3 class="text-sm font-medium text-gray-900">Backlink Generation</h3>
                 </div>
-                <p class="text-sm text-gray-600 mb-3">生成高质量的外链资源</p>
+                <p class="text-sm text-gray-600 mb-3">Generate high-quality backlink resources</p>
                 <a href="/backlink-generator" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
-                  使用工具
+                  Use Tool
                 </a>
               </div>
 
-              <!-- 流量检查工具 -->
+              <!-- Traffic Check Tool -->
               <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                 <div class="flex items-center mb-3">
                   <svg class="w-6 h-6 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
                   </svg>
-                  <h3 class="text-sm font-medium text-gray-900">流量检查</h3>
+                  <h3 class="text-sm font-medium text-gray-900">Traffic Check</h3>
                 </div>
-                <p class="text-sm text-gray-600 mb-3">分析网站流量和访问数据</p>
+                <p class="text-sm text-gray-600 mb-3">Analyze website traffic and access data</p>
                 <a href="/traffic-checker" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors">
-                  使用工具
+                  Use Tool
                 </a>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 升级提示（仅对普通用户显示） -->
-        <RoleGuard allowedRoles={['user']} userId={userId} showFallback={false}>
+        <!-- Upgrade Prompt (Only shown to free users) -->
+        {userRole && userRole.role === 'free' && (
           <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
             <div class="flex items-center">
               <svg class="w-8 h-8 text-blue-600 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
               </svg>
               <div class="flex-1">
-                <h3 class="text-lg font-medium text-blue-900">升级到高级版</h3>
-                <p class="text-blue-700 mt-1">解锁更多功能，获得更高的配额限制和优先支持</p>
+                <h3 class="text-lg font-medium text-blue-900">Upgrade to Premium</h3>
+                <p class="text-blue-700 mt-1">Unlock more features, get higher quota limits and priority support</p>
               </div>
               <a href="/pricing" class="ml-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                查看定价
+                View Pricing
               </a>
             </div>
           </div>
-        </RoleGuard>
+        )}
 
-        <!-- 最近活动 -->
-        <div class="bg-white shadow rounded-lg">
-          <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-medium text-gray-900">最近活动</h2>
-            <p class="text-sm text-gray-600">您最近的使用记录</p>
-          </div>
-          <div class="px-6 py-4">
-            <div class="text-center py-8">
-              <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-              </svg>
-              <p class="text-gray-500">暂无活动记录</p>
-              <p class="text-sm text-gray-400 mt-1">开始使用我们的工具来查看活动历史</p>
-            </div>
-          </div>
-        </div>
 
-      </RoleGuard>
+
     </div>
   </main>
 
-  <Footer />
 </BaseLayout>
 
 <style>

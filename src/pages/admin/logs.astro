@@ -3,18 +3,18 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import RoleGuard from '../../components/auth/RoleGuard.astro';
 import Footer from '../../components/global/Footer.astro';
 
-// 获取用户会话信息
+// Get user session information
 const session = Astro.locals.session;
 const user = Astro.locals.user;
 
-// 如果用户未登录，重定向到登录页面
+// If user is not logged in, redirect to login page
 if (!session || !user) {
   return Astro.redirect('/login?redirect=/admin/logs');
 }
 
 const userId = user.id;
 
-// 获取用户角色信息
+// Get user role information
 let userRole = null;
 try {
   const response = await fetch(`${Astro.url.origin}/api/auth/get-user-role`, {
@@ -32,7 +32,7 @@ try {
   console.error('Role fetch error:', error);
 }
 
-// 获取日志数据
+// Get log data
 let logsData = {
   systemLogs: [
     {
@@ -40,25 +40,25 @@ let logsData = {
       timestamp: '2024-01-07 14:30:25',
       level: 'INFO',
       category: 'SYSTEM',
-      message: '系统启动完成',
+      message: 'System startup completed',
       source: 'server.js',
-      details: '所有服务已成功启动'
+      details: 'All services have been successfully started'
     },
     {
       id: 2,
       timestamp: '2024-01-07 14:25:18',
       level: 'WARNING',
       category: 'DATABASE',
-      message: '数据库连接池接近上限',
+      message: 'Database connection pool approaching limit',
       source: 'database.js',
-      details: '当前连接数: 95/100'
+      details: 'Current connections: 95/100'
     },
     {
       id: 3,
       timestamp: '2024-01-07 14:20:42',
       level: 'ERROR',
       category: 'API',
-      message: 'API请求超时',
+      message: 'API request timeout',
       source: 'api/check.js',
       details: 'Request timeout after 30s for domain: slow-website.com'
     },
@@ -67,7 +67,7 @@ let logsData = {
       timestamp: '2024-01-07 14:15:33',
       level: 'INFO',
       category: 'AUTH',
-      message: '用户登录成功',
+      message: 'User login successful',
       source: 'auth.js',
       details: 'User: user@example.com, IP: 192.168.1.100'
     },
@@ -76,9 +76,9 @@ let logsData = {
       timestamp: '2024-01-07 14:10:15',
       level: 'DEBUG',
       category: 'CACHE',
-      message: '缓存清理完成',
+      message: 'Cache cleanup completed',
       source: 'cache.js',
-      details: '清理了 1,234 个过期缓存项'
+      details: 'Cleaned up 1,234 expired cache items'
     }
   ],
   userActivities: [
@@ -144,7 +144,7 @@ let logsData = {
       timestamp: '2024-01-07 14:35:42',
       level: 'CRITICAL',
       error: 'DatabaseConnectionError',
-      message: '无法连接到主数据库',
+      message: 'Unable to connect to main database',
       stack: 'Error: Connection timeout\n    at Database.connect (/app/lib/database.js:45:12)',
       url: '/api/users',
       method: 'GET',
@@ -156,7 +156,7 @@ let logsData = {
       timestamp: '2024-01-07 14:30:18',
       level: 'ERROR',
       error: 'ValidationError',
-      message: '无效的邮箱格式',
+      message: 'Invalid email format',
       stack: 'ValidationError: Invalid email format\n    at validateEmail (/app/utils/validation.js:23:8)',
       url: '/api/auth/register',
       method: 'POST',
@@ -168,7 +168,7 @@ let logsData = {
       timestamp: '2024-01-07 14:25:33',
       level: 'ERROR',
       error: 'TimeoutError',
-      message: 'API请求超时',
+      message: 'API request timeout',
       stack: 'TimeoutError: Request timeout after 30000ms\n    at Timeout._onTimeout (/app/lib/http.js:156:9)',
       url: '/api/check/backlinks',
       method: 'POST',
@@ -180,7 +180,7 @@ let logsData = {
       timestamp: '2024-01-07 14:20:15',
       level: 'WARNING',
       error: 'RateLimitError',
-      message: '请求频率超限',
+      message: 'Request rate limit exceeded',
       stack: 'RateLimitError: Too many requests\n    at rateLimiter (/app/middleware/rateLimit.js:34:10)',
       url: '/api/check',
       method: 'POST',
@@ -192,7 +192,7 @@ let logsData = {
       timestamp: '2024-01-07 14:15:28',
       level: 'ERROR',
       error: 'AuthenticationError',
-      message: '无效的访问令牌',
+      message: 'Invalid access token',
       stack: 'AuthenticationError: Invalid token\n    at verifyToken (/app/middleware/auth.js:67:12)',
       url: '/api/admin/users',
       method: 'GET',
@@ -219,10 +219,10 @@ try {
 }
 ---
 
-<BaseLayout title="日志监控 - 管理员面板">
+<BaseLayout title="Log Monitoring - Admin Panel">
   <main class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100 py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- 页面标题和导航 -->
+      <!-- Page title and navigation -->
       <div class="mb-8">
         <div class="flex items-center justify-between">
           <div class="flex items-center">
@@ -235,8 +235,8 @@ try {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
             <div>
-              <h1 class="text-3xl font-bold text-gray-900">日志监控</h1>
-              <p class="mt-2 text-gray-600">系统日志、用户活动和错误监控</p>
+              <h1 class="text-3xl font-bold text-gray-900">Log Monitoring</h1>
+              <p class="mt-2 text-gray-600">System logs, user activities and error monitoring</p>
             </div>
           </div>
           <div class="flex space-x-3">
@@ -247,7 +247,7 @@ try {
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
               </svg>
-              刷新日志
+              Refresh Logs
             </button>
             <button 
               onclick="exportLogs()"
@@ -256,7 +256,7 @@ try {
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
               </svg>
-              导出日志
+              Export Logs
             </button>
             <button 
               onclick="clearLogs()"
@@ -265,16 +265,16 @@ try {
               <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
               </svg>
-              清理日志
+              Clear Logs
             </button>
           </div>
         </div>
       </div>
 
-      <!-- 角色守卫 -->
+      <!-- Role guard -->
       <RoleGuard allowedRoles={['admin', 'super']} userId={userId}>
         
-        <!-- 日志统计概览 -->
+        <!-- Log statistics overview -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div class="bg-white rounded-lg shadow p-6">
             <div class="flex items-center">
@@ -284,7 +284,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">系统日志</p>
+                <p class="text-sm font-medium text-gray-600">System Logs</p>
                 <p class="text-2xl font-bold text-gray-900">{logsData.systemLogs.length}</p>
               </div>
             </div>
@@ -298,7 +298,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">用户活动</p>
+                <p class="text-sm font-medium text-gray-600">User Activities</p>
                 <p class="text-2xl font-bold text-gray-900">{logsData.userActivities.length}</p>
               </div>
             </div>
@@ -312,7 +312,7 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">错误日志</p>
+                <p class="text-sm font-medium text-gray-600">Error Logs</p>
                 <p class="text-2xl font-bold text-gray-900">{logsData.errorLogs.length}</p>
               </div>
             </div>
@@ -326,37 +326,37 @@ try {
                 </svg>
               </div>
               <div class="ml-4">
-                <p class="text-sm font-medium text-gray-600">未解决错误</p>
+                <p class="text-sm font-medium text-gray-600">Unresolved Errors</p>
                 <p class="text-2xl font-bold text-gray-900">{logsData.errorLogs.filter(log => !log.resolved).length}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 筛选和搜索 -->
+        <!-- Filter and search -->
         <div class="bg-white rounded-lg shadow p-6 mb-8">
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">日志类型</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Log Type</label>
               <select 
                 id="logType"
                 onchange="filterLogs()"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">全部日志</option>
-                <option value="system">系统日志</option>
-                <option value="user">用户活动</option>
-                <option value="error">错误日志</option>
+                <option value="all">All Logs</option>
+                <option value="system">System Logs</option>
+                <option value="user">User Activities</option>
+                <option value="error">Error Logs</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">日志级别</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Log Level</label>
               <select 
                 id="logLevel"
                 onchange="filterLogs()"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">全部级别</option>
+                <option value="all">All Levels</option>
                 <option value="DEBUG">DEBUG</option>
                 <option value="INFO">INFO</option>
                 <option value="WARNING">WARNING</option>
@@ -365,24 +365,24 @@ try {
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">时间范围</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Time Range</label>
               <select 
                 id="timeRange"
                 onchange="filterLogs()"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="1h">最近1小时</option>
-                <option value="24h" selected>最近24小时</option>
-                <option value="7d">最近7天</option>
-                <option value="30d">最近30天</option>
+                <option value="1h">Last 1 Hour</option>
+                <option value="24h" selected>Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">搜索</label>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
               <input 
                 type="text" 
                 id="searchInput"
-                placeholder="搜索日志内容..."
+                placeholder="Search log content..."
                 oninput="filterLogs()"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -390,7 +390,7 @@ try {
           </div>
         </div>
 
-        <!-- 日志标签页 -->
+        <!-- Log tabs -->
         <div class="bg-white rounded-lg shadow">
           <div class="border-b border-gray-200">
             <nav class="-mb-px flex space-x-8 px-6" aria-label="Tabs">
@@ -399,37 +399,37 @@ try {
                 id="tab-system"
                 class="tab-button active border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
               >
-                系统日志
+                System Logs
               </button>
               <button 
                 onclick="switchTab('user')"
                 id="tab-user"
                 class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
               >
-                用户活动
+                User Activities
               </button>
               <button 
                 onclick="switchTab('error')"
                 id="tab-error"
                 class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
               >
-                错误日志
+                Error Logs
               </button>
             </nav>
           </div>
 
-          <!-- 系统日志标签页 -->
+          <!-- System logs tab -->
           <div id="content-system" class="tab-content">
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">级别</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分类</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">消息</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">来源</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -462,7 +462,7 @@ try {
                           onclick={`viewLogDetails('system', ${log.id})`}
                           class="text-blue-600 hover:text-blue-900 mr-3"
                         >
-                          查看详情
+                          View Details
                         </button>
                       </td>
                     </tr>
@@ -472,19 +472,19 @@ try {
             </div>
           </div>
 
-          <!-- 用户活动标签页 -->
+          <!-- User activities tab -->
           <div id="content-user" class="tab-content hidden">
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">资源</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP地址</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Resource</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP Address</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -520,7 +520,7 @@ try {
                           onclick={`viewLogDetails('user', ${activity.id})`}
                           class="text-blue-600 hover:text-blue-900 mr-3"
                         >
-                          查看详情
+                          View Details
                         </button>
                       </td>
                     </tr>
@@ -530,19 +530,19 @@ try {
             </div>
           </div>
 
-          <!-- 错误日志标签页 -->
+          <!-- Error logs tab -->
           <div id="content-error" class="tab-content hidden">
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时间</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">级别</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">错误类型</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">消息</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Error Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Message</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -573,7 +573,7 @@ try {
                         <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                           error.resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         }`}>
-                          {error.resolved ? '已解决' : '未解决'}
+                          {error.resolved ? 'Resolved' : 'Unresolved'}
                         </span>
                       </td>
                       <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -581,14 +581,14 @@ try {
                           onclick={`viewLogDetails('error', ${error.id})`}
                           class="text-blue-600 hover:text-blue-900 mr-3"
                         >
-                          查看详情
+                          View Details
                         </button>
                         {!error.resolved && (
                           <button 
                             onclick={`markAsResolved(${error.id})`}
                             class="text-green-600 hover:text-green-900"
                           >
-                            标记已解决
+                            Mark Resolved
                           </button>
                         )}
                       </td>
@@ -604,11 +604,11 @@ try {
     </div>
   </main>
 
-  <!-- 日志详情模态框 -->
+  <!-- Log details modal -->
   <div id="logDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
     <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-medium text-gray-900">日志详情</h3>
+        <h3 class="text-lg font-medium text-gray-900">Log Details</h3>
         <button onclick="closeLogDetails()" class="text-gray-400 hover:text-gray-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -616,7 +616,7 @@ try {
         </button>
       </div>
       <div id="logDetailsContent" class="space-y-4">
-        <!-- 日志详情内容将在这里动态加载 -->
+        <!-- Log details content will be dynamically loaded here -->
       </div>
     </div>
   </div>
@@ -628,9 +628,9 @@ try {
   let currentTab = 'system';
   let allLogs = logsData;
 
-  // 标签页切换
+  // Tab switching
   function switchTab(tab) {
-    // 更新标签按钮状态
+    // Update tab button status
     document.querySelectorAll('.tab-button').forEach(btn => {
       btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
       btn.classList.add('border-transparent', 'text-gray-500');
@@ -639,7 +639,7 @@ try {
     document.getElementById(`tab-${tab}`).classList.add('active', 'border-blue-500', 'text-blue-600');
     document.getElementById(`tab-${tab}`).classList.remove('border-transparent', 'text-gray-500');
 
-    // 显示对应内容
+    // Show corresponding content
     document.querySelectorAll('.tab-content').forEach(content => {
       content.classList.add('hidden');
     });
@@ -648,23 +648,23 @@ try {
     currentTab = tab;
   }
 
-  // 筛选日志
+  // Filter logs
   function filterLogs() {
     const logType = document.getElementById('logType').value;
     const logLevel = document.getElementById('logLevel').value;
     const timeRange = document.getElementById('timeRange').value;
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
-    // 这里应该调用API重新获取筛选后的数据
-    console.log('筛选条件:', { logType, logLevel, timeRange, searchTerm });
+    // Should call API to re-fetch filtered data here
+    console.log('Filter conditions:', { logType, logLevel, timeRange, searchTerm });
     
-    // 模拟筛选效果
+    // Simulate filtering effect
     if (logType !== 'all') {
       switchTab(logType);
     }
   }
 
-  // 查看日志详情
+  // View log details
   function viewLogDetails(type, id) {
     let logData;
     
@@ -687,70 +687,70 @@ try {
     if (type === 'system') {
       content.innerHTML = `
         <div class="grid grid-cols-2 gap-4">
-          <div><strong>时间:</strong> ${logData.timestamp}</div>
-          <div><strong>级别:</strong> <span class="px-2 py-1 text-xs rounded-full ${getLogLevelClass(logData.level)}">${logData.level}</span></div>
-          <div><strong>分类:</strong> ${logData.category}</div>
-          <div><strong>来源:</strong> ${logData.source}</div>
+          <div><strong>Time:</strong> ${logData.timestamp}</div>
+          <div><strong>Level:</strong> <span class="px-2 py-1 text-xs rounded-full ${getLogLevelClass(logData.level)}">${logData.level}</span></div>
+          <div><strong>Category:</strong> ${logData.category}</div>
+          <div><strong>Source:</strong> ${logData.source}</div>
         </div>
         <div class="mt-4">
-          <strong>消息:</strong>
+          <strong>Message:</strong>
           <p class="mt-2 p-3 bg-gray-50 rounded">${logData.message}</p>
         </div>
         <div class="mt-4">
-          <strong>详细信息:</strong>
+          <strong>Details:</strong>
           <p class="mt-2 p-3 bg-gray-50 rounded">${logData.details}</p>
         </div>
       `;
     } else if (type === 'user') {
       content.innerHTML = `
         <div class="grid grid-cols-2 gap-4">
-          <div><strong>时间:</strong> ${logData.timestamp}</div>
-          <div><strong>状态:</strong> <span class="px-2 py-1 text-xs rounded-full ${logData.status === 'SUCCESS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${logData.status}</span></div>
-          <div><strong>用户ID:</strong> ${logData.userId}</div>
-          <div><strong>邮箱:</strong> ${logData.email}</div>
-          <div><strong>操作:</strong> ${logData.action}</div>
-          <div><strong>IP地址:</strong> ${logData.ip}</div>
+          <div><strong>Time:</strong> ${logData.timestamp}</div>
+          <div><strong>Status:</strong> <span class="px-2 py-1 text-xs rounded-full ${logData.status === 'SUCCESS' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${logData.status}</span></div>
+          <div><strong>User ID:</strong> ${logData.userId}</div>
+          <div><strong>Email:</strong> ${logData.email}</div>
+          <div><strong>Action:</strong> ${logData.action}</div>
+          <div><strong>IP Address:</strong> ${logData.ip}</div>
         </div>
         <div class="mt-4">
-          <strong>资源:</strong>
+          <strong>Resource:</strong>
           <p class="mt-2 p-3 bg-gray-50 rounded">${logData.resource}</p>
         </div>
         <div class="mt-4">
-          <strong>用户代理:</strong>
+          <strong>User Agent:</strong>
           <p class="mt-2 p-3 bg-gray-50 rounded text-sm">${logData.userAgent}</p>
         </div>
       `;
     } else if (type === 'error') {
       content.innerHTML = `
         <div class="grid grid-cols-2 gap-4">
-          <div><strong>时间:</strong> ${logData.timestamp}</div>
-          <div><strong>级别:</strong> <span class="px-2 py-1 text-xs rounded-full ${getLogLevelClass(logData.level)}">${logData.level}</span></div>
-          <div><strong>错误类型:</strong> ${logData.error}</div>
-          <div><strong>状态:</strong> <span class="px-2 py-1 text-xs rounded-full ${logData.resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${logData.resolved ? '已解决' : '未解决'}</span></div>
+          <div><strong>Time:</strong> ${logData.timestamp}</div>
+          <div><strong>Level:</strong> <span class="px-2 py-1 text-xs rounded-full ${getLogLevelClass(logData.level)}">${logData.level}</span></div>
+          <div><strong>Error Type:</strong> ${logData.error}</div>
+          <div><strong>Status:</strong> <span class="px-2 py-1 text-xs rounded-full ${logData.resolved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">${logData.resolved ? 'Resolved' : 'Unresolved'}</span></div>
           <div><strong>URL:</strong> ${logData.url}</div>
-          <div><strong>方法:</strong> ${logData.method}</div>
+          <div><strong>Method:</strong> ${logData.method}</div>
         </div>
         <div class="mt-4">
-          <strong>错误消息:</strong>
+          <strong>Error Message:</strong>
           <p class="mt-2 p-3 bg-gray-50 rounded">${logData.message}</p>
         </div>
         <div class="mt-4">
-          <strong>堆栈跟踪:</strong>
+          <strong>Stack Trace:</strong>
           <pre class="mt-2 p-3 bg-gray-50 rounded text-sm overflow-x-auto">${logData.stack}</pre>
         </div>
-        ${logData.userId ? `<div class="mt-4"><strong>用户ID:</strong> ${logData.userId}</div>` : ''}
+        ${logData.userId ? `<div class="mt-4"><strong>User ID:</strong> ${logData.userId}</div>` : ''}
       `;
     }
 
     document.getElementById('logDetailsModal').classList.remove('hidden');
   }
 
-  // 关闭日志详情
+  // Close log details
   function closeLogDetails() {
     document.getElementById('logDetailsModal').classList.add('hidden');
   }
 
-  // 获取日志级别样式
+  // Get log level style
   function getLogLevelClass(level) {
     switch (level) {
       case 'CRITICAL': return 'bg-red-100 text-red-800';
@@ -762,7 +762,7 @@ try {
     }
   }
 
-  // 标记错误为已解决
+  // Mark error as resolved
   async function markAsResolved(errorId) {
     try {
       const response = await fetch('/api/admin/logs', {
@@ -777,18 +777,18 @@ try {
       });
 
       if (response.ok) {
-        // 更新页面显示
+        // Update page display
         location.reload();
       } else {
-        alert('标记失败，请重试。');
+        alert('Mark failed, please try again.');
       }
     } catch (error) {
-      console.error('标记错误:', error);
-      alert('操作失败，请检查网络连接。');
+      console.error('Mark error:', error);
+      alert('Operation failed, please check network connection.');
     }
   }
 
-  // 刷新日志
+  // Refresh logs
   async function refreshLogs() {
     try {
       const response = await fetch('/api/admin/logs?refresh=true', {
@@ -801,15 +801,15 @@ try {
       if (response.ok) {
         location.reload();
       } else {
-        alert('刷新失败，请重试。');
+        alert('Refresh failed, please try again.');
       }
     } catch (error) {
-      console.error('刷新错误:', error);
-      alert('刷新失败，请检查网络连接。');
+      console.error('Refresh error:', error);
+      alert('Refresh failed, please check network connection.');
     }
   }
 
-  // 导出日志
+  // Export logs
   async function exportLogs() {
     try {
       const response = await fetch('/api/admin/logs', {
@@ -831,17 +831,17 @@ try {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       } else {
-        alert('导出失败，请重试。');
+        alert('Export failed, please try again.');
       }
     } catch (error) {
-      console.error('导出错误:', error);
-      alert('导出失败，请检查网络连接。');
+      console.error('Export error:', error);
+      alert('Export failed, please check network connection.');
     }
   }
 
-  // 清理日志
+  // Clear logs
   async function clearLogs() {
-    if (!confirm('确定要清理旧日志吗？此操作不可撤销。')) {
+    if (!confirm('Are you sure you want to clear old logs? This operation cannot be undone.')) {
       return;
     }
 
@@ -855,18 +855,18 @@ try {
       });
 
       if (response.ok) {
-        alert('日志清理完成。');
+        alert('Log cleanup completed.');
         location.reload();
       } else {
-        alert('清理失败，请重试。');
+        alert('Cleanup failed, please try again.');
       }
     } catch (error) {
-      console.error('清理错误:', error);
-      alert('清理失败，请检查网络连接。');
+      console.error('Cleanup error:', error);
+      alert('Cleanup failed, please check network connection.');
     }
   }
 
-  // 点击模态框外部关闭
+  // Close when clicking outside modal
   document.getElementById('logDetailsModal').addEventListener('click', function(e) {
     if (e.target === this) {
       closeLogDetails();
