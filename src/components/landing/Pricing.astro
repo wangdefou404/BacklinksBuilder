@@ -474,8 +474,16 @@
     }, {});
     
     console.log('Parsed cookies:', cookies);
+    console.log('session exists:', !!cookies['session']);
     console.log('sb-access-token exists:', !!cookies['sb-access-token']);
     console.log('sb-refresh-token exists:', !!cookies['sb-refresh-token']);
+    console.log('user_role exists:', !!cookies['user_role']);
+    console.log('user_info exists:', !!cookies['user_info']);
+    
+    if (cookies['session']) {
+      console.log('Session cookie length:', cookies['session'].length);
+      console.log('Session cookie preview:', cookies['session'].substring(0, 20) + '...');
+    }
     
     if (cookies['sb-access-token']) {
       console.log('Access token length:', cookies['sb-access-token'].length);
@@ -485,6 +493,21 @@
     if (cookies['sb-refresh-token']) {
       console.log('Refresh token length:', cookies['sb-refresh-token'].length);
       console.log('Refresh token preview:', cookies['sb-refresh-token'].substring(0, 20) + '...');
+    }
+    
+    if (cookies['user_role']) {
+      console.log('User role:', cookies['user_role']);
+    }
+    
+    if (cookies['user_info']) {
+      console.log('User info length:', cookies['user_info'].length);
+      try {
+        const userInfoDecoded = decodeURIComponent(cookies['user_info']);
+        const userInfo = JSON.parse(userInfoDecoded);
+        console.log('User info parsed:', { id: userInfo.id, email: userInfo.email, name: userInfo.name });
+      } catch (error) {
+        console.log('User info parse error:', error.message);
+      }
     }
     
     console.log('=== END COOKIES DEBUG ===');
@@ -507,10 +530,22 @@
       console.log('Auth API response status:', response.status);
       console.log('Auth API response headers:', Object.fromEntries(response.headers.entries()));
       
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log('Auth API error response:', errorText);
+        return { success: false, error: `HTTP ${response.status}: ${errorText}`, status: response.status };
+      }
+      
       const data = await response.json();
       console.log('Auth API response data:', data);
       
-      return { success: response.ok, data, status: response.status };
+      // 验证响应数据结构
+      if (!data.user || !data.user.id) {
+        console.error('Invalid response structure:', data);
+        return { success: false, error: 'Invalid user data in response', status: response.status };
+      }
+      
+      return { success: true, data, status: response.status };
     } catch (error) {
       console.error('Auth API error:', error);
       return { success: false, error: error.message };
@@ -580,8 +615,20 @@
         
         console.log('Billing cycle:', billingCycle);
         
-        // 检查是否有必要的cookies（只要有其中一个就认为已登录）
-        if (!cookies['sb-access-token'] && !cookies['sb-refresh-token']) {
+        // 检查是否有认证cookies（检查多种类型的认证cookie）
+        const hasSessionCookie = !!cookies['session'];
+        const hasSupabaseCookies = !!(cookies['sb-access-token'] || cookies['sb-refresh-token']);
+        const hasUserInfoCookies = !!cookies['user_info']; // 只需要user_info cookie即可
+        
+        console.log('Authentication status:', {
+          hasSessionCookie,
+          hasSupabaseCookies,
+          hasUserInfoCookies,
+          allCookies: Object.keys(cookies)
+        });
+        
+        // 如果没有任何认证信息，跳转到登录
+        if (!hasSessionCookie && !hasSupabaseCookies && !hasUserInfoCookies) {
           console.error('❌ No authentication cookies found!');
           console.log('Starting Google OAuth login with payment intent...');
           
@@ -627,27 +674,87 @@
           return;
         }
         
+        // 根据不同的认证cookie类型进行处理
+        if (hasSessionCookie) {
+          console.log('✅ Found session cookie, proceeding with authentication check...');
+        } else if (hasSupabaseCookies) {
+          console.log('⚠️ No session cookie found, but Supabase cookies exist, proceeding with authentication check...');
+        } else if (hasUserInfoCookies) {
+          console.log('✅ Found user info cookies, proceeding with authentication check...');
+        }
+        
         // 详细的认证检查
         console.log('🔍 Starting authentication check...');
         
-        const authResult = await testAuthAPI();
+        let userId;
         
-        if (!authResult.success) {
-          console.error('❌ Authentication check failed:', authResult);
-          alert('认证检查失败：' + (authResult.error || '请重新登录'));
-          return;
+        // 优先从user_info cookie提取用户ID
+        if (hasUserInfoCookies && cookies['user_info']) {
+          try {
+            // 尝试多种解码方式
+            let userInfo;
+            const userInfoCookie = cookies['user_info'];
+            
+            try {
+              // 直接解析
+              userInfo = JSON.parse(userInfoCookie);
+            } catch {
+              try {
+                // 单次URL解码
+                userInfo = JSON.parse(decodeURIComponent(userInfoCookie));
+              } catch {
+                // 双重URL解码
+                userInfo = JSON.parse(decodeURIComponent(decodeURIComponent(userInfoCookie)));
+              }
+            }
+            
+            userId = userInfo.id;
+            console.log('✅ User ID extracted from user_info cookie:', userId);
+          } catch (error) {
+            console.error('❌ Failed to parse user_info cookie:', error);
+            console.log('Falling back to API authentication check...');
+            
+            // 如果cookie解析失败，回退到API检查
+            const authResult = await testAuthAPI();
+            
+            if (!authResult.success) {
+              console.error('❌ Authentication check failed:', authResult);
+              alert('认证检查失败：' + (authResult.error || '请重新登录'));
+              return;
+            }
+            
+            const userData = authResult.data;
+            userId = userData.user?.id;
+            
+            if (!userId) {
+              console.error('❌ No user ID found in response:', userData);
+              alert('无法获取用户信息，请重新登录。');
+              return;
+            }
+            
+            console.log('✅ Authentication successful via API fallback, user ID:', userId);
+          }
+        } else {
+          // 使用API检查认证
+          const authResult = await testAuthAPI();
+          
+          if (!authResult.success) {
+            console.error('❌ Authentication check failed:', authResult);
+            alert('认证检查失败：' + (authResult.error || '请重新登录'));
+            return;
+          }
+          
+          const userData = authResult.data;
+          userId = userData.user?.id;
+          
+          if (!userId) {
+            console.error('❌ No user ID found in response:', userData);
+            alert('无法获取用户信息，请重新登录。');
+            return;
+          }
+          
+          console.log('✅ Authentication successful via API, user ID:', userId);
         }
-        
-        const userData = authResult.data;
-        const userId = userData.user?.id;
-        
-        if (!userId) {
-          console.error('❌ No user ID found in response:', userData);
-          alert('无法获取用户信息，请重新登录。');
-          return;
-        }
-        
-        console.log('✅ Authentication successful, user ID:', userId);
 
         // 创建支付会话
         console.log('🛒 Creating checkout session...');
