@@ -1,162 +1,27 @@
 import type { APIRoute } from 'astro';
 import type { BacklinkResource, BacklinkFilters, BacklinkListResponse } from '../../../types/backlinks';
+import { supabase } from '../../../lib/supabase';
 
-// Mock data - In real applications, this data should come from database
-const mockBacklinks: BacklinkResource[] = [
-  {
-    id: '1',
-    name: 'AI Valley',
-    websiteLink: 'https://aivalley.ai',
-    dr: 29,
-    traffic: 132378,
-    paymentType: 'Free',
-    followType: 'NoFollow',
-    platformType: 'directory',
-    access: 'guest',
-    updated: '2025-08-20',
-    featured: true,
-    tags: ['AI', 'Tools', 'Directory'],
-    submissionUrl: 'https://aivalley.ai/submit',
-    requirements: 'AI-related tools and services only',
-    approvalTime: '2-3 days',
-    contactEmail: 'submit@aivalley.ai'
-  },
-  {
-    id: '2',
-    name: 'Product Hunt',
-    websiteLink: 'https://producthunt.com',
-    dr: 91,
-    traffic: 8500000,
-    paymentType: 'Free',
-    followType: 'DoFollow',
-    platformType: 'directory',
-    access: 'premium',
-    updated: '2025-08-19',
-    featured: true,
-    tags: ['Startup', 'Product', 'Launch'],
-    submissionUrl: 'https://producthunt.com/posts/new',
-    requirements: 'New products and services',
-    approvalTime: '1-2 days',
-    contactEmail: 'hello@producthunt.com'
-  },
-  {
-    id: '3',
-    name: 'Hacker News',
-    websiteLink: 'https://news.ycombinator.com',
-    dr: 93,
-    traffic: 12000000,
-    paymentType: 'Free',
-    followType: 'NoFollow',
-    platformType: 'content',
-    access: 'guest',
-    updated: '2025-08-18',
-    featured: true,
-    tags: ['Tech', 'News', 'Startup'],
-    submissionUrl: 'https://news.ycombinator.com/submit',
-    requirements: 'Tech and startup related content',
-    approvalTime: 'Immediate',
-    contactEmail: 'hn@ycombinator.com'
-  },
-  {
-    id: '4',
-    name: 'Reddit',
-    websiteLink: 'https://reddit.com',
-    dr: 96,
-    traffic: 52000000,
-    paymentType: 'Free',
-    followType: 'NoFollow',
-    platformType: 'social',
-    access: 'premium',
-    updated: '2025-08-17',
-    featured: true,
-    tags: ['Social', 'Community', 'Discussion'],
-    submissionUrl: 'https://reddit.com/submit',
-    requirements: 'Follow subreddit rules',
-    approvalTime: 'Immediate',
-    contactEmail: 'contact@reddit.com'
-  },
-  {
-    id: '5',
-    name: 'Indie Hackers',
-    websiteLink: 'https://indiehackers.com',
-    dr: 78,
-    traffic: 2100000,
-    paymentType: 'Free',
-    followType: 'DoFollow',
-    platformType: 'comment',
-    access: 'guest',
-    updated: '2025-08-16',
-    featured: false,
-    tags: ['Entrepreneur', 'Startup', 'Community'],
-    submissionUrl: 'https://indiehackers.com/post',
-    requirements: 'Entrepreneur and startup content',
-    approvalTime: '1 day',
-    contactEmail: 'hello@indiehackers.com'
-  }
-];
-
-// Generate more mock data to meet the requirement of 50+ records
-for (let i = 6; i <= 60; i++) {
-  mockBacklinks.push({
-    id: i.toString(),
-    name: `Resource ${i}`,
-    websiteLink: `https://example${i}.com`,
-    dr: Math.floor(Math.random() * 80) + 20,
-    traffic: Math.floor(Math.random() * 1000000) + 10000,
-    paymentType: ['Free', 'Paid'][Math.floor(Math.random() * 2)] as any,
-    followType: ['DoFollow', 'NoFollow'][Math.floor(Math.random() * 2)] as any,
-    platformType: ['blog', 'directory', 'content', 'comment', 'social'][Math.floor(Math.random() * 5)] as any,
-    access: ['guest', 'premium'][Math.floor(Math.random() * 2)] as any,
-    updated: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    featured: Math.random() > 0.7,
-    tags: ['SEO', 'Marketing', 'Business'],
-    submissionUrl: `https://example${i}.com/submit`,
+// Helper function to convert database record to BacklinkResource format
+function formatBacklinkResource(dbRecord: any): BacklinkResource {
+  return {
+    id: dbRecord.id,
+    name: dbRecord.name,
+    websiteLink: dbRecord.website_link,
+    dr: dbRecord.dr || 0,
+    traffic: dbRecord.traffic || 0,
+    paymentType: dbRecord.payment_type === 'free' ? 'Free' : 'Paid',
+    followType: dbRecord.follow_type === 'dofollow' ? 'DoFollow' : 'NoFollow',
+    platformType: dbRecord.platform_type || 'blog',
+    access: dbRecord.access_type === 'guest' ? 'guest' : 'premium',
+    updated: new Date(dbRecord.updated_at).toISOString().split('T')[0],
+    featured: dbRecord.status === 'featured',
+    tags: ['SEO', 'Marketing', 'Business'], // Default tags
+    submissionUrl: dbRecord.submit_url || dbRecord.website_link,
     requirements: 'Quality content required',
-    approvalTime: `${Math.floor(Math.random() * 7) + 1} days`,
-    contactEmail: `contact@example${i}.com`
-  });
-}
-
-function applyFilters(backlinks: BacklinkResource[], filters: BacklinkFilters): BacklinkResource[] {
-  let filtered = [...backlinks];
-
-  if (filters.search) {
-    const searchLower = filters.search.toLowerCase();
-    filtered = filtered.filter(item => 
-      item.name.toLowerCase().includes(searchLower) ||
-      item.tags?.some(tag => tag.toLowerCase().includes(searchLower))
-    );
-  }
-
-  if (filters.paymentType) {
-    filtered = filtered.filter(item => item.paymentType === filters.paymentType);
-  }
-
-  if (filters.followType) {
-    filtered = filtered.filter(item => item.followType === filters.followType);
-  }
-
-  if (filters.platformType) {
-    filtered = filtered.filter(item => item.platformType === filters.platformType);
-  }
-
-  if (filters.minDr !== undefined) {
-    filtered = filtered.filter(item => item.dr >= filters.minDr!);
-  }
-
-  if (filters.maxDr !== undefined) {
-    filtered = filtered.filter(item => item.dr <= filters.maxDr!);
-  }
-
-  if (filters.minTraffic !== undefined) {
-    filtered = filtered.filter(item => item.traffic >= filters.minTraffic!);
-  }
-
-  if (filters.maxTraffic !== undefined) {
-    filtered = filtered.filter(item => item.traffic <= filters.maxTraffic!);
-  }
-
-  return filtered;
+    approvalTime: '1-3 days',
+    contactEmail: 'contact@example.com'
+  };
 }
 
 export const GET: APIRoute = async ({ url }) => {
@@ -177,34 +42,98 @@ export const GET: APIRoute = async ({ url }) => {
       maxTraffic: searchParams.get('maxTraffic') ? parseInt(searchParams.get('maxTraffic')!) : undefined,
     };
 
-    // Apply filters
-    let filteredBacklinks = applyFilters(mockBacklinks, filters);
-    
-    // Sort by DR (descending)
-    filteredBacklinks.sort((a, b) => b.dr - a.dr);
-    
-    // User permission control - filter based on access field
-    let availableItems: BacklinkResource[];
-    if (isPremium) {
-      // Premium users can see all data
-      availableItems = filteredBacklinks;
-    } else {
-      // Free users can only see first 50 records with guest access
-      const guestBacklinks = filteredBacklinks.filter(item => item.access === 'guest');
-      availableItems = guestBacklinks.slice(0, 50);
+    // Build query for backlink_resources table
+    let query = supabase
+      .from('backlink_resources')
+      .select(`
+        id,
+        name,
+        website_link,
+        submit_url,
+        dr,
+        traffic,
+        payment_type,
+        follow_type,
+        platform_type,
+        access_type,
+        status,
+        updated_at
+      `);
+
+    // Apply search filter
+    if (filters.search) {
+      query = query.or(`name.ilike.%${filters.search}%,website_link.ilike.%${filters.search}%`);
     }
+
+    // Apply payment type filter
+    if (filters.paymentType) {
+      const dbPaymentType = filters.paymentType.toLowerCase() === 'free' ? 'free' : 'paid';
+      query = query.eq('payment_type', dbPaymentType);
+    }
+
+    // Apply follow type filter
+    if (filters.followType) {
+      const dbFollowType = filters.followType.toLowerCase() === 'dofollow' ? 'dofollow' : 'nofollow';
+      query = query.eq('follow_type', dbFollowType);
+    }
+
+    // Apply platform type filter
+    if (filters.platformType) {
+      query = query.eq('platform_type', filters.platformType);
+    }
+
+    // Apply DR filters
+    if (filters.minDr !== undefined) {
+      query = query.gte('dr', filters.minDr);
+    }
+    if (filters.maxDr !== undefined) {
+      query = query.lte('dr', filters.maxDr);
+    }
+
+    // Apply traffic filters
+    if (filters.minTraffic !== undefined) {
+      query = query.gte('traffic', filters.minTraffic);
+    }
+    if (filters.maxTraffic !== undefined) {
+      query = query.lte('traffic', filters.maxTraffic);
+    }
+
+    // User permission control - filter based on access_type
+    if (!isPremium) {
+      // Free users can only see guest access resources
+      query = query.eq('access_type', 'guest');
+    }
+
+    // Get total count
+    const { count: totalCount } = await query
+      .select('*', { count: 'exact', head: true });
+
+    // Get paginated data with sorting by DR (descending)
+    const { data: backlinks, error: backlinksError } = await query
+      .order('dr', { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (backlinksError) {
+      console.error('Error fetching backlinks:', backlinksError);
+      return new Response(JSON.stringify({ error: 'Failed to fetch backlinks' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+
+    // Format data for frontend
+    const formattedBacklinks = (backlinks || []).map(formatBacklinkResource);
     
-    // Pagination
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedItems = availableItems.slice(startIndex, endIndex);
-    
-    const response: BacklinkListResponse = {
-      data: paginatedItems,
-      total: availableItems.length,
-      page,
-      limit,
-      hasMore: endIndex < availableItems.length
+    const response = {
+      backlinks: formattedBacklinks,
+      pagination: {
+        page,
+        limit,
+        total: totalCount || 0,
+        hasMore: page * limit < (totalCount || 0)
+      }
     };
 
     return new Response(JSON.stringify(response), {
@@ -228,18 +157,42 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const newBacklink: Omit<BacklinkResource, 'id'> = await request.json();
     
-    // Generate new ID
-    const id = (mockBacklinks.length + 1).toString();
-    const backlinkWithId: BacklinkResource = {
-      ...newBacklink,
-      id,
-      updated: new Date().toISOString().split('T')[0]
+    // Convert frontend format to database format
+    const dbRecord = {
+      name: newBacklink.name,
+      website_link: newBacklink.websiteLink,
+      submit_url: newBacklink.submissionUrl || newBacklink.websiteLink,
+      dr: newBacklink.dr || 0,
+      traffic: newBacklink.traffic || 0,
+      payment_type: newBacklink.paymentType?.toLowerCase() === 'free' ? 'free' : 'paid',
+      follow_type: newBacklink.followType?.toLowerCase() === 'dofollow' ? 'dofollow' : 'nofollow',
+      platform_type: newBacklink.platformType || 'blog',
+      access_type: newBacklink.access === 'guest' ? 'guest' : 'premium',
+      status: newBacklink.featured ? 'featured' : 'active',
+      user_id: '00000000-0000-0000-0000-000000000000' // Default system user for public resources
     };
     
-    // Add to mock data (should be saved to database in real applications)
-    mockBacklinks.push(backlinkWithId);
+    // Insert into database
+    const { data: insertedBacklink, error: insertError } = await supabase
+      .from('backlink_resources')
+      .insert([dbRecord])
+      .select()
+      .single();
     
-    return new Response(JSON.stringify(backlinkWithId), {
+    if (insertError) {
+      console.error('Error inserting backlink:', insertError);
+      return new Response(JSON.stringify({ error: 'Failed to create backlink' }), {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+    }
+    
+    // Format response for frontend
+    const formattedBacklink = formatBacklinkResource(insertedBacklink);
+    
+    return new Response(JSON.stringify(formattedBacklink), {
       status: 201,
       headers: {
         'Content-Type': 'application/json',

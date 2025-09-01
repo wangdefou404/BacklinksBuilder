@@ -240,124 +240,53 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       }
     }
 
-    // Load backlinks from API
+    // Load backlinks data
     async function loadBacklinks() {
       try {
         const params = new URLSearchParams({
           page: currentPage.toString(),
-          limit: isUserPremium ? '100' : '50',
-          premium: isUserPremium.toString(),
+          limit: (isUserPremium ? '100' : '50'),
+          isPremium: isUserPremium.toString(),
           ...currentFilters
         });
         
-        const response = await fetch(`/api/backlinks?${params}`);
+        const response = await fetch(`/api/backlinks?${params}`, {
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to load backlinks');
+        }
+        
         const data = await response.json();
         
-        allBacklinks = data.data;
+        allBacklinks = data.backlinks || [];
         displayedBacklinks = allBacklinks;
         
         renderBacklinks();
-        updatePagination(data);
+        updatePagination(data.pagination || {
+          page: currentPage,
+          limit: isUserPremium ? 100 : 50,
+          total: allBacklinks.length,
+          hasMore: false
+        });
       } catch (error) {
         console.error('Error loading backlinks:', error);
-        // Fallback to mock data if API fails
-        loadMockData();
+        // Show error message to user
+        tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-gray-500">加载外链数据失败，请刷新页面重试</td></tr>';
       }
     }
 
-    // Load mock data as fallback
-    function loadMockData() {
-      const mockBacklinks = [
-        {
-          id: 1,
-          name: "TechCrunch",
-          websiteLink: "https://techcrunch.com",
-          dr: 92,
-          traffic: 45000000,
-          paymentType: "Paid",
-          followType: "DoFollow",
-          platformType: "content",
-          access: "premium",
-          updated: "2024-01-15",
-          featured: true
-        },
-        {
-          id: 2,
-          name: "Product Hunt",
-          websiteLink: "https://producthunt.com",
-          dr: 88,
-          traffic: 12000000,
-          paymentType: "Free",
-          followType: "DoFollow",
-          platformType: "directory",
-          access: "guest",
-          updated: "2024-01-14",
-          featured: true
-        },
-        {
-          id: 3,
-          name: "Hacker News",
-          websiteLink: "https://news.ycombinator.com",
-          dr: 91,
-          traffic: 8000000,
-          paymentType: "Free",
-          followType: "NoFollow",
-          platformType: "comment",
-          access: "guest",
-          updated: "2024-01-13",
-          featured: false
-        },
-        {
-          id: 4,
-          name: "Reddit",
-          websiteLink: "https://reddit.com",
-          dr: 96,
-          traffic: 430000000,
-          paymentType: "Free",
-          followType: "NoFollow",
-          platformType: "social",
-          access: "premium",
-          updated: "2024-01-12",
-          featured: false
-        },
-        {
-          id: 5,
-          name: "Medium",
-          websiteLink: "https://medium.com",
-          dr: 96,
-          traffic: 180000000,
-          paymentType: "Paid",
-          followType: "DoFollow",
-          platformType: "blog",
-          access: "guest",
-          updated: "2024-01-11",
-          featured: true
-        }
-      ];
-      
-      // Apply user access control
-      if (isUserPremium) {
-        // Premium users can see all data
-        allBacklinks = mockBacklinks;
-      } else {
-        // Free users can only see guest access data, limited to 50
-        const guestBacklinks = mockBacklinks.filter(item => item.access === 'guest');
-        allBacklinks = guestBacklinks.slice(0, 50);
-      }
-      displayedBacklinks = allBacklinks;
-      
-      renderBacklinks();
-      updatePagination({
-        page: 1,
-        limit: isUserPremium ? '100' : '50',
-        total: mockBacklinks.length,
-        hasMore: false
-      });
-    }
+
 
     // Render backlinks table
     function renderBacklinks() {
       tbody.innerHTML = '';
+      
+      if (!displayedBacklinks || displayedBacklinks.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-gray-500">暂无外链数据</td></tr>';
+        return;
+      }
       
       displayedBacklinks.forEach((backlink, index) => {
         const row = document.createElement('tr');
@@ -367,44 +296,63 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           ? 'bg-white hover:bg-blue-50 transition-colors duration-150' 
           : 'bg-gray-50 hover:bg-blue-50 transition-colors duration-150';
         
+        // 处理数据格式兼容性
+        const name = backlink.name || '';
+        const websiteLink = backlink.website_link || backlink.websiteLink || '';
+        const dr = backlink.dr || 0;
+        const traffic = backlink.traffic || 0;
+        const paymentType = backlink.payment_type || backlink.paymentType || 'free';
+        const followType = backlink.follow_type || backlink.followType || 'nofollow';
+        const platformType = backlink.platform_type || backlink.platformType || '';
+        const updatedAt = backlink.updated_at || backlink.updated || '';
+        
+        // 格式化日期
+        let formattedDate = updatedAt;
+        if (updatedAt && updatedAt.includes('T')) {
+          formattedDate = new Date(updatedAt).toLocaleDateString('zh-CN');
+        }
+        
+        // 格式化流量数字
+        const formattedTraffic = traffic > 0 ? traffic.toLocaleString() : '0';
+        
         row.innerHTML = `
           <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-700 text-center">
             ${((currentPage - 1) * (isUserPremium ? 100 : 50)) + index + 1}
           </td>
           <td class="px-6 py-6">
-            <div class="text-sm text-gray-900">${backlink.name}</div>
+            <div class="text-sm text-gray-900">${name}</div>
           </td>
           <td class="px-6 py-6 whitespace-nowrap">
-            <a href="${backlink.websiteLink}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm transition-colors duration-150">
-              ${new URL(backlink.websiteLink).hostname}
+            <a href="${websiteLink}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm transition-colors duration-150">
+              ${websiteLink ? new URL(websiteLink).hostname : ''}
             </a>
           </td>
-          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 text-center">${backlink.dr}</td>
-          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 text-right">${backlink.traffic}</td>
+          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 text-center">${dr}</td>
+          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-900 text-right">${formattedTraffic}</td>
           <td class="px-6 py-6 whitespace-nowrap text-center text-sm text-gray-900">
             <span class="inline-flex px-2 py-1 text-sm rounded-full ${
-              backlink.paymentType === 'Free' 
+              paymentType.toLowerCase() === 'free' 
                 ? 'bg-green-100 text-green-800' 
                 : 'bg-orange-100 text-orange-800'
             }">
-              ${backlink.paymentType}
+              ${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)}
             </span>
           </td>
           <td class="px-6 py-6 whitespace-nowrap text-center text-sm text-gray-900">
             <span class="inline-flex px-2 py-1 text-sm rounded-full ${
-              backlink.followType === 'DoFollow' 
+              followType.toLowerCase() === 'dofollow' 
                 ? 'bg-blue-100 text-blue-800' 
                 : 'bg-gray-100 text-gray-800'
             }">
-              ${backlink.followType}
+              ${followType.charAt(0).toUpperCase() + followType.slice(1)}
             </span>
           </td>
           <td class="px-6 py-6 whitespace-nowrap text-center text-sm text-gray-900">
             <span class="inline-flex px-2 py-1 text-sm rounded-full bg-purple-100 text-purple-800">
-              ${backlink.platformType}
+              ${platformType}
             </span>
           </td>
-          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-600 text-center">${backlink.updated}</td>
+          <td class="px-6 py-6 whitespace-nowrap text-sm text-gray-600 text-center">${formattedDate}</td>
         `;
         
         tbody.appendChild(row);
@@ -441,19 +389,23 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         
         if (currentFilters.search) {
           const searchTerm = currentFilters.search.toLowerCase();
-          matches = matches && backlink.name.toLowerCase().includes(searchTerm);
+          const name = (backlink.name || '').toLowerCase();
+          matches = matches && name.includes(searchTerm);
         }
         
         if (currentFilters.paymentType) {
-          matches = matches && backlink.paymentType === currentFilters.paymentType;
+          const paymentType = backlink.payment_type || backlink.paymentType || 'free';
+          matches = matches && paymentType.toLowerCase() === currentFilters.paymentType.toLowerCase();
         }
         
         if (currentFilters.followType) {
-          matches = matches && backlink.followType === currentFilters.followType;
+          const followType = backlink.follow_type || backlink.followType || 'nofollow';
+          matches = matches && followType.toLowerCase() === currentFilters.followType.toLowerCase();
         }
         
         if (currentFilters.platformType) {
-          matches = matches && backlink.platformType === currentFilters.platformType;
+          const platformType = backlink.platform_type || backlink.platformType || '';
+          matches = matches && platformType.toLowerCase() === currentFilters.platformType.toLowerCase();
         }
         
         return matches;

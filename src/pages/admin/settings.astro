@@ -1,9 +1,9 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import Layout from '../../layouts/BaseLayout.astro';
 import RoleGuard from '../../components/auth/RoleGuard.astro';
 ---
 
-<BaseLayout title="System Settings - Admin Panel">
+<Layout title="System Settings - Admin Panel">
   <RoleGuard allowedRoles={['admin']} currentRole="admin">
     <div class="min-h-screen bg-gray-50 py-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -574,4 +574,4 @@ import RoleGuard from '../../components/auth/RoleGuard.astro';
       }
     </script>
   </RoleGuard>
-</BaseLayout>
+</Layout>

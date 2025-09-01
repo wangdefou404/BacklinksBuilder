@@ -1,5 +1,12 @@
 import type { APIRoute } from 'astro';
 import { supabase } from '../../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// 创建具有service role权限的supabase客户端，用于管理员操作绕过RLS
+const supabaseAdmin = createClient(
+  'https://fmkekjlsfnvubnvurhbt.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZta2VramxzZm52dWJudnVyaGJ0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzI2NzU0NCwiZXhwIjoyMDY4ODQzNTQ0fQ.fcRzWgH972dC5r65kSKQbTBWlvE-L3Osk2UQgvsjYn0'
+);
 
 export const GET: APIRoute = async ({ request, locals }) => {
   try {
@@ -30,6 +37,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
 
     // 获取URL参数
     const url = new URL(request.url);
+    const backlinkId = url.searchParams.get('backlinkId');
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const search = url.searchParams.get('search') || '';
@@ -42,13 +50,54 @@ export const GET: APIRoute = async ({ request, locals }) => {
     const sortBy = url.searchParams.get('sortBy') || 'updated_at';
     const sortOrder = url.searchParams.get('sortOrder') || 'desc';
 
-    // 构建查询
-    let query = supabase
-      .from('backlinks')
+    // 如果提供了backlinkId，返回单个外链
+    if (backlinkId) {
+      const { data: backlink, error: backlinkError } = await supabaseAdmin
+        .from('backlink_resources')
+        .select(`
+          id,
+          name,
+          website_link,
+          dr,
+          traffic,
+          payment_type,
+          follow_type,
+          platform_type,
+          access_type,
+          submit_url,
+          created_at,
+          updated_at,
+          status
+        `)
+        .eq('id', backlinkId)
+        .single();
+
+      if (backlinkError) {
+        console.error('获取反向链接失败:', backlinkError);
+        return new Response(JSON.stringify({ error: '获取反向链接失败' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        backlink: backlink,
+        backlinks: backlink ? [backlink] : [],
+        total: backlink ? 1 : 0
+      }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 构建查询 - 管理员可以查看所有外链
+    let query = supabaseAdmin
+      .from('backlink_resources')
       .select(`
         id,
         name,
-        website,
+        website_link,
         dr,
         traffic,
         payment_type,
@@ -56,14 +105,18 @@ export const GET: APIRoute = async ({ request, locals }) => {
         platform_type,
         access_type,
         submit_url,
+        anchor_text,
+        target_url,
+        notes,
         created_at,
         updated_at,
-        status
+        status,
+        user_id
       `);
 
     // 添加搜索条件
     if (search) {
-      query = query.or(`name.ilike.%${search}%,website.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,website_link.ilike.%${search}%,anchor_text.ilike.%${search}%,target_url.ilike.%${search}%`);
     }
 
     // 添加筛选条件
@@ -118,12 +171,34 @@ export const GET: APIRoute = async ({ request, locals }) => {
       });
     }
 
+    // 转换字段名以匹配前端期望
+    const formattedBacklinks = (backlinks || []).map(backlink => ({
+      id: backlink.id,
+      name: backlink.name,
+      website_link: backlink.website_link,
+      dr: backlink.dr || 0,
+      traffic: backlink.traffic || 0,
+      payment_type: backlink.payment_type || 'free',
+      follow_type: backlink.follow_type || 'dofollow',
+      platform_type: backlink.platform_type || 'blog',
+      access_type: backlink.access_type || 'public',
+      submit_url: backlink.submit_url,
+      anchor_text: backlink.anchor_text,
+      target_url: backlink.target_url,
+      notes: backlink.notes,
+      created_at: backlink.created_at,
+      updated_at: backlink.updated_at,
+      status: backlink.status
+    }));
+
     return new Response(JSON.stringify({
-      backlinks: backlinks || [],
+      success: true,
+      backlinks: formattedBacklinks,
       total: totalCount || 0,
       page,
       limit,
-      totalPages: Math.ceil((totalCount || 0) / limit)
+      totalPages: Math.ceil((totalCount || 0) / limit),
+      hasMore: page * limit < (totalCount || 0)
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -172,7 +247,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
         // 创建新反向链接
         const {
           name,
-          website,
+          website_link,
           dr,
           traffic,
           payment_type,
@@ -182,21 +257,21 @@ export const POST: APIRoute = async ({ request, locals }) => {
           submit_url
         } = data;
         
-        const { data: newBacklink, error: createError } = await supabase
-          .from('backlinks')
+        // 使用supabaseAdmin绕过RLS限制
+        const { data: newBacklink, error: createError } = await supabaseAdmin
+          .from('backlink_resources')
           .insert({
-            name,
-            website,
-            dr: parseInt(dr),
-            traffic: parseInt(traffic),
-            payment_type,
-            follow_type,
-            platform_type,
-            access_type,
-            submit_url,
-            status: 'active',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            user_id: user.id,
+            name: name,
+            website_link: website_link,
+            submit_url: submit_url,
+            dr: dr || 0,
+            traffic: traffic || 0,
+            payment_type: payment_type || 'free',
+            follow_type: follow_type || 'dofollow',
+            platform_type: platform_type || 'blog',
+            access_type: access_type || 'public',
+            status: 'active'
           })
           .select()
           .single();
@@ -217,16 +292,23 @@ export const POST: APIRoute = async ({ request, locals }) => {
       case 'update':
         // 更新反向链接信息
         const updateData = {
-          ...data,
+          name: data.name,
+          website_link: data.website_link,
+          submit_url: data.submit_url,
+          dr: data.dr || 0,
+          traffic: data.traffic || 0,
+          payment_type: data.payment_type || 'free',
+          follow_type: data.follow_type || 'dofollow',
+          platform_type: data.platform_type || 'blog',
+          access_type: data.access_type || 'public',
+          anchor_text: data.anchor_text,
+          target_url: data.target_url,
+          notes: data.notes,
           updated_at: new Date().toISOString()
         };
         
-        // 转换数字字段
-        if (updateData.dr) updateData.dr = parseInt(updateData.dr);
-        if (updateData.traffic) updateData.traffic = parseInt(updateData.traffic);
-        
-        const { data: updatedBacklink, error: updateError } = await supabase
-          .from('backlinks')
+        const { data: updatedBacklink, error: updateError } = await supabaseAdmin
+          .from('backlink_resources')
           .update(updateData)
           .eq('id', backlinkId)
           .select()
@@ -247,8 +329,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       case 'delete':
         // 删除反向链接
-        const { error: deleteError } = await supabase
-          .from('backlinks')
+        const { error: deleteError } = await supabaseAdmin
+          .from('backlink_resources')
           .delete()
           .eq('id', backlinkId);
 
@@ -269,8 +351,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
         // 切换反向链接状态
         const { status } = data;
         
-        const { error: statusError } = await supabase
-          .from('backlinks')
+        const { error: statusError } = await supabaseAdmin
+          .from('backlink_resources')
           .update({ 
             status,
             updated_at: new Date().toISOString()
@@ -299,8 +381,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
           try {
             switch (batchAction) {
               case 'activate':
-                await supabase
-                  .from('backlinks')
+                await supabaseAdmin
+                  .from('backlink_resources')
                   .update({ 
                     status: 'active',
                     updated_at: new Date().toISOString()
@@ -308,8 +390,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
                   .eq('id', id);
                 break;
               case 'deactivate':
-                await supabase
-                  .from('backlinks')
+                await supabaseAdmin
+                  .from('backlink_resources')
                   .update({ 
                     status: 'inactive',
                     updated_at: new Date().toISOString()
@@ -317,8 +399,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
                   .eq('id', id);
                 break;
               case 'delete':
-                await supabase
-                  .from('backlinks')
+                await supabaseAdmin
+                  .from('backlink_resources')
                   .delete()
                   .eq('id', id);
                 break;
@@ -337,8 +419,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
       case 'stats':
         // 获取统计信息
         const { data: stats } = await supabase
-          .from('backlinks')
+          .from('backlink_resources')
           .select('status, payment_type, follow_type, platform_type')
+          .eq('user_id', user.id)
           .then(({ data }) => {
             if (!data) return { data: null };
             

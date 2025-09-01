@@ -22,20 +22,33 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
   authSubscription: null,
   
   async init() {
-    console.log('AuthStatus component initialization started');
+    console.log('🚀 AuthStatus component initialization started');
     this.loading = true;
     
     try {
       // First try to load user info from cookie
+      console.log('📋 Step 1: Loading user from cookie...');
       await this.loadUserFromCookie();
+      console.log('📋 Step 1 completed, user after cookie load:', this.user);
       
       // Then load complete user information
+      console.log('📋 Step 2: Loading complete user information...');
       await this.loadUser();
+      console.log('📋 Step 2 completed, final user data:', this.user);
+      
+      console.log('📋 Step 3: Setting up auth listener...');
       this.setupAuthListener();
       
-      console.log('AuthStatus component initialization completed, user status:', this.user ? 'logged in' : 'not logged in');
+      console.log('✅ AuthStatus component initialization completed, user status:', this.user ? 'logged in' : 'not logged in');
+      if (this.user) {
+        console.log('🖼️ Final avatar URLs:', {
+          avatar_url: this.user.avatar_url,
+          metadata_picture: this.user.user_metadata?.picture,
+          metadata_avatar_url: this.user.user_metadata?.avatar_url
+        });
+      }
     } catch (error) {
-      console.error('AuthStatus initialization failed:', error);
+      console.error('❌ AuthStatus initialization failed:', error);
       this.authError = 'Authentication system initialization failed';
     } finally {
       this.loading = false;
@@ -371,7 +384,7 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
   </div>
   
   <!-- Display user avatar after login -->
-  <div x-show="!loading && user" class="relative">
+  <div x-show="!loading && user" class="relative" x-init="console.log('🖼️ Avatar debug - user data:', user); console.log('🖼️ Avatar URLs:', { avatar_url: user?.avatar_url, metadata_avatar: user?.user_metadata?.avatar_url, metadata_picture: user?.user_metadata?.picture });">
     <!-- User avatar button -->
     <button
       @click="toggleDropdown()"
@@ -381,16 +394,20 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
       aria-label="User menu"
     >
       <!-- Avatar -->
-      <template x-if="user?.user_metadata?.avatar_url || user?.user_metadata?.picture">
+      <template x-if="user?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar_url">
         <img
-          :src="user.user_metadata?.avatar_url || user.user_metadata?.picture"
+          :src="user?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar_url"
           :alt="userName"
           class="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
           loading="lazy"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer"
+          @error="console.error('🖼️ Avatar image failed to load:', $event.target.src)"
+          @load="console.log('🖼️ Avatar image loaded successfully:', $event.target.src)"
         />
       </template>
       
-      <template x-if="!user?.user_metadata?.avatar_url && !user?.user_metadata?.picture">
+      <template x-if="!user?.avatar_url && !user?.user_metadata?.picture && !user?.user_metadata?.avatar_url">
         <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm">
           <span x-text="userName.charAt(0).toUpperCase()"></span>
         </div>
@@ -429,16 +446,18 @@ import GoogleSignInButton from './GoogleSignInButton.astro';
       <div class="px-4 py-3 border-b border-gray-100">
         <div class="flex items-center space-x-3">
           <!-- 头像 -->
-          <template x-if="user?.user_metadata?.avatar_url || user?.user_metadata?.picture">
+          <template x-if="user?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar_url">
             <img
-              :src="user.user_metadata?.avatar_url || user.user_metadata?.picture"
+              :src="user?.avatar_url || user?.user_metadata?.picture || user?.user_metadata?.avatar_url"
               :alt="userName"
               class="w-10 h-10 rounded-full object-cover"
               loading="lazy"
+              crossorigin="anonymous"
+              referrerpolicy="no-referrer"
             />
           </template>
           
-          <template x-if="!user?.user_metadata?.avatar_url && !user?.user_metadata?.picture">
+          <template x-if="!user?.avatar_url && !user?.user_metadata?.picture && !user?.user_metadata?.avatar_url">
             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-medium">
               <span x-text="userName.charAt(0).toUpperCase()"></span>
             </div>

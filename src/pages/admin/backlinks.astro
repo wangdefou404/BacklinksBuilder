@@ -174,6 +174,7 @@ if (!user || userRole !== 'admin') {
               <input
                 type="text"
                 id="name"
+                name="name"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -186,6 +187,7 @@ if (!user || userRole !== 'admin') {
               <input
                 type="url"
                 id="websiteLink"
+                name="websiteLink"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -202,6 +204,7 @@ if (!user || userRole !== 'admin') {
               <input
                 type="number"
                 id="dr"
+                name="dr"
                 required
                 min="0"
                 max="100"
@@ -216,6 +219,7 @@ if (!user || userRole !== 'admin') {
               <input
                 type="number"
                 id="traffic"
+                name="traffic"
                 required
                 min="0"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -228,6 +232,7 @@ if (!user || userRole !== 'admin') {
               </label>
               <select
                 id="paymentType"
+                name="paymentType"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -243,6 +248,7 @@ if (!user || userRole !== 'admin') {
               </label>
               <select
                 id="followType"
+                name="followType"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -260,6 +266,7 @@ if (!user || userRole !== 'admin') {
               </label>
               <select
                 id="platformType"
+                name="platformType"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -278,6 +285,7 @@ if (!user || userRole !== 'admin') {
               </label>
               <select
                 id="accessType"
+                name="accessType"
                 required
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
@@ -294,6 +302,7 @@ if (!user || userRole !== 'admin') {
               <input
                 type="url"
                 id="submissionUrl"
+                name="submissionUrl"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -350,6 +359,7 @@ if (!user || userRole !== 'admin') {
     // Load backlinks
     async function loadBacklinks() {
       try {
+        console.log('🔄 Loading backlinks...');
         const params = new URLSearchParams({
           page: currentPage.toString(),
           limit: '20',
@@ -357,11 +367,20 @@ if (!user || userRole !== 'admin') {
           ...currentFilters
         });
         
-        const response = await fetch(`/api/backlinks?${params}`);
-        const data = await response.json();
+        const response = await fetch(`/api/admin/backlinks?${params}`, {
+          credentials: 'include' // Include cookies for authentication
+        });
+        console.log('📡 API response status:', response.status);
+        const result = await response.json();
+        console.log('📊 API result:', result);
         
-        renderBacklinks(data.data);
-        updatePagination(data);
+        if (result.success && result.backlinks) {
+          renderBacklinks(result.backlinks);
+          updatePagination(result);
+        } else {
+          console.error('Error loading backlinks:', result.error || 'Unknown error');
+          alert('Error loading backlinks: ' + (result.error || 'Unknown error'));
+        }
       } catch (error) {
         console.error('Error loading backlinks:', error);
         alert('Error loading backlinks');
@@ -379,45 +398,45 @@ if (!user || userRole !== 'admin') {
         const paymentTypeClass = {
           'Free': 'bg-green-100 text-green-800',
           'Paid': 'bg-red-100 text-red-800'
-        }[backlink.paymentType] || 'bg-gray-100 text-gray-800';
+        }[backlink.payment_type] || 'bg-gray-100 text-gray-800';
         
         // const followTypeClass = {
         //   'DoFollow': 'bg-green-100 text-green-800',
         //   'NoFollow': 'bg-red-100 text-red-800'
-        // }[backlink.followType] || 'bg-gray-100 text-gray-800'; // 未使用的变量
+        // }[backlink.follow_type] || 'bg-gray-100 text-gray-800'; // 未使用的变量
         
         const accessTypeClass = {
           'guest': 'bg-blue-100 text-blue-800',
           'premium': 'bg-purple-100 text-purple-800'
-        }[backlink.access] || 'bg-gray-100 text-gray-800';
+        }[backlink.access_type] || 'bg-gray-100 text-gray-800';
         
         row.innerHTML = `
           <td class="px-6 py-4">
             <div class="text-sm font-medium text-gray-900">${backlink.name}</div>
           </td>
           <td class="px-6 py-4">
-            <a href="${backlink.websiteLink}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
-              ${new URL(backlink.websiteLink).hostname}
+            <a href="${backlink.website_link}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
+              ${new URL(backlink.website_link).hostname}
             </a>
           </td>
           <td class="px-6 py-4 text-sm text-gray-900">${backlink.dr}</td>
           <td class="px-6 py-4 text-sm text-gray-900">${backlink.traffic.toLocaleString()}</td>
           <td class="px-6 py-4">
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${paymentTypeClass}">
-              ${backlink.paymentType}
+              ${backlink.payment_type}
             </span>
           </td>
           <td class="px-6 py-4">
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-              ${backlink.platformType}
+              ${backlink.platform_type}
             </span>
           </td>
           <td class="px-6 py-4">
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${accessTypeClass}">
-              ${backlink.access}
+              ${backlink.access_type}
             </span>
           </td>
-          <td class="px-6 py-4 text-sm text-gray-500">${backlink.updated}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${new Date(backlink.updated_at).toLocaleDateString()}</td>
           <td class="px-6 py-4 text-sm font-medium space-x-2">
             <button onclick="editBacklink('${backlink.id}')" class="text-blue-600 hover:text-blue-800">Edit</button>
             <button onclick="deleteBacklink('${backlink.id}')" class="text-red-600 hover:text-red-800">Delete</button>
@@ -453,7 +472,7 @@ if (!user || userRole !== 'admin') {
         document.getElementById('paymentType').value = backlink.paymentType;
         document.getElementById('followType').value = backlink.followType;
         document.getElementById('platformType').value = backlink.platformType;
-        document.getElementById('accessType').value = backlink.access || '';
+        document.getElementById('accessType').value = backlink.accessType || '';
         document.getElementById('submissionUrl').value = backlink.submissionUrl || '';
       } else {
         // Clear form
@@ -482,9 +501,29 @@ if (!user || userRole !== 'admin') {
     // Edit backlink
     window.editBacklink = async function(id) {
       try {
-        const response = await fetch(`/api/backlinks/${id}`);
-        const backlink = await response.json();
-        showModal('Edit Backlink', backlink);
+        const response = await fetch(`/api/admin/backlinks?backlinkId=${id}`, {
+          credentials: 'include'
+        });
+        const result = await response.json();
+        if (result.backlink) {
+          const backlink = result.backlink;
+          // Convert database field names to frontend format
+          const formattedBacklink = {
+            id: backlink.id,
+            name: backlink.name,
+            websiteLink: backlink.website_link,
+            dr: backlink.dr,
+            traffic: backlink.traffic,
+            paymentType: backlink.payment_type,
+            followType: backlink.follow_type,
+            platformType: backlink.platform_type,
+            accessType: backlink.access_type,
+            submissionUrl: backlink.submit_url
+          };
+          showModal('Edit Backlink', formattedBacklink);
+        } else {
+          alert('Error loading backlink: ' + (result.error || 'Backlink not found'));
+        }
       } catch (error) {
         console.error('Error loading backlink:', error);
         alert('Error loading backlink');
@@ -498,12 +537,25 @@ if (!user || userRole !== 'admin') {
       }
       
       try {
-        const response = await fetch(`/api/backlinks/${id}`, {
-          method: 'DELETE'
+        const response = await fetch('/api/admin/backlinks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            action: 'delete',
+            backlinkId: id
+          })
         });
         
         if (response.ok) {
-          loadBacklinks();
+          const result = await response.json();
+          if (result.success) {
+            loadBacklinks();
+          } else {
+            alert('Error deleting backlink: ' + (result.error || 'Unknown error'));
+          }
         } else {
           alert('Error deleting backlink');
         }
@@ -523,31 +575,38 @@ if (!user || userRole !== 'admin') {
       const formData = new FormData(form);
       const data = {
         name: formData.get('name'),
-        websiteLink: formData.get('websiteLink'),
+        website_link: formData.get('websiteLink'),
         dr: parseInt(formData.get('dr')),
         traffic: parseInt(formData.get('traffic')),
-        paymentType: formData.get('paymentType'),
-        followType: formData.get('followType'),
-        platformType: formData.get('platformType'),
-        access: formData.get('accessType'),
-        submissionUrl: formData.get('submissionUrl') || undefined
+        payment_type: formData.get('paymentType'),
+        follow_type: formData.get('followType'),
+        platform_type: formData.get('platformType'),
+        access_type: formData.get('accessType'),
+        submit_url: formData.get('submissionUrl') || undefined
       };
       
       try {
-        const url = editingId ? `/api/backlinks/${editingId}` : '/api/backlinks';
-        const method = editingId ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-          method,
+        const response = await fetch('/api/admin/backlinks', {
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(data)
+          credentials: 'include',
+          body: JSON.stringify({
+            action: editingId ? 'update' : 'create',
+            backlinkId: editingId || undefined,
+            data: data
+          })
         });
         
         if (response.ok) {
-          hideModal();
-          loadBacklinks();
+          const result = await response.json();
+          if (result.success) {
+            hideModal();
+            loadBacklinks();
+          } else {
+            alert('Error saving backlink: ' + (result.error || 'Unknown error'));
+          }
         } else {
           alert('Error saving backlink');
         }
