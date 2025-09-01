@@ -276,23 +276,52 @@ const currentPrice = currentPlan[billing];
             const data = await response.json();
             
             if (!response.ok) {
-              throw new Error(data.error || 'Failed to create checkout session');
+              throw new Error(data.error || data.details || 'Failed to create checkout session');
+            }
+            
+            // Check response format
+            if (!data.success) {
+              throw new Error(data.error || data.details || 'Checkout session creation failed');
+            }
+            
+            const checkoutUrl = data.url || data.checkout_url;
+            if (!checkoutUrl) {
+              throw new Error('No checkout URL received from server');
             }
             
             // Redirect to Stripe Checkout
-            window.location.href = data.url;
+            window.location.href = checkoutUrl;
             
           } catch (error: any) {
-            console.error('Checkout error:', error);
-            errorMessage.textContent = error.message || 'An unexpected error occurred. Please try again.';
-            errorState.classList.remove('hidden');
-            checkoutForm.classList.add('hidden');
-          } finally {
-            // Reset button state
-            buttonText.classList.remove('hidden');
-            buttonLoading.classList.add('hidden');
-            if (checkoutButton) checkoutButton.disabled = false;
-          }
+              console.error('Checkout error:', error);
+              
+              let errorText = 'An unexpected error occurred. Please try again.';
+              
+              if (error.message) {
+                if (error.message.includes('authentication') || error.message.includes('login')) {
+                  errorText = 'Please log in to continue with your purchase.';
+                } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                  errorText = 'Network error. Please check your connection and try again.';
+                } else if (error.message.includes('JSON')) {
+                  errorText = 'Server response error. Please try again in a moment.';
+                } else if (error.message.includes('checkout') || error.message.includes('payment')) {
+                  errorText = 'Payment processing error. Please try again or contact support.';
+                } else if (error.message.includes('No checkout URL')) {
+                  errorText = 'Payment session creation failed. Please try again.';
+                } else {
+                  errorText = error.message;
+                }
+              }
+              
+              errorMessage.textContent = errorText;
+              errorState.classList.remove('hidden');
+              checkoutForm.classList.add('hidden');
+            } finally {
+              // Reset button state
+              buttonText.classList.remove('hidden');
+              buttonLoading.classList.add('hidden');
+              if (checkoutButton) checkoutButton.disabled = false;
+            }
         });
         
       } catch (error: any) {

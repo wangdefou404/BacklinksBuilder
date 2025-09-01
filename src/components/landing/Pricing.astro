@@ -610,7 +610,7 @@
         // 检查按钮状态获取计费周期
         const annualButton = document.getElementById('annual-pricing-button');
         if (annualButton && annualButton.getAttribute('aria-pressed') === 'true') {
-          billingCycle = 'annual';
+          billingCycle = 'yearly'; // 修复：API 期望 'yearly' 而不是 'annual'
         }
         
         console.log('Billing cycle:', billingCycle);
@@ -775,19 +775,57 @@
         console.log('Checkout response status:', checkoutResponse.status);
         console.log('Checkout response headers:', Object.fromEntries(checkoutResponse.headers.entries()));
 
+        // 检查响应状态
         if (!checkoutResponse.ok) {
-          const errorData = await checkoutResponse.json();
+          let errorData;
+          try {
+            const responseText = await checkoutResponse.text();
+            console.log('Raw error response:', responseText);
+            
+            if (responseText.trim()) {
+              errorData = JSON.parse(responseText);
+            } else {
+              errorData = { error: 'Empty response from server' };
+            }
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError);
+            errorData = { error: `Server returned ${checkoutResponse.status}: ${checkoutResponse.statusText}` };
+          }
+          
           console.error('❌ Checkout error:', errorData);
-          throw new Error(errorData.error || 'Failed to create checkout session');
+          throw new Error(errorData.error || errorData.details || `HTTP ${checkoutResponse.status}: ${checkoutResponse.statusText}`);
         }
 
-        const checkoutData = await checkoutResponse.json();
-        console.log('Checkout response data:', checkoutData);
+        // 解析响应数据
+        let checkoutData;
+        try {
+          const responseText = await checkoutResponse.text();
+          console.log('Raw checkout response:', responseText);
+          
+          if (!responseText.trim()) {
+            throw new Error('Empty response from server');
+          }
+          
+          checkoutData = JSON.parse(responseText);
+          console.log('Parsed checkout response data:', checkoutData);
+        } catch (parseError) {
+          console.error('Failed to parse checkout response:', parseError);
+          throw new Error('Invalid response format from server');
+        }
         
-        const { checkout_url: url } = checkoutData;
+        // 检查响应格式 - 兼容多种响应格式
+        const isSuccess = checkoutData.success === true || (checkoutData.checkout_url && checkoutData.session_id);
+        
+        if (!isSuccess) {
+          console.error('❌ Checkout failed:', checkoutData);
+          throw new Error(checkoutData.error || checkoutData.details || '支付会话创建失败');
+        }
+        
+        // 兼容多种URL字段名
+        const url = checkoutData.url || checkoutData.checkout_url;
         
         if (!url) {
-          console.error('❌ No checkout URL in response');
+          console.error('❌ No checkout URL in response:', checkoutData);
           throw new Error('未能获取支付链接，请重试');
         }
         
@@ -798,9 +836,40 @@
         window.location.href = url;
         
       } catch (error) {
-        console.error('❌ Error in handleUpgrade:', error);
-        console.log('=== HANDLE UPGRADE FAILED ===');
-        alert('支付处理失败：' + error.message);
+          console.error('❌ Error in handleUpgrade:', error);
+          console.log('=== HANDLE UPGRADE FAILED ===');
+          console.log('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+            timestamp: new Date().toISOString()
+          });
+          
+          let errorMessage = '支付处理失败，请重试。';
+          
+          if (error.message) {
+            if (error.message.includes('authentication') || error.message.includes('login') || error.message.includes('认证')) {
+              errorMessage = '请先登录后再进行购买。';
+            } else if (error.message.includes('network') || error.message.includes('fetch') || error.message.includes('网络')) {
+              errorMessage = '网络连接错误，请检查网络后重试。';
+            } else if (error.message.includes('JSON') || error.message.includes('Invalid response') || error.message.includes('Empty response')) {
+              errorMessage = '服务器响应格式错误，请稍后重试。';
+            } else if (error.message.includes('checkout') || error.message.includes('payment') || error.message.includes('支付')) {
+              errorMessage = '支付处理失败：' + error.message;
+            } else if (error.message.includes('User not found') || error.message.includes('用户未找到')) {
+              errorMessage = '用户信息未找到，请重新登录。';
+            } else if (error.message.includes('Invalid plan') || error.message.includes('Invalid billing')) {
+              errorMessage = '套餐配置错误，请联系客服。';
+            } else if (error.message.includes('HTTP 4')) {
+              errorMessage = '请求参数错误，请重试或联系客服。';
+            } else if (error.message.includes('HTTP 5')) {
+              errorMessage = '服务器内部错误，请稍后重试。';
+            } else {
+              errorMessage = '支付处理失败：' + error.message;
+            }
+          }
+          
+          alert(errorMessage);
       } finally {
         // 重置标志，允许下次执行
         isUpgradeInProgress = false;
