@@ -13,8 +13,11 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export const POST: APIRoute = async ({ request }) => {
   try {
     const { quotaType, userId } = await request.json();
+    
+    console.log('配额检查请求:', { quotaType, userId });
 
     if (!quotaType) {
+      console.error('缺少 quotaType 参数');
       return new Response(
         JSON.stringify({ error: 'Missing quotaType' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -49,6 +52,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // 获取用户角色
+    console.log('获取用户角色:', userId);
     let { data: userRole, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
@@ -56,8 +60,11 @@ export const POST: APIRoute = async ({ request }) => {
       .eq('is_active', true)
       .single();
 
+    console.log('用户角色查询结果:', { userRole, roleError });
+
     // 如果用户角色不存在，创建默认的free角色
     if (roleError || !userRole) {
+      console.log('创建默认用户角色: free');
       const { data: newRole, error: createRoleError } = await supabase
         .from('user_roles')
         .insert({
@@ -68,8 +75,11 @@ export const POST: APIRoute = async ({ request }) => {
         .select('role')
         .single();
 
+      console.log('创建角色结果:', { newRole, createRoleError });
+
       if (createRoleError || !newRole) {
         // 如果创建失败，使用默认角色
+        console.log('创建角色失败，使用默认 free 角色');
         userRole = { role: 'free' };
       } else {
         userRole = newRole;
@@ -79,13 +89,36 @@ export const POST: APIRoute = async ({ request }) => {
     // 映射角色到计划类型
     const planTypeMap: Record<string, string> = {
       'free': 'free',
-      'Pro': 'pro',
-      'admin': 'super'
+      'pro': 'pro',
+      'Pro': 'pro', // 兼容大写
+      'admin': 'super',
+      'super': 'super'
     };
 
     const planType = planTypeMap[userRole.role] || 'free';
+    console.log('角色映射结果:', { role: userRole.role, planType });
+
+    // Admin用户拥有无限配额
+    if (userRole.role === 'admin') {
+      console.log('Admin用户检测到，返回无限配额');
+      return new Response(
+        JSON.stringify({
+          canUse: true,
+          monthlyUsed: 0,
+          monthlyLimit: 999999,
+          dailyUsed: 0,
+          dailyLimit: 999999,
+          planType: 'admin',
+          isAdmin: true,
+          resetMonthlyAt: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
+          resetDailyAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
     // 获取计划配额限制
+    console.log('查询配额限制:', { planType, quotaType });
     const { data: planQuota, error: planError } = await supabase
       .from('user_plan_quotas')
       .select('monthly_limit, daily_limit')
@@ -93,9 +126,12 @@ export const POST: APIRoute = async ({ request }) => {
       .eq('quota_type', quotaType)
       .single();
 
+    console.log('配额限制查询结果:', { planQuota, planError });
+
     if (planError || !planQuota) {
+      console.error('未找到配额限制:', { planType, quotaType, planError });
       return new Response(
-        JSON.stringify({ error: 'Plan quota not found' }),
+        JSON.stringify({ error: 'Plan quota not found', details: { planType, quotaType, planError } }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       );
     }

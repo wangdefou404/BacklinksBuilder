@@ -324,6 +324,44 @@ class TrafficChecker {
     if (window.ResultsTable && this.results.length > 0) {
       window.ResultsTable.showExportButton();
     }
+    
+    // Scroll to results title section smoothly with navbar offset
+    setTimeout(() => {
+      // First try to find the results title (h2 element within results container)
+      const resultsContainer = document.querySelector('#results-section, #results-container, .results-container');
+      const resultsTitle = resultsContainer ? resultsContainer.querySelector('h2') : null;
+      
+      if (resultsTitle) {
+        // Calculate navbar height (typically around 64px)
+        const navbar = document.querySelector('nav, .navbar, header');
+        const navbarHeight = navbar ? navbar.offsetHeight : 80;
+        
+        // Get the position of results title
+        const rect = resultsTitle.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetPosition = rect.top + scrollTop - navbarHeight - 40; // 40px extra padding to show title better
+        
+        // Smooth scroll to the calculated position
+        window.scrollTo({
+          top: Math.max(0, targetPosition),
+          behavior: 'smooth'
+        });
+      } else {
+        // Fallback: scroll to results container if results title not found
+        if (resultsContainer) {
+          const navbar = document.querySelector('nav, .navbar, header');
+          const navbarHeight = navbar ? navbar.offsetHeight : 80;
+          const rect = resultsContainer.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const targetPosition = rect.top + scrollTop - navbarHeight - 20;
+          
+          window.scrollTo({
+            top: Math.max(0, targetPosition),
+            behavior: 'smooth'
+          });
+        }
+      }
+    }, 200);
   }
 
   hideResults() {

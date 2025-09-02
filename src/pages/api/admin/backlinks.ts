@@ -372,6 +372,72 @@ export const POST: APIRoute = async ({ request, locals }) => {
           headers: { 'Content-Type': 'application/json' }
         });
 
+      case 'batch_create':
+        // CSV批量创建反向链接
+        const batchData = data; // data应该是一个包含多个反向链接对象的数组
+        const batchResults = [];
+        let createdCount = 0;
+        let failedCount = 0;
+
+        for (const item of batchData) {
+          try {
+            const { data: newBacklink, error: batchCreateError } = await supabaseAdmin
+              .from('backlink_resources')
+              .insert({
+                user_id: user.id,
+                name: item.name,
+                website_link: item.website_link,
+                submit_url: item.submit_url || '',
+                dr: parseInt(item.dr) || 0,
+                traffic: parseInt(item.traffic) || 0,
+                payment_type: item.payment_type || 'Free',
+                follow_type: item.follow_type || 'DoFollow',
+                platform_type: item.platform_type || 'blog',
+                access_type: item.access_type || 'guest',
+                status: 'active',
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+              .select()
+              .single();
+
+            if (batchCreateError) {
+              console.error('批量创建单项失败:', batchCreateError);
+              batchResults.push({ 
+                item: item.name, 
+                success: false, 
+                error: batchCreateError.message 
+              });
+              failedCount++;
+            } else {
+              batchResults.push({ 
+                item: item.name, 
+                success: true, 
+                backlink: newBacklink 
+              });
+              createdCount++;
+            }
+          } catch (error) {
+            console.error('批量创建异常:', error);
+            batchResults.push({ 
+              item: item.name || 'Unknown', 
+              success: false, 
+              error: error.message 
+            });
+            failedCount++;
+          }
+        }
+
+        return new Response(JSON.stringify({ 
+          success: true, 
+          created: createdCount,
+          failed: failedCount,
+          results: batchResults 
+        }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+
       case 'batch':
         // 批量操作
         const { backlinkIds, batchAction } = data;

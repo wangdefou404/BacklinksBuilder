@@ -10,36 +10,61 @@ export const GET: APIRoute = async ({ request }) => {
   try {
     console.log('🔍 Admin stats API called');
     
-    // 获取总用户数
-    const { count: totalUsers, error: usersError } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true });
-    
-    if (usersError) {
-      console.error('Error fetching total users:', usersError);
-    }
-
-    // 获取高级用户数
-    const { count: premiumUsers, error: premiumError } = await supabase
-      .from('users')
+    // 获取Free用户数
+    const { count: freeUsers, error: freeError } = await supabase
+      .from('user_roles')
       .select('*', { count: 'exact', head: true })
-      .in('role', ['Pro', 'super', 'admin'])
-      .single();
-
-    if (premiumError) {
-      console.error('Error fetching premium users:', premiumError);
+      .eq('role', 'free');
+    
+    if (freeError) {
+      console.error('Error fetching free users:', freeError);
     }
 
-    // 获取总检查次数（如果有相关表的话）
-    // 这里使用模拟数据，实际应该从相关的检查记录表获取
-    const totalChecks = Math.floor(Math.random() * 10000) + 5000;
-    const todayChecks = Math.floor(Math.random() * 100) + 50;
+    // 获取Regular用户数
+    const { count: regularUsers, error: regularError } = await supabase
+      .from('user_roles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'user');
+
+    if (regularError) {
+      console.error('Error fetching regular users:', regularError);
+    }
+
+    // 获取Pro用户数
+    const { count: proUsers, error: proError } = await supabase
+      .from('user_roles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'Pro');
+
+    if (proError) {
+      console.error('Error fetching pro users:', proError);
+    }
+
+    // 获取Admin用户数（包括super和admin）
+    const { count: adminUsers, error: adminError } = await supabase
+      .from('user_roles')
+      .select('*', { count: 'exact', head: true })
+      .in('role', ['super', 'admin']);
+
+    if (adminError) {
+      console.error('Error fetching admin users:', adminError);
+    }
+
+    // 获取总用户数
+    const { count: totalUsers, error: totalError } = await supabase
+      .from('user_roles')
+      .select('*', { count: 'exact', head: true });
+
+    if (totalError) {
+      console.error('Error fetching total users:', totalError);
+    }
 
     const stats = {
       totalUsers: totalUsers || 0,
-      premiumUsers: premiumUsers || 0,
-      totalChecks,
-      todayChecks
+      freeUsers: freeUsers || 0,
+      regularUsers: regularUsers || 0,
+      proUsers: proUsers || 0,
+      adminUsers: adminUsers || 0
     };
 
     console.log('📊 Admin stats:', stats);

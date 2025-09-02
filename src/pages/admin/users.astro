@@ -229,12 +229,12 @@ try {
                   <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                   </th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User Info</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registration</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户信息</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户等级</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">注册时间</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">产品额度使用</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                 </tr>
               </thead>
               <tbody id="usersTableBody" class="bg-white divide-y divide-gray-200">
@@ -246,11 +246,15 @@ try {
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="flex items-center">
                         <div class="flex-shrink-0 h-10 w-10">
-                          <img class="h-10 w-10 rounded-full" src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.email)}&background=6366f1&color=fff`} alt="" crossorigin="anonymous">
+                          <img class="h-10 w-10 rounded-full" 
+                                 src={user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=6366f1&color=ffffff&size=40`} 
+                                 alt={user.name || user.email}
+                                 crossorigin="anonymous"
+                                 onerror="this.src='https://ui-avatars.com/api/?name=' + encodeURIComponent(this.alt) + '&background=6366f1&color=ffffff&size=40'">
                         </div>
                         <div class="ml-4">
-                          <div class="text-sm font-medium text-gray-900">{user.email}</div>
-                          <div class="text-sm text-gray-500">ID: {user.id.substring(0, 8)}...</div>
+                          <div class="text-sm font-medium text-gray-900">{user.name || user.email}</div>
+                          <div class="text-sm text-gray-500 font-mono">ID: {user.id}</div>
                         </div>
                       </div>
                     </td>
@@ -261,10 +265,68 @@ try {
                         user.subscription_status === 'active' ? 'bg-green-100 text-green-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {user.role === 'super' ? 'Super Admin' :
-                         user.role === 'admin' ? 'Admin' :
-                         user.subscription_status === 'active' ? 'Pro User' : 'Regular User'}
+                        {user.role === 'super' ? '超级管理员' :
+                         user.role === 'admin' ? '管理员' :
+                         user.subscription_status === 'active' ? 'Pro用户' : '普通用户'}
                       </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(user.created_at).toLocaleDateString('zh-CN')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <div class="space-y-1 text-xs">
+                        <!-- DR 检查 -->
+                        <div class="flex items-center justify-between py-1">
+                          <span class="text-gray-600 w-12">DR:</span>
+                          <div class="flex items-center space-x-2 flex-1">
+                            <span class="font-medium text-gray-900 min-w-[60px] text-right">
+                              <span id={`dr-quota-${user.id}`}>0</span>/<span id={`dr-limit-${user.id}`}>100</span>
+                            </span>
+                            <div class="flex-1 bg-gray-200 rounded-full h-1.5 max-w-[60px]">
+                              <div id={`dr-progress-${user.id}`} class="bg-blue-500 h-1.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- 流量检查 -->
+                        <div class="flex items-center justify-between py-1">
+                          <span class="text-gray-600 w-12">流量:</span>
+                          <div class="flex items-center space-x-2 flex-1">
+                            <span class="font-medium text-gray-900 min-w-[60px] text-right">
+                              <span id={`traffic-quota-${user.id}`}>0</span>/<span id={`traffic-limit-${user.id}`}>50</span>
+                            </span>
+                            <div class="flex-1 bg-gray-200 rounded-full h-1.5 max-w-[60px]">
+                              <div id={`traffic-progress-${user.id}`} class="bg-green-500 h-1.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- 反链检查 -->
+                        <div class="flex items-center justify-between py-1">
+                          <span class="text-gray-600 w-12">反链:</span>
+                          <div class="flex items-center space-x-2 flex-1">
+                            <span class="font-medium text-gray-900 min-w-[60px] text-right">
+                              <span id={`backlink-quota-${user.id}`}>0</span>/<span id={`backlink-limit-${user.id}`}>1000</span>
+                            </span>
+                            <div class="flex-1 bg-gray-200 rounded-full h-1.5 max-w-[60px]">
+                              <div id={`backlink-progress-${user.id}`} class="bg-purple-500 h-1.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <!-- 反链查看 -->
+                        <div class="flex items-center justify-between py-1">
+                          <span class="text-gray-600 w-12">查看:</span>
+                          <div class="flex items-center space-x-2 flex-1">
+                            <span class="font-medium text-gray-900 min-w-[60px] text-right">
+                              <span id={`view-quota-${user.id}`}>0</span>/<span id={`view-limit-${user.id}`}>∞</span>
+                            </span>
+                            <div class="flex-1 bg-gray-200 rounded-full h-1.5 max-w-[60px]">
+                              <div id={`view-progress-${user.id}`} class="bg-orange-500 h-1.5 rounded-full" style="width: 0%"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <span class={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -272,15 +334,9 @@ try {
                         user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 'bg-green-100 text-green-800' :
                         'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {user.status === 'suspended' ? 'Suspended' :
-                         user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? 'Active' : 'Inactive'}
+                        {user.status === 'suspended' ? '已暂停' :
+                         user.last_sign_in_at && new Date(user.last_sign_in_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) ? '活跃' : '不活跃'}
                       </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {new Date(user.created_at).toLocaleDateString('en-US')}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('en-US') : 'Never logged in'}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div class="flex space-x-2">
@@ -436,13 +492,19 @@ try {
     allUsers = Array.from(document.querySelectorAll('.user-row')).map(row => {
       const userId = row.dataset.userId;
       const cells = row.querySelectorAll('td');
+      
+      // 安全地获取文本内容，添加null检查
+      const emailElement = cells[1]?.querySelector('.text-sm.font-medium');
+      const roleElement = cells[2]?.querySelector('span');
+      const statusElement = cells[3]?.querySelector('span');
+      
       return {
         id: userId,
-        email: cells[1].querySelector('.text-sm.font-medium').textContent,
-        role: cells[2].querySelector('span').textContent,
-        status: cells[3].querySelector('span').textContent,
-        created_at: cells[4].textContent.trim(),
-        last_sign_in_at: cells[5].textContent.trim()
+        email: emailElement?.textContent || '',
+        role: roleElement?.textContent || '',
+        status: statusElement?.textContent || '',
+        created_at: cells[4]?.textContent?.trim() || '',
+        last_sign_in_at: cells[5]?.textContent?.trim() || ''
       };
     });
     filteredUsers = [...allUsers];

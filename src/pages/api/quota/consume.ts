@@ -53,6 +53,25 @@ export const POST: APIRoute = async ({ request }) => {
 
     const quotaInfo = await checkResponse.json();
 
+    // Admin用户直接返回成功，不消耗配额
+    if (quotaInfo.isAdmin) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          consumed: amount,
+          monthlyUsed: 0,
+          monthlyLimit: 999999,
+          dailyUsed: 0,
+          dailyLimit: 999999,
+          remainingMonthly: 999999,
+          remainingDaily: 999999,
+          planType: 'admin',
+          isAdmin: true
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     if (!quotaInfo.canUse) {
       return new Response(
         JSON.stringify({ 

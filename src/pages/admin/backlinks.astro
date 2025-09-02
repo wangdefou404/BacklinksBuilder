@@ -25,12 +25,20 @@ if (!user || userRole !== 'admin') {
             Manage backlink resources for the Featured Backlink Resources page
           </p>
         </div>
-        <button
-          id="add-backlink-btn"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200"
-        >
-          Add New Backlink
-        </button>
+        <div class="flex space-x-3">
+          <button
+            id="csv-upload-btn"
+            class="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200"
+          >
+            CSV批量上传
+          </button>
+          <button
+            id="add-backlink-btn"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors duration-200"
+          >
+            Add New Backlink
+          </button>
+        </div>
       </div>
 
       <!-- Filters -->
@@ -338,6 +346,113 @@ if (!user || userRole !== 'admin') {
     </div>
   </div>
 
+  <!-- CSV Upload Modal -->
+  <div id="csv-upload-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+          <h3 class="text-lg font-medium text-gray-900">
+            CSV批量上传反向链接
+          </h3>
+        </div>
+        
+        <div class="px-8 py-6 space-y-6">
+
+          <!-- 文件上传区域 -->
+          <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <input type="file" id="csv-file-input" accept=".csv" class="hidden" />
+            <div id="file-drop-zone" class="cursor-pointer">
+              <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <p class="mt-2 text-sm text-gray-600">
+                <span class="font-medium text-blue-600 hover:text-blue-500">点击选择文件</span> 或拖拽CSV文件到此处
+              </p>
+              <p class="text-xs text-gray-500">支持 .csv 格式文件</p>
+            </div>
+            <div id="file-info" class="hidden mt-4 p-3 bg-gray-50 rounded">
+              <p class="text-sm text-gray-700">已选择文件: <span id="file-name" class="font-medium"></span></p>
+              <p class="text-xs text-gray-500">文件大小: <span id="file-size"></span></p>
+            </div>
+          </div>
+          
+                  
+          <!-- CSV格式说明 -->
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h4 class="text-sm font-medium text-blue-900 mb-2">CSV文件格式要求：</h4>
+            <div class="text-sm text-blue-800 space-y-2">
+              <div>
+                <p class="mb-2">• 文件必须包含以下列（按顺序）：</p>
+                <div class="ml-4 bg-white p-3 rounded border">
+                  <div class="font-mono text-xs space-y-1">
+                    <div class="flex flex-wrap gap-1">
+                      <span class="bg-gray-100 px-2 py-1 rounded">name</span>
+                      <span class="text-gray-400">,</span>
+                      <span class="bg-gray-100 px-2 py-1 rounded">website_link</span>
+                      <span class="text-gray-400">,</span>
+                      <span class="bg-gray-100 px-2 py-1 rounded">dr</span>
+                      <span class="text-gray-400">,</span>
+                      <span class="bg-gray-100 px-2 py-1 rounded">traffic</span>
+                      <span class="text-gray-400">,</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                      <span class="bg-gray-100 px-2 py-1 rounded">payment_type</span>
+                      <span class="text-gray-400">,</span>
+                      <span class="bg-gray-100 px-2 py-1 rounded">follow_type</span>
+                      <span class="text-gray-400">,</span>
+                      <span class="bg-gray-100 px-2 py-1 rounded">platform_type</span>
+                      <span class="text-gray-400">,</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                      <span class="bg-gray-100 px-2 py-1 rounded">access_type</span>
+                      <span class="text-gray-400">,</span>
+                      <span class="bg-gray-100 px-2 py-1 rounded">submit_url</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="space-y-1">
+                <p>• <strong>payment_type:</strong> Free 或 Paid</p>
+                <p>• <strong>follow_type:</strong> DoFollow 或 NoFollow</p>
+                <p>• <strong>platform_type:</strong> blog, directory, content, comment, social</p>
+                <p>• <strong>access_type:</strong> guest 或 premium</p>
+                <p>• <strong>submit_url:</strong> 可选字段</p>
+              </div>
+            </div>
+          </div>
+          
+
+          
+          <!-- 上传进度 -->
+          <div id="upload-progress" class="hidden">
+            <div class="bg-gray-200 rounded-full h-2">
+              <div id="progress-bar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <p id="progress-text" class="text-sm text-gray-600 mt-2">准备上传...</p>
+          </div>
+        </div>
+        
+        <div class="px-8 py-6 border-t border-gray-200 flex justify-end space-x-3">
+          <button
+            id="csv-cancel-btn"
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+          >
+            取消
+          </button>
+          <button
+            id="csv-upload-submit-btn"
+            type="button"
+            class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled
+          >
+            开始上传
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script is:inline>
     let currentPage = 1;
     // let totalPages = 1; // 未使用的变量
@@ -348,6 +463,22 @@ if (!user || userRole !== 'admin') {
     const tbody = document.getElementById('backlinks-tbody');
     const modal = document.getElementById('backlink-modal');
     const modalTitle = document.getElementById('modal-title');
+    
+    // CSV Upload elements
+    const csvModal = document.getElementById('csv-upload-modal');
+    const csvFileInput = document.getElementById('csv-file-input');
+    const fileDropZone = document.getElementById('file-drop-zone');
+    const fileInfo = document.getElementById('file-info');
+    const fileName = document.getElementById('file-name');
+    const fileSize = document.getElementById('file-size');
+    const uploadProgress = document.getElementById('upload-progress');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const csvUploadBtn = document.getElementById('csv-upload-btn');
+    const csvCancelBtn = document.getElementById('csv-cancel-btn');
+    const csvUploadSubmitBtn = document.getElementById('csv-upload-submit-btn');
+    
+    let selectedFile = null;
     const form = document.getElementById('backlink-form');
     const addBtn = document.getElementById('add-backlink-btn');
     const cancelBtn = document.getElementById('cancel-btn');
@@ -565,9 +696,223 @@ if (!user || userRole !== 'admin') {
       }
     };
 
+    // CSV Upload Functions
+    function showCsvModal() {
+      csvModal.classList.remove('hidden');
+      resetCsvUpload();
+    }
+    
+    function hideCsvModal() {
+      csvModal.classList.add('hidden');
+      resetCsvUpload();
+    }
+    
+    function resetCsvUpload() {
+      selectedFile = null;
+      csvFileInput.value = '';
+      fileInfo.classList.add('hidden');
+      uploadProgress.classList.add('hidden');
+      csvUploadSubmitBtn.disabled = true;
+      progressBar.style.width = '0%';
+      progressText.textContent = '准备上传...';
+    }
+    
+    function handleFileSelect(file) {
+      if (!file || !file.name.toLowerCase().endsWith('.csv')) {
+        alert('请选择有效的CSV文件');
+        return;
+      }
+      
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileSize.textContent = formatFileSize(file.size);
+      fileInfo.classList.remove('hidden');
+      csvUploadSubmitBtn.disabled = false;
+    }
+    
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    function parseCSV(text) {
+      const lines = text.split('\n').filter(line => line.trim());
+      if (lines.length < 2) {
+        throw new Error('CSV文件必须包含标题行和至少一行数据');
+      }
+      
+      const headers = lines[0].split(',').map(h => h.trim());
+      const expectedHeaders = ['name', 'website_link', 'dr', 'traffic', 'payment_type', 'follow_type', 'platform_type', 'access_type', 'submit_url'];
+      
+      // 检查必需的列
+      const requiredHeaders = expectedHeaders.slice(0, 8); // 除了submit_url都是必需的
+      for (const header of requiredHeaders) {
+        if (!headers.includes(header)) {
+          throw new Error(`缺少必需的列: ${header}`);
+        }
+      }
+      
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        if (values.length < 8) continue; // 跳过不完整的行
+        
+        const row = {};
+        headers.forEach((header, index) => {
+          if (expectedHeaders.includes(header)) {
+            row[header] = values[index] || '';
+          }
+        });
+        
+        // 验证数据类型
+        if (row.dr) row.dr = parseInt(row.dr) || 0;
+        if (row.traffic) row.traffic = parseInt(row.traffic) || 0;
+        
+        // 验证枚举值
+        if (row.payment_type && !['Free', 'Paid'].includes(row.payment_type)) {
+          throw new Error(`第${i+1}行: payment_type必须是Free或Paid`);
+        }
+        if (row.follow_type && !['DoFollow', 'NoFollow'].includes(row.follow_type)) {
+          throw new Error(`第${i+1}行: follow_type必须是DoFollow或NoFollow`);
+        }
+        if (row.platform_type && !['blog', 'directory', 'content', 'comment', 'social'].includes(row.platform_type)) {
+          throw new Error(`第${i+1}行: platform_type必须是blog, directory, content, comment或social之一`);
+        }
+        if (row.access_type && !['guest', 'premium'].includes(row.access_type)) {
+          throw new Error(`第${i+1}行: access_type必须是guest或premium`);
+        }
+        
+        data.push(row);
+      }
+      
+      return data;
+    }
+    
+    async function uploadCSVData() {
+      if (!selectedFile) return;
+      
+      try {
+        uploadProgress.classList.remove('hidden');
+        progressText.textContent = '正在读取文件...';
+        progressBar.style.width = '10%';
+        
+        const text = await selectedFile.text();
+        progressText.textContent = '正在解析CSV数据...';
+        progressBar.style.width = '30%';
+        
+        const data = parseCSV(text);
+        progressText.textContent = `解析完成，准备上传${data.length}条记录...`;
+        progressBar.style.width = '50%';
+        
+        // 批量上传数据
+        const batchSize = 10; // 每批处理10条记录
+        let uploaded = 0;
+        let failed = 0;
+        
+        for (let i = 0; i < data.length; i += batchSize) {
+          const batch = data.slice(i, i + batchSize);
+          progressText.textContent = `正在上传第${i + 1}-${Math.min(i + batchSize, data.length)}条记录...`;
+          
+          try {
+            const response = await fetch('/api/admin/backlinks', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              credentials: 'include',
+              body: JSON.stringify({
+                action: 'batch_create',
+                data: batch
+              })
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+              uploaded += result.created || batch.length;
+            } else {
+              failed += batch.length;
+              console.error('批量上传失败:', result.error);
+            }
+          } catch (error) {
+            failed += batch.length;
+            console.error('批量上传错误:', error);
+          }
+          
+          const progress = Math.min(50 + ((i + batchSize) / data.length) * 50, 100);
+          progressBar.style.width = progress + '%';
+        }
+        
+        progressBar.style.width = '100%';
+        progressText.textContent = `上传完成！成功: ${uploaded}条，失败: ${failed}条`;
+        
+        setTimeout(() => {
+          hideCsvModal();
+          loadBacklinks(); // 刷新列表
+          if (failed > 0) {
+            alert(`CSV上传完成！\n成功上传: ${uploaded}条\n失败: ${failed}条\n请检查控制台了解失败详情。`);
+          } else {
+            alert(`CSV上传成功！共上传${uploaded}条记录。`);
+          }
+        }, 2000);
+        
+      } catch (error) {
+        console.error('CSV上传错误:', error);
+        progressText.textContent = '上传失败: ' + error.message;
+        progressBar.style.width = '0%';
+        alert('CSV上传失败: ' + error.message);
+      }
+    }
+
     // Event listeners
     addBtn.addEventListener('click', () => showModal('Add New Backlink'));
     cancelBtn.addEventListener('click', hideModal);
+    
+    // CSV Upload Event Listeners
+    csvUploadBtn.addEventListener('click', showCsvModal);
+    csvCancelBtn.addEventListener('click', hideCsvModal);
+    csvUploadSubmitBtn.addEventListener('click', uploadCSVData);
+    
+    // File input change
+    csvFileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileSelect(e.target.files[0]);
+      }
+    });
+    
+    // File drop zone events
+    fileDropZone.addEventListener('click', () => {
+      csvFileInput.click();
+    });
+    
+    fileDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      fileDropZone.classList.add('border-blue-400', 'bg-blue-50');
+    });
+    
+    fileDropZone.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      fileDropZone.classList.remove('border-blue-400', 'bg-blue-50');
+    });
+    
+    fileDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileDropZone.classList.remove('border-blue-400', 'bg-blue-50');
+      
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileSelect(files[0]);
+      }
+    });
+    
+    // Close CSV modal when clicking outside
+    csvModal.addEventListener('click', (e) => {
+      if (e.target === csvModal) {
+        hideCsvModal();
+      }
+    });
     
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

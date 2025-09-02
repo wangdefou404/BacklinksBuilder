@@ -53,6 +53,7 @@ export const GET: APIRoute = async ({ request }) => {
           id,
           name,
           email,
+          avatar_url,
           created_at
         )
       `);
@@ -111,6 +112,52 @@ export const GET: APIRoute = async ({ request }) => {
       });
     }
 
+    // 获取用户配额信息
+    const { data: userQuotas, error: quotaError } = await supabase
+      .from('user_quotas')
+      .select(`
+        user_id,
+        product_type,
+        used_count,
+        quota_limit,
+        reset_at
+      `)
+      .in('user_id', userIds);
+
+    // 创建配额映射
+    const quotaMap = {};
+    if (userQuotas) {
+      userQuotas.forEach(quota => {
+        if (!quotaMap[quota.user_id]) {
+          quotaMap[quota.user_id] = {};
+        }
+        quotaMap[quota.user_id][quota.product_type] = {
+          used: quota.used_count,
+          limit: quota.quota_limit,
+          reset_at: quota.reset_at
+        };
+      });
+    }
+
+    // 获取默认配额定义（用于没有记录的用户）
+    const { data: quotaDefinitions, error: defError } = await supabase
+      .from('quota_definitions')
+      .select('product_type, role, default_quota, reset_cycle');
+
+    // 创建默认配额映射
+    const defaultQuotaMap = {};
+    if (quotaDefinitions) {
+      quotaDefinitions.forEach(def => {
+        if (!defaultQuotaMap[def.role]) {
+          defaultQuotaMap[def.role] = {};
+        }
+        defaultQuotaMap[def.role][def.product_type] = {
+          limit: def.default_quota,
+          reset_cycle: def.reset_cycle
+        };
+      });
+    }
+
     // 格式化用户数据
     const formattedUsers = users?.map(userRole => {
       const user = userRole.users;
@@ -121,16 +168,53 @@ export const GET: APIRoute = async ({ request }) => {
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       const isActive = lastActivity && new Date(lastActivity) > sevenDaysAgo;
       
+      // 获取用户配额信息
+      const userQuotaData = quotaMap[userRole.user_id] || {};
+      const defaultQuotas = defaultQuotaMap[userRole.role] || {};
+      
+      // 构建四种产品的配额信息
+      const productTypes = ['dr_check', 'traffic_check', 'backlink_check', 'backlink_view'];
+      const quotas = {};
+      
+      productTypes.forEach(productType => {
+        const userQuota = userQuotaData[productType];
+        const defaultQuota = defaultQuotas[productType];
+        
+        if (userQuota) {
+          // 用户有具体的配额记录
+          quotas[productType] = {
+            used: userQuota.used,
+            limit: userQuota.limit,
+            reset_at: userQuota.reset_at
+          };
+        } else if (defaultQuota) {
+          // 使用默认配额
+          quotas[productType] = {
+            used: 0,
+            limit: defaultQuota.limit,
+            reset_cycle: defaultQuota.reset_cycle
+          };
+        } else {
+          // 没有配额定义，设置为无限制
+          quotas[productType] = {
+            used: 0,
+            limit: -1 // -1 表示无限制
+          };
+        }
+      });
+      
       return {
         id: user.id,
         name: user.name,
         email: user.email,
+        avatar_url: user.avatar_url,
         role: userRole.role,
         created_at: user.created_at,
         role_created_at: userRole.created_at,
         role_updated_at: userRole.updated_at,
         last_activity: lastActivity,
-        status: isActive ? 'active' : 'inactive'
+        status: isActive ? 'active' : 'inactive',
+        quotas: quotas
       };
     }) || [];
 

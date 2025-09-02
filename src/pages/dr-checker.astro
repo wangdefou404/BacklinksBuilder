@@ -93,7 +93,7 @@ const features = [
   document.addEventListener('DOMContentLoaded', function() {
     if (typeof QuotaManager !== 'undefined') {
       const quotaManager = new QuotaManager();
-      quotaManager.initPageQuota('dr_check');
+      quotaManager.initPageQuota('dr_check', 'quota-display');
     }
   });
 </script>

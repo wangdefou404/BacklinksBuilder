@@ -254,4 +254,44 @@ function displayResults(results) {
   
   // Setup export button after table is shown
   setTimeout(setupExportButton, 100);
+  
+  // Scroll to results title section smoothly with navbar offset
+    setTimeout(() => {
+      // First try to find the results container h2 title
+      const resultsContainer = document.querySelector('#results-container');
+      let resultsTitle = null;
+      
+      if (resultsContainer) {
+        resultsTitle = resultsContainer.querySelector('h2');
+      }
+      
+      if (resultsTitle) {
+        // Calculate navbar height (typically around 64px)
+        const navbar = document.querySelector('nav, .navbar, header');
+        const navbarHeight = navbar ? navbar.offsetHeight : 80;
+        
+        // Get the position of results title
+        const rect = resultsTitle.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetPosition = rect.top + scrollTop - navbarHeight - 40; // 40px extra padding to show title better
+        
+        // Smooth scroll to the calculated position
+        window.scrollTo({
+          top: Math.max(0, targetPosition),
+          behavior: 'smooth'
+        });
+      } else if (resultsContainer) {
+        // Fallback: scroll to results container if title not found
+        const navbar = document.querySelector('nav, .navbar, header');
+        const navbarHeight = navbar ? navbar.offsetHeight : 80;
+        const rect = resultsContainer.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetPosition = rect.top + scrollTop - navbarHeight - 20;
+        
+        window.scrollTo({
+          top: Math.max(0, targetPosition),
+          behavior: 'smooth'
+        });
+      }
+    }, 200);
 }
