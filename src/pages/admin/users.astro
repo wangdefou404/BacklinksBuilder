@@ -36,7 +36,7 @@ try {
 let users = [];
 let totalUsers = 0;
 try {
-  const usersResponse = await fetch(`${Astro.url.origin}/api/admin/users`, {
+  const usersResponse = await fetch(`${Astro.url.origin}/api/admin/users?userId=${userId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

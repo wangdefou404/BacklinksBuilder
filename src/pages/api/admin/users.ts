@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.SUPABASE_URL;
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
@@ -49,9 +49,9 @@ export const GET: APIRoute = async ({ request }) => {
         role,
         created_at,
         updated_at,
-        users!inner(
+        users!user_roles_user_id_fkey(
           id,
-          username,
+          name,
           email,
           created_at
         )
@@ -64,7 +64,7 @@ export const GET: APIRoute = async ({ request }) => {
 
     // 应用搜索条件
     if (search) {
-      query = query.or(`users.username.ilike.%${search}%,users.email.ilike.%${search}%`);
+      query = query.or(`users.name.ilike.%${search}%,users.email.ilike.%${search}%`);
     }
 
     // 获取总数
@@ -123,7 +123,7 @@ export const GET: APIRoute = async ({ request }) => {
       
       return {
         id: user.id,
-        username: user.username,
+        name: user.name,
         email: user.email,
         role: userRole.role,
         created_at: user.created_at,
