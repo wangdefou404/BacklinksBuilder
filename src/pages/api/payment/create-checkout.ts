@@ -2,7 +2,12 @@ import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
 import { supabase } from '../../../lib/supabase';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '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', {
+// 验证环境变量
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2023-10-16',
 });
 
