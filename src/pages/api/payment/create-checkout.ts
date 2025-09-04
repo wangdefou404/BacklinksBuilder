@@ -2,7 +2,14 @@ import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
 import { supabase } from '../../../lib/supabase';
 
+// 加载环境变量
+import 'dotenv/config';
+
 // 验证环境变量
+console.log('🔍 Debug: Checking Stripe environment variables...');
+console.log('🔑 STRIPE_SECRET_KEY exists:', !!process.env.STRIPE_SECRET_KEY);
+console.log('🔑 STRIPE_SECRET_KEY preview:', process.env.STRIPE_SECRET_KEY ? process.env.STRIPE_SECRET_KEY.substring(0, 12) + '...' : 'undefined');
+
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('STRIPE_SECRET_KEY environment variable is required');
 }
@@ -185,7 +192,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     console.log(`[${requestId}] Using price ID:`, priceId);
 
     // 获取站点 URL
-    const SITE_URL = import.meta.env.SITE_URL || 'http://localhost:4321';
+    const SITE_URL = process.env.PUBLIC_SITE_URL || 'http://localhost:4321';
     console.log('Site URL:', SITE_URL);
 
     // 创建 Stripe 结账会话

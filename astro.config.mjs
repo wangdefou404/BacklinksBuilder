@@ -23,6 +23,9 @@ export default defineConfig({
     define: {
       'process.env.ADMIN_USERNAME': JSON.stringify(process.env.ADMIN_USERNAME),
       'process.env.ADMIN_PASSWORD': JSON.stringify(process.env.ADMIN_PASSWORD),
+      'process.env.STRIPE_SECRET_KEY': JSON.stringify(process.env.STRIPE_SECRET_KEY),
+      'process.env.PUBLIC_STRIPE_PUBLISHABLE_KEY': JSON.stringify(process.env.PUBLIC_STRIPE_PUBLISHABLE_KEY),
+      'process.env.STRIPE_WEBHOOK_SECRET': JSON.stringify(process.env.STRIPE_WEBHOOK_SECRET),
     },
   },
 });
