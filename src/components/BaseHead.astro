@@ -7,9 +7,11 @@ export interface Props {
 }
 
 const { 
-  title = "BacklinksBuilder - a free backLink Building Tool",
-  description = "Astro SaaS template built with Astro & Tailwind CSS. Customize freely and deploy with ease."
+  title = "BacklinksBuilder - Free Backlink Building & SEO Tools",
+  description = "Free backlink building tools to boost SEO. Check domain authority, generate backlinks, analyze traffic."
 } = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://backlinksbuilder.com');
 ---
 
 <meta charset="UTF-8" />
@@ -21,8 +23,9 @@ const {
   name="description"
   content={description}
 />
-<meta name="keywords" content="keyword1, keyword2, keyword3" />
-<meta name="author" content="Your Name or Company Name" />
+<meta name="keywords" content="backlink building, SEO tools, domain authority, free SEO, link building" />
+<meta name="author" content="BacklinksBuilder" />
+<meta name="generator" content={Astro.generator} />
 
 <!-- Favicons -->
 <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -31,34 +34,25 @@ const {
 <link rel="shortcut icon" href="/logo.svg" type="image/x-icon" />
 
 <!-- Open Graph / Facebook -->
-<meta property="og:image" content="/og-image.png" />
 <meta property="og:type" content="website" />
-<meta property="og:url" content="https://www.yourwebsite.com/" />
+<meta property="og:url" content={canonicalURL} />
 <meta property="og:title" content={title} />
-<meta
-  property="og:description"
-  content={description}
-/>
-<meta
-  property="og:image"
-  content="https://www.yourwebsite.com/path/to/image.jpg"
-/>
+<meta property="og:description" content={description} />
+<meta property="og:image" content="https://backlinksbuilder.com/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:site_name" content="BacklinksBuilder" />
 
 <!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content="https://www.yourwebsite.com/" />
-<meta property="twitter:title" content={title} />
-<meta
-  property="twitter:description"
-  content={description}
-/>
-<meta
-  property="twitter:image"
-  content="https://www.yourwebsite.com/path/to/image.jpg"
-/>
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:url" content={canonicalURL} />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content="https://backlinksbuilder.com/og-image.png" />
+<meta name="twitter:creator" content="@BacklinksBuilder" />
 
 <!-- Canonical URL -->
-<link rel="canonical" href="https://www.yourwebsite.com/" />
+<link rel="canonical" href={canonicalURL} />
 
 <!-- Additional SEO -->
 <meta name="robots" content="index, follow" />

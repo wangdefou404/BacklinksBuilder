@@ -2,10 +2,10 @@
   <div class="px-8 pt-20 pb-20 mx-auto md:px-12 lg:px-24 max-w-7xl">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-12">
       <div class="text-center lg:text-left">
-        <p
+        <h2
           class="text-xl leading-tight tracking-tight sm:text-2xl md:text-3xl capitalize lg:text-4xl font-medium text-base-900 lg:text-balance">
           Frequently asked questions
-        </p>
+        </h2>
         <p class="text-base leading-normal mt-4 text-base-500 font-medium">
           Answers to commonly asked questions about our platform
         </p>
@@ -25,7 +25,7 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>What is a backlink submission list? How to use it?</span>
+            <h3 class="text-base font-medium">What is a backlink submission list? How to use it?</h3>
             <svg
               class="size-5 duration-300 ease-out text-accent-500 -rotate-[45deg]"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -54,9 +54,9 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>
+            <h3 class="text-base font-medium">
               How does Backlink Generator help me get high-quality backlinks?
-            </span>
+            </h3>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -93,9 +93,9 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>
-              How accurate is the Website DR checker?
-            </span>
+            <h3 class="text-base font-medium">
+              How accurate is the Website DR Checker?
+            </h3>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -121,7 +121,7 @@
             x-transition:leave-end="opacity-0 transform scale-95"
             style="display: none;">
             <div class="p-4 pt-2 text-zinc-500">
-              Our Website DR checker uses advanced algorithms and multiple authoritative data sources to evaluate a website's Domain Rating. The tool has very high accuracy, with data updated daily to ensure you get the latest website authority information. We integrate data from multiple SEO tools, including backlink count, referring domains, website traffic, and other dimensions to provide you with comprehensive and accurate website authority assessment, helping you make informed backlink building decisions.
+              Our Website DR Checker uses advanced algorithms and multiple authoritative data sources to evaluate a website's Domain Rating. The tool has very high accuracy, with data updated daily to ensure you get the latest website authority information. We integrate data from multiple SEO tools, including backlink count, referring domains, website traffic, and other dimensions to provide you with comprehensive and accurate website authority assessment, helping you make informed backlink building decisions.
             </div>
           </div>
         </div>
@@ -132,9 +132,9 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>
+            <h3 class="text-base font-medium">
               Which websites does Website Traffic Checker support?
-            </span>
+            </h3>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -171,9 +171,9 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>
+            <h3 class="text-base font-medium">
               Are these tools free to use?
-            </span>
+            </h3>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -210,7 +210,7 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>Can I use BacklinksBuilder on multiple devices?</span>
+            <h3 class="text-base font-medium">Can I use BacklinksBuilder on multiple devices?</h3>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -247,9 +247,9 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>
+            <h3 class="text-base font-medium">
               Is my data safe on BacklinksBuilder?
-            </span>
+            </h3>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"
@@ -286,7 +286,7 @@
           <button
             @click="setActiveAccordion(id)"
             class="flex items-center justify-between w-full p-4 pb-1 text-left font-medium select-none">
-            <span>Can I get technical support if I encounter problems?</span>
+            <h3 class="text-base font-medium">Can I get technical support if I encounter problems?</h3>
             <svg
               class="w-5 h-5 duration-300 ease-out text-accent-500"
               :class="{ '-rotate-[45deg]': activeAccordion==id }"

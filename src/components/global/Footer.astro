@@ -15,10 +15,10 @@ const sections = [
     title: "All Products",
     links: [
       { name: "Home", href: "/" },
-      { name: "SubmitList", href: "/#section-two" },
+      { name: "Backlink SubmitList", href: "/#section-two" },
       { name: "Backlink Generator", href: "/#section-three" },
-      { name: "DR checker", href: "/#section-four" },
-      { name: "Traffic checker", href: "/#section-five" },
+      { name: "DR Checker", href: "/#section-four" },
+      { name: "Traffic Checker", href: "/#section-five" },
     ],
   },
   {
@@ -91,7 +91,7 @@ const sections = [
       {
         sections.map(({ title, links }) => (
           <div>
-            <h4 class="text-base font-semibold text-black mb-5">{title}</h4>
+            <div class="text-base font-semibold text-black mb-5">{title}</div>
             <ul>
               {links.map(({ name, href }) => (
                 <li class="first:prose-a:pt-0 last:prose-a:pb-0">

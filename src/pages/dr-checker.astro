@@ -16,29 +16,29 @@ const tableColumns = [
 const features = [
   {
     icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-    title: 'Batch Analysis',
-    description: 'Check up to 100 domains at once for efficient bulk analysis',
+    title: 'Bulk DR Checker Analysis',
+    description: 'Use our DR checker to analyze up to 100 domains simultaneously for efficient domain rating evaluation and bulk authority assessment',
     iconColor: 'blue'
   },
   {
     icon: 'M13 10V3L4 14h7v7l9-11h-7z',
-    title: 'Real-time Results',
-    description: 'Get instant DR scores and rankings as soon as analysis completes',
+    title: 'Instant DR Checker Results',
+    description: 'Get instant domain rating scores with our DR checker tool, providing real-time authority analysis for effective backlink strategy',
     iconColor: 'green'
   },
   {
     icon: 'M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-    title: 'Data Export',
-    description: 'Export your results to CSV format for further analysis and reporting',
+    title: 'DR Checker Export Features',
+    description: 'Export DR checker results to CSV format for comprehensive domain rating analysis and strategic competitor evaluation',
     iconColor: 'purple'
   }
 ];
 ---
 
-<BaseLayout title="Domain Rating Checker - BacklinksBuilder">
+<BaseLayout title="DR Checker - Free Domain Rating Analysis Tool | BacklinksBuilder">
   <ToolPageLayout 
-    title="Domain Rating Checker"
-    description="Check any website's domain rating score to understand its SEO authority. Free domain rating (DR) checker for any website to understand site authority. Check the domain rating and authority of multiple websites instantly. Get comprehensive SEO metrics to analyze your competition and improve your rankings."
+    title="DR Checker - Domain Rating Analysis Tool"
+    description="Use our free DR Checker to analyze domain rating scores and evaluate website authority. This powerful DR checker helps you assess backlink prospects and competitor domains with accurate DR ratings for effective SEO strategy."
     features={features}
   >
     <Fragment slot="tool-content">
@@ -46,7 +46,7 @@ const features = [
       <div id="quota-display" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-sm font-medium text-blue-900">DR Check Quota</h3>
+            <h3 class="text-sm font-medium text-blue-900">DR Checker Quota - Domain Rating Analysis</h3>
             <p id="quota-info" class="text-sm text-blue-700">Loading quota information...</p>
           </div>
           <div id="quota-upgrade" class="hidden">
