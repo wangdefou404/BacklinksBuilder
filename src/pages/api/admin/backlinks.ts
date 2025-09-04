@@ -171,15 +171,15 @@ export const GET: APIRoute = async ({ request, locals }) => {
       });
     }
 
-    // 转换字段名以匹配前端期望
+    // 转换字段名以匹配前端期望，使用与前端API相同的格式化逻辑
     const formattedBacklinks = (backlinks || []).map(backlink => ({
       id: backlink.id,
       name: backlink.name,
       website_link: backlink.website_link,
       dr: backlink.dr || 0,
       traffic: backlink.traffic || 0,
-      payment_type: backlink.payment_type || 'free',
-      follow_type: backlink.follow_type || 'dofollow',
+      payment_type: backlink.payment_type === 'free' ? 'Free' : 'Paid',
+      follow_type: backlink.follow_type?.toLowerCase() === 'dofollow' ? 'DoFollow' : 'NoFollow',
       platform_type: backlink.platform_type || 'blog',
       access_type: backlink.access_type || 'public',
       submit_url: backlink.submit_url,

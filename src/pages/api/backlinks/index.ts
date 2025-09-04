@@ -11,7 +11,7 @@ function formatBacklinkResource(dbRecord: any): BacklinkResource {
     dr: dbRecord.dr || 0,
     traffic: dbRecord.traffic || 0,
     paymentType: dbRecord.payment_type === 'free' ? 'Free' : 'Paid',
-    followType: dbRecord.follow_type === 'dofollow' ? 'DoFollow' : 'NoFollow',
+    followType: dbRecord.follow_type?.toLowerCase() === 'dofollow' ? 'DoFollow' : 'NoFollow',
     platformType: dbRecord.platform_type || 'blog',
     access: dbRecord.access_type === 'guest' ? 'guest' : 'premium',
     updated: new Date(dbRecord.updated_at).toISOString().split('T')[0],
