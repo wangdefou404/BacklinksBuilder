@@ -65,3 +65,13 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site || 'https://backlink
 <meta name="theme-color" content="#ffffff" />
 
 <!-- Alpine.js will be imported via npm in BaseLayout.astro -->
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-S4X0NQVDRJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-S4X0NQVDRJ');
+</script>
