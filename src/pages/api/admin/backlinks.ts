@@ -178,7 +178,7 @@ export const GET: APIRoute = async ({ request, locals }) => {
       website_link: backlink.website_link,
       dr: backlink.dr || 0,
       traffic: backlink.traffic || 0,
-      payment_type: backlink.payment_type === 'free' ? 'Free' : 'Paid',
+      payment_type: backlink.payment_type?.toLowerCase() === 'free' ? 'Free' : 'Paid',
       follow_type: backlink.follow_type?.toLowerCase() === 'dofollow' ? 'DoFollow' : 'NoFollow',
       platform_type: backlink.platform_type || 'blog',
       access_type: backlink.access_type || 'public',

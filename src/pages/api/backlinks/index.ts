@@ -10,7 +10,7 @@ function formatBacklinkResource(dbRecord: any): BacklinkResource {
     websiteLink: dbRecord.website_link,
     dr: dbRecord.dr || 0,
     traffic: dbRecord.traffic || 0,
-    paymentType: dbRecord.payment_type === 'free' ? 'Free' : 'Paid',
+    paymentType: dbRecord.payment_type?.toLowerCase() === 'free' ? 'Free' : 'Paid',
     followType: dbRecord.follow_type?.toLowerCase() === 'dofollow' ? 'DoFollow' : 'NoFollow',
     platformType: dbRecord.platform_type || 'blog',
     access: dbRecord.access_type === 'guest' ? 'guest' : 'premium',
