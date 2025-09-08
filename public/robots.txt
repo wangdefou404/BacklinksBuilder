@@ -1,5 +1,31 @@
 User-agent: *
 Allow: /
-Disallow: /admin/
 
+# 禁止访问私有页面和敏感目录
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /auth/
+Disallow: /api/
+Disallow: /user/
+Disallow: /payment/
+Disallow: /premium/
+Disallow: /super/
+
+# 禁止访问敏感文件
+Disallow: /.env
+Disallow: /package.json
+Disallow: /package-lock.json
+Disallow: /yarn.lock
+Disallow: /pnpm-lock.yaml
+Disallow: /.git/
+Disallow: /node_modules/
+Disallow: /.next/
+Disallow: /build/
+Disallow: /dist/
+
+# 爬虫延迟设置（秒）
+Crawl-delay: 1
+
+# 网站地图
 Sitemap: https://backlinksbuilder.com/sitemap.xml
